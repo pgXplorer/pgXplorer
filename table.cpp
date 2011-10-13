@@ -4,15 +4,24 @@
 
 Table::Table(Schema* sch, QString tblName)
 {
+    int xs = sch->x();
+    int ys = sch->y();
     int siz = sch->getTblList().size();
-    int i = sch->getTblList().findIndex(tblName);
+    int i = sch->getTblList().indexOf(tblName)-(siz/2);
     int radius = 8 * siz;
-    if(radius < 100)
-        radius = 100;
+    if(radius < 100) radius = 100;
     qreal dtheta = 2*M_PI*i/siz;
     this->setParent(sch);
     this->setParentItem(sch);
-    this->setPos(radius*sin(dtheta),radius*cos(dtheta));
+    //this->setPos(i*radius, (-xs/ys)*i*radius+((radius+sqrt(xs*xs+ys*ys)/(cos(atan(xs/ys))))));
+    if(siz/2 == 0)
+        this->setPos(radius, radius*sin(dtheta));
+        //this->setPos(radius*cos(atan(ys/xs))-radius*sin(dtheta)*sin(atan(ys/xs)),
+        //             radius*sin(atan(ys/xs))+radius*sin(dtheta)*cos(atan(ys/xs)));
+    else
+        this->setPos(radius, radius*sin(dtheta));
+        //this->setPos(radius*cos(atan(ys/xs))-radius*cos(dtheta)*sin(atan(ys/xs)),
+        //             radius*sin(atan(ys/xs))+radius*cos(dtheta)*cos(atan(ys/xs)));
     this->setName(tblName);
     this->setStatus(false);
     this->setCollapsed(true);
