@@ -12,7 +12,7 @@ TableView::TableView(QString const tblName, QString const name, Qt::WidgetAttrib
     sql = "SELECT * FROM " + tblName;
     qryMdl = new QSqlQueryModel;
     if(quickFetch) {
-        fetchSiz = 10000;
+        fetchSiz = 1000;
         QString offset = " OFFSET " + QString::number(fetchSiz);
         limit = " LIMIT " + QString::number(fetchSiz);
         qryMdl->setQuery(sql + limit + offset);
@@ -68,9 +68,9 @@ void TableView::contextMenuEvent(QContextMenuEvent *event)
     QVariant data = tview->model()->data(index);
     if(data.canConvert<QString>()) {
         QMenu menu;
-        QPalette palette;
-        palette.setColor(menu.backgroundRole(), QColor(205,205,205));
-        menu.setPalette(palette);
+        //QPalette palette;
+        //palette.setColor(menu.backgroundRole(), QColor(205,205,205));
+        //menu.setPalette(palette);
         menu.addAction("Select");
         menu.addAction("~Select");
         QMenu* deselectMenu = new QMenu("Deselect");
@@ -97,6 +97,24 @@ void TableView::contextMenuEvent(QContextMenuEvent *event)
             disarrangeMenu->addAction("All");
         }
         menu.addMenu(disarrangeMenu);
+        /*
+        menu.addSeparator();
+        menu.addAction("Group");
+        QMenu* ungroupMenu = new QMenu("Ungroup");
+        int groupClSiz = groupCl.size();
+        for(int i=0; i<groupClSiz; i++) {
+            QString group = groupCl.at(i);
+            ungroupMenu->addAction(group);
+        }
+        if(groupClSiz > 1) {
+            ungroupMenu->addSeparator();
+            ungroupMenu->addAction("All");
+        }
+        menu.addMenu(ungroupMenu);
+        */
+        menu.addSeparator();
+        menu.addAction("Copy query");
+
         QAction *a = menu.exec(QCursor::pos());
         if(a && QString::compare(a->text(),"Select")==0) {
             statusBar()->showMessage("Fetching data...");
@@ -119,7 +137,7 @@ void TableView::contextMenuEvent(QContextMenuEvent *event)
                     whereCl.append("\"" + hdr.toString() + "\"='" + data.toString() + "'");
             offsetList.clear();
             offsetList.append(" OFFSET 0");
-            qryMdl->setQuery(sql + " WHERE " + whereCl.join(" AND ") + " ORDER BY " + orderCl.join(",") + limit + offsetList.last());
+            qryMdl->setQuery(sql + " WHERE " + whereCl.join(" AND ") + (orderClSiz > 0 ? " ORDER BY " + orderCl.join(","):"") + limit + offsetList.last());
             if (qryMdl->lastError().isValid()) {
                 QMessageBox* dbErr = new QMessageBox("pgXplorer", qryMdl->lastError().text(),
                                                        QMessageBox::Critical, 1, 0, 0, this, 0, FALSE );
@@ -156,7 +174,7 @@ void TableView::contextMenuEvent(QContextMenuEvent *event)
                     whereCl.append("\"" + hdr.toString() + "\"<>'" + data.toString() + "'");
             offsetList.clear();
             offsetList.append(" OFFSET 0");
-            qryMdl->setQuery(sql + " WHERE " + whereCl.join(" AND ") + " ORDER BY " + orderCl.join(",") + limit+ offsetList.last());
+            qryMdl->setQuery(sql + " WHERE " + whereCl.join(" AND ") + (orderClSiz > 0 ? " ORDER BY " + orderCl.join(","):"") + limit+ offsetList.last());
             if (qryMdl->lastError().isValid()) {
                 QMessageBox* dbErr = new QMessageBox("pgXplorer", qryMdl->lastError().text(),
                                                        QMessageBox::Critical, 1, 0, 0, this, 0, FALSE );
@@ -181,7 +199,9 @@ void TableView::contextMenuEvent(QContextMenuEvent *event)
             t.start();
             offsetList.clear();
             offsetList.append(" OFFSET 0");
-            qryMdl->setQuery(sql + " ORDER BY " + orderCl.join(",") + limit+ offsetList.last());
+            orderCl.clear();
+            orderClSiz = 0;
+            qryMdl->setQuery(sql + limit+ offsetList.last());
             if (qryMdl->lastError().isValid()) {
                 QMessageBox* dbErr = new QMessageBox("pgXplorer", qryMdl->lastError().text(),
                                                        QMessageBox::Critical, 1, 0, 0, this, 0, FALSE );
@@ -205,10 +225,11 @@ void TableView::contextMenuEvent(QContextMenuEvent *event)
             t.start();
             QVariant hdr = tview->model()->headerData(index.column(), Qt::Horizontal);
             orderCl.append(hdr.toString() + " ASC");
+            orderClSiz++;
             if(whereCl.isEmpty())
-                qryMdl->setQuery(sql + " ORDER BY " + orderCl.join(",") + limit + offsetList.last());
+                qryMdl->setQuery(sql + (orderClSiz > 0 ? " ORDER BY " + orderCl.join(","):"") + limit + offsetList.last());
             else
-                qryMdl->setQuery(sql + " WHERE " + whereCl.join(" AND ") + " ORDER BY " + orderCl.join(",") + limit + offsetList.last());
+                qryMdl->setQuery(sql + " WHERE " + whereCl.join(" AND ") + (orderClSiz > 0 ? " ORDER BY " + orderCl.join(","):"") + limit + offsetList.last());
             if (qryMdl->lastError().isValid()) {
                 QMessageBox* dbErr = new QMessageBox("pgXplorer", qryMdl->lastError().text(),
                                                        QMessageBox::Critical, 1, 0, 0, this, 0, FALSE );
@@ -232,10 +253,11 @@ void TableView::contextMenuEvent(QContextMenuEvent *event)
             t.start();
             QVariant hdr = tview->model()->headerData(index.column(), Qt::Horizontal);
             orderCl.append(hdr.toString() + " DESC");
+            orderClSiz++;
             if(whereCl.isEmpty())
-                qryMdl->setQuery(sql + " ORDER BY " + orderCl.join(",") + limit+ offsetList.last());
+                qryMdl->setQuery(sql + (orderClSiz > 0 ? " ORDER BY " + orderCl.join(","):"") + limit+ offsetList.last());
             else
-                qryMdl->setQuery(sql + " WHERE " + whereCl.join(" AND ") + " ORDER BY " + orderCl.join(",") + limit+ offsetList.last());
+                qryMdl->setQuery(sql + " WHERE " + whereCl.join(" AND ") + (orderClSiz > 0 ? " ORDER BY " + orderCl.join(","):"") + limit+ offsetList.last());
             if (qryMdl->lastError().isValid()) {
                 QMessageBox* dbErr = new QMessageBox("pgXplorer", qryMdl->lastError().text(),
                                                        QMessageBox::Critical, 1, 0, 0, this, 0, FALSE );
@@ -253,6 +275,50 @@ void TableView::contextMenuEvent(QContextMenuEvent *event)
                                      " \t Columns: " + QString::number(colcount));
             return;
         }
+        /*else if(a && QString::compare(a->text(),"Group")==0) {
+            statusBar()->showMessage("Fetching data...");
+            QTime t;
+            t.start();
+            QVariant hdr = tview->model()->headerData(index.column(), Qt::Horizontal);
+            groupCl.append(hdr.toString());
+            groupClSiz++;
+            if(whereCl.isEmpty())
+                qryMdl->setQuery(sql
+                                 + (groupClSiz > 0 ? " GROUP BY " + groupCl.join(","):"")
+                                 + (orderClSiz > 0 ? " ORDER BY " + orderCl.join(","):"")
+                                 + limit + offsetList.last());
+            else
+                qryMdl->setQuery(sql
+                                 + " WHERE " + whereCl.join(" AND ")
+                                 + (groupClSiz > 0 ? " GROUP BY " + groupCl.join(","):"")
+                                 + (orderClSiz > 0 ? " ORDER BY " + orderCl.join(","):"")
+                                 + limit + offsetList.last());
+            if (qryMdl->lastError().isValid()) {
+                QMessageBox* dbErr = new QMessageBox("pgXplorer", qryMdl->lastError().text(),
+                                                       QMessageBox::Critical, 1, 0, 0, this, 0, FALSE );
+                dbErr->setButtonText(1, "Close");
+                dbErr->show();
+                statusBar()->showMessage("An error occurred.");
+                return;
+            }
+            qint32 rowcount = qryMdl->rowCount();
+            qint32 colcount = qryMdl->columnCount();
+            tview->setModel(qryMdl);
+            //tview->hideColumn(0);
+            statusBar()->showMessage("Time elapsed: " + QString::number((double)t.elapsed()/1000) +
+                                     " s \t Rows: " + QString::number(rowcount) +
+                                     " \t Columns: " + QString::number(colcount));
+            return;
+        }*/
+        else if(a && QString::compare(a->text(),"Copy query")==0) {
+            QString copy_sql;
+            if(whereCl.isEmpty())
+                copy_sql = sql + (orderClSiz > 0 ? " ORDER BY " + orderCl.join(","):"");
+            else
+                copy_sql = sql + " WHERE " + whereCl.join(" AND ") + (orderClSiz > 0 ? " ORDER BY " + orderCl.join(","):"");
+
+            qApp->clipboard()->setText(copy_sql);
+        }
         else {
             for(int i=0; i<whereCl.size(); i++) {
                 if(a && QString::compare(a->text(),whereCl.at(i))==0) {
@@ -267,9 +333,9 @@ void TableView::contextMenuEvent(QContextMenuEvent *event)
                     offsetList.clear();
                     offsetList.append(" OFFSET 0");
                     if(whereCl.isEmpty())
-                        qryMdl->setQuery(sql + " ORDER BY " + orderCl.join(",") + limit + offsetList.last());
+                        qryMdl->setQuery(sql + (orderClSiz > 0 ? " ORDER BY " + orderCl.join(","):"") + limit + offsetList.last());
                     else
-                        qryMdl->setQuery(sql + " WHERE " + whereCl.join(" AND ") + " ORDER BY " + orderCl.join(",") + limit + offsetList.last());
+                        qryMdl->setQuery(sql + " WHERE " + whereCl.join(" AND ") + (orderClSiz > 0 ? " ORDER BY " + orderCl.join(","):"") + limit + offsetList.last());
                     if (qryMdl->lastError().isValid()) {
                         QMessageBox* dbErr = new QMessageBox("pgXplorer", qryMdl->lastError().text(),
                                                                QMessageBox::Critical, 1, 0, 0, this, 0, FALSE );
@@ -299,6 +365,7 @@ void TableView::contextMenuEvent(QContextMenuEvent *event)
                     QTime t;
                     t.start();
                     orderCl.removeAt(i);
+                    orderClSiz--;
                     if(qryMdl->rowCount() == 0)
                         canFetchMore = false;
                     else
@@ -306,9 +373,9 @@ void TableView::contextMenuEvent(QContextMenuEvent *event)
                     offsetList.clear();
                     offsetList.append(" OFFSET 0");
                     if(whereCl.isEmpty())
-                        qryMdl->setQuery(sql + " ORDER BY " + orderCl.join(",") + limit+ offsetList.last());
+                        qryMdl->setQuery(sql + (orderClSiz > 0 ? " ORDER BY " + orderCl.join(","):"") + limit+ offsetList.last());
                     else
-                        qryMdl->setQuery(sql + " WHERE " + whereCl.join(" AND ") + " ORDER BY " + orderCl.join(",") + limit+ offsetList.last());
+                        qryMdl->setQuery(sql + " WHERE " + whereCl.join(" AND ") + (orderClSiz > 0 ? " ORDER BY " + orderCl.join(","):"") + limit+ offsetList.last());
                     if (qryMdl->lastError().isValid()) {
                         QMessageBox* dbErr = new QMessageBox("pgXplorer", qryMdl->lastError().text(),
                                                                QMessageBox::Critical, 1, 0, 0, this, 0, FALSE );
@@ -339,25 +406,26 @@ void TableView::fetchData()
 
 void TableView::fetchMore()
 {
-    if(tview->verticalScrollBar()->value() == tview->verticalScrollBar()->maximum())
+    if(qryMdl->rowCount() >= fetchSiz &&
+       tview->verticalScrollBar()->value() == tview->verticalScrollBar()->maximum())
         if(canFetchMore) {
             statusBar()->showMessage("Fetching more data...");
             QTime t;
             t.start();
             QString offset = " OFFSET " + QString::number((offsetList.size()+1)*fetchSiz);
             if(whereCl.isEmpty())
-                qryMdl->setQuery(sql + " ORDER BY " + orderCl.join(",") + limit + offset);
+                qryMdl->setQuery(sql + (orderCl.size() > 0 ? " ORDER BY " + orderCl.join(","):"") + limit + offset);
             else
-                qryMdl->setQuery(sql + " WHERE " + whereCl.join(" AND ") + " ORDER BY " + orderCl.join(",") + limit+ offset);
+                qryMdl->setQuery(sql + " WHERE " + whereCl.join(" AND ") + (orderCl.size() > 0 ? " ORDER BY " + orderCl.join(","):"") + limit+ offset);
             if(qryMdl->rowCount() == 0)
                 canFetchMore = false;
             else
                 canFetchMore = true;
             offsetList.append(" OFFSET " + QString::number(offsetList.size()*fetchSiz));
             if(whereCl.isEmpty())
-                qryMdl->setQuery(sql + " ORDER BY " + orderCl.join(",") + limit + offsetList.last());
+                qryMdl->setQuery(sql + (orderCl.size() > 0 ? " ORDER BY " + orderCl.join(","):"") + limit + offsetList.last());
             else
-                qryMdl->setQuery(sql + " WHERE " + whereCl.join(" AND ") + " ORDER BY " + orderCl.join(",") + limit+ offsetList.last());
+                qryMdl->setQuery(sql + " WHERE " + whereCl.join(" AND ") + (orderCl.size() > 0 ? " ORDER BY " + orderCl.join(","):"") + limit+ offsetList.last());
             if (qryMdl->lastError().isValid()) {
                 QMessageBox* dbErr = new QMessageBox("pgXplorer", qryMdl->lastError().text(),
                                                        QMessageBox::Critical, 1, 0, 0, this, 0, FALSE );
@@ -419,8 +487,9 @@ void TableView::copych()
     qSort(indices);
     QString headerText;
     QModelIndex current;
+    int prevRow = indices.at(0).row();
     foreach(current, indices) {
-        if(current.row() == 0) {
+        if(current.row() == prevRow) {
             QVariant data = atm->headerData(current.column(), Qt::Horizontal);
             headerText.append(data.toString());
             headerText.append(QLatin1Char('\t'));
@@ -429,7 +498,10 @@ void TableView::copych()
             headerText.append(QLatin1Char('\n'));
             break;
         }
+        prevRow = current.row();
     }
+    if(!headerText.endsWith("\n"))
+        headerText.append(QLatin1Char('\n'));
     QString selectedText;
     QModelIndex prev = indices.first();
     QModelIndex last = indices.last();
