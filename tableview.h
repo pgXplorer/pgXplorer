@@ -17,6 +17,7 @@ private:
     QString sql;
     QStringList whereCl;
     QStringList orderCl;
+    QStringList groupCl;
     QString limit;
     QStringList offsetList;
     int fetchSiz;
