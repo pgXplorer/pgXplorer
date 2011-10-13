@@ -22,7 +22,6 @@ QueryView::QueryView(QWidget *parent, QSqlQueryModel* model, QString const name,
     connect(shortcut_ctrl_c, SIGNAL(activated()), this, SLOT(copyc()));
     QShortcut* shortcut_ctrl_shft_c = new QShortcut(QKeySequence("Ctrl+Shift+C"), this);
     connect(shortcut_ctrl_shft_c, SIGNAL(activated()), this, SLOT(copych()));
-
 }
 
 QueryView::~QueryView()
@@ -99,8 +98,9 @@ void QueryView::copych()
     qSort(indices);
     QString headerText;
     QModelIndex current;
-    foreach(current, indices)
-        if(current.row() == 0) {
+    int prevRow = indices.at(0).row();
+    foreach(current, indices) {
+        if(current.row() == prevRow) {
             QVariant data = atm->headerData(current.column(), Qt::Horizontal);
             headerText.append(data.toString());
             headerText.append(QLatin1Char('\t'));
@@ -109,6 +109,10 @@ void QueryView::copych()
             headerText.append(QLatin1Char('\n'));
             break;
         }
+        prevRow = current.row();
+    }
+    if(!headerText.endsWith("\n"))
+        headerText.append(QLatin1Char('\n'));
     QString selectedText;
     QModelIndex prev = indices.first();
     QModelIndex last = indices.last();
