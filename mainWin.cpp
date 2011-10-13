@@ -42,34 +42,34 @@ MainWin::MainWin(QGraphicsScene& c, QWidget* parent, const char* name, Qt::Windo
     QMainWindow(parent,name,f), scn(c)
 {
     edt = new FigureEditor(scn, this);
-    QMenuBar* menubar = menuBar();
-    QMenu* file = new QMenu( menubar );
-    file->insertItem("&New db", this, SLOT(newDb()), Qt::CTRL+Qt::Key_N);
-    file->insertItem("&Open db", this, SLOT(openDbFile()), Qt::CTRL+Qt::Key_O);
-    file->insertItem("&Save db", this, SLOT(saveDbFile()), Qt::CTRL+Qt::Key_S);
-    file->addSeparator();
-    file->insertItem("E&xit", qApp, SLOT(quit()), Qt::CTRL+Qt::Key_Q);
-    menubar->insertItem("&File", file);
-    QMenu* edit = new QMenu( menubar );
-    edit->insertItem("SQL Console", this, SLOT(console()), Qt::ALT+Qt::Key_C);
-    menubar->insertItem("&Tools", edit);
-    QMenu* view = new QMenu( menubar );
-    view->insertItem("&Enlarge", this, SLOT(enlarge()), Qt::SHIFT+Qt::CTRL+Qt::Key_Plus);
-    view->insertItem("Shr&ink", this, SLOT(shrink()), Qt::SHIFT+Qt::CTRL+Qt::Key_Minus);
-    view->insertSeparator();
-    view->insertItem("&Zoom in", this, SLOT(zoomIn()), Qt::CTRL+Qt::Key_Plus);
-    view->insertItem("Zoom &out", this, SLOT(zoomOut()), Qt::CTRL+Qt::Key_Minus);
-    view->insertItem("Translate left", this, SLOT(moveL()), Qt::CTRL+Qt::Key_Left);
-    view->insertItem("Translate right", this, SLOT(moveR()), Qt::CTRL+Qt::Key_Right);
-    view->insertItem("Translate up", this, SLOT(moveU()), Qt::CTRL+Qt::Key_Up);
-    view->insertItem("Translate down", this, SLOT(moveD()), Qt::CTRL+Qt::Key_Down);
-    view->insertItem("&Default", this, SLOT(default1()), Qt::CTRL+Qt::Key_Home);
-    menubar->insertItem("&View", view);
+    menubar = menuBar();
+    fileMenu = new QMenu( menubar );
+    fileMenu->insertItem("&New db", this, SLOT(newDb()), Qt::CTRL+Qt::Key_N);
+    fileMenu->insertItem("&Open db", this, SLOT(openDbFile()), Qt::CTRL+Qt::Key_O);
+    fileMenu->insertItem("&Save db", this, SLOT(saveDbFile()), Qt::CTRL+Qt::Key_S);
+    fileMenu->addSeparator();
+    fileMenu->insertItem("E&xit", qApp, SLOT(quit()), Qt::CTRL+Qt::Key_Q);
+    menubar->insertItem("&File", fileMenu);
+    editMenu = new QMenu( menubar );
+    editMenu->insertItem("SQL Console", this, SLOT(console()), Qt::ALT+Qt::Key_C);
+    menubar->insertItem("&Tools", editMenu);
+    /*viewMenu = new QMenu( menubar );
+    viewMenu->insertItem("&Enlarge", this, SLOT(enlarge()), Qt::SHIFT+Qt::CTRL+Qt::Key_Plus);
+    viewMenu->insertItem("Shr&ink", this, SLOT(shrink()), Qt::SHIFT+Qt::CTRL+Qt::Key_Minus);
+    viewMenu->insertSeparator();
+    viewMenu->insertItem("&Zoom in", this, SLOT(zoomIn()), Qt::CTRL+Qt::Key_Plus);
+    viewMenu->insertItem("Zoom &out", this, SLOT(zoomOut()), Qt::CTRL+Qt::Key_Minus);
+    viewMenu->insertItem("Translate left", this, SLOT(moveL()), Qt::CTRL+Qt::Key_Left);
+    viewMenu->insertItem("Translate right", this, SLOT(moveR()), Qt::CTRL+Qt::Key_Right);
+    viewMenu->insertItem("Translate up", this, SLOT(moveU()), Qt::CTRL+Qt::Key_Up);
+    viewMenu->insertItem("Translate down", this, SLOT(moveD()), Qt::CTRL+Qt::Key_Down);
+    viewMenu->insertItem("&Default", this, SLOT(default1()), Qt::CTRL+Qt::Key_Home);
+    menubar->insertItem("&View", viewMenu);*/
     menubar->addSeparator();
-    QMenu* help = new QMenu( menubar );
-    help->insertItem("&About", this, SLOT(help()), Qt::Key_F1);
-    help->setItemChecked(dbf_id, TRUE);
-    menubar->insertItem("&Help",help);
+    helpMenu = new QMenu( menubar );
+    helpMenu->insertItem("&About", this, SLOT(help()), Qt::Key_F1);
+    helpMenu->setItemChecked(dbf_id, TRUE);
+    menubar->insertItem("&Help",helpMenu);
     setCentralWidget(edt);
     readSettings();
     prn = 0;
@@ -100,13 +100,13 @@ void MainWin::writeSettings()
 
 void MainWin::openDbFile()
 {
-    clear();
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"),
                                                      "C:/",
                                                      tr("Database (*.pgx)"));
     //QString fileName = QFileDialog::getOpenFileName(this);
     if(fileName.isEmpty())
         return;
+    clear();
     open(fileName);
 }
 
@@ -150,6 +150,8 @@ void MainWin::open(QString fileName)
     QString pass;
     fileStrm >> pass;
     db->setConnProps(srv, port, datab, user, pass);
+
+    this->setWindowTitle("pgXplorer - " + fileName);
 }
 
 void MainWin::saveDbFile()
@@ -160,6 +162,12 @@ void MainWin::saveDbFile()
     if(fileName.isEmpty())
         return;
     save(fileName);
+    saveState(fileName);
+}
+
+int MainWin::saveState(QString fileName)
+{
+
 }
 
 void MainWin::save(QString fileName)
