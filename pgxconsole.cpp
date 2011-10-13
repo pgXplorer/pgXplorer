@@ -194,6 +194,20 @@ void PgxConsole::showView(QKeyEvent * e)
         clear();
         return;
     }
+    // 'quit' command to clear console and history
+    else if(cmd.compare("quit", Qt::CaseInsensitive) == 0) {
+        history.clear();
+        hit =0;
+        clear();
+        this->close();
+    }
+    // 'exit' command to clear console and history
+    else if(cmd.compare("exit", Qt::CaseInsensitive) == 0) {
+        history.clear();
+        hit =0;
+        clear();
+        this->close();
+    }
     // Reduce all groups of whitespace characters
     // to a single space between words.
     cmd = cmd.simplified();
@@ -312,10 +326,19 @@ void PgxConsole::paste_cmd()
     if(textCursor().block().next().isValid()) {
         cursor.movePosition(QTextCursor::End);
         setTextCursor(cursor);
+
         paste();
     }
-    else
+    else {
+        /*QClipboard *clipboard = QApplication::clipboard();
+        QString cb = clipboard->text();
+        QStringList cbl = cb.split("\n");
+        siz = cbl.size();
+        for(int i = 0; i < siz; i++) {
+            appendPlainText(cbl.at(i));
+        }*/
         paste();
+    }
 }
 
 void PgxConsole::histUpCmd()
