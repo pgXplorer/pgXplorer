@@ -105,11 +105,11 @@ PropDialog::PropDialog(Database *db)
     pBOK->setText(QApplication::translate("Connection", "OK", 0, QApplication::UnicodeUTF8));
     pBCancel->setText(QApplication::translate("Connection", "Cancel", 0, QApplication::UnicodeUTF8));
     if(!db->getStatus()) {
-        getSrv()->setText(QApplication::translate("Connection", db->getHost(), 0, QApplication::UnicodeUTF8));
+        getSrv()->setText(db->getHost());
         getDb()->setText(db->getName());
-        getPort()->setText(QApplication::translate("Connection", db->getPort(), 0, QApplication::UnicodeUTF8));
-        getUser()->setText(QApplication::translate("Connection", db->getUser(), 0, QApplication::UnicodeUTF8));
-        getPass()->setText(QApplication::translate("Connection", db->getPassword(), 0, QApplication::UnicodeUTF8));
+        getPort()->setText(db->getPort());
+        getUser()->setText(db->getUser());
+        getPass()->setText(db->getPassword());
         lSrv->setText(QApplication::translate("Connection", "Server", 0, QApplication::UnicodeUTF8));
         lDb->setText(QApplication::translate("Connection", "Database", 0, QApplication::UnicodeUTF8));
         lPort->setText(QApplication::translate("Connection", "Port", 0, QApplication::UnicodeUTF8));
@@ -122,11 +122,11 @@ PropDialog::PropDialog(Database *db)
         if(QSqlDatabase::connectionNames().length()>0) {
             dbact = QSqlDatabase::database(QSqlDatabase::connectionNames ().at(0));
         }
-        getSrv()->setText(QApplication::translate("Connection", dbact.hostName(), 0, QApplication::UnicodeUTF8));
+        getSrv()->setText(dbact.hostName());
         getDb()->setText(db->getName());
-        getPort()->setText(QApplication::translate("Connection", QString::number(dbact.port()), 0, QApplication::UnicodeUTF8));
-        getUser()->setText(QApplication::translate("Connection", dbact.userName(), 0, QApplication::UnicodeUTF8));
-        getPass()->setText(QApplication::translate("Connection", dbact.password(), 0, QApplication::UnicodeUTF8));
+        getPort()->setText(QString::number(dbact.port()));
+        getUser()->setText(dbact.userName());
+        getPass()->setText(dbact.password());
         lSrv->setText(QApplication::translate("Connection", "Server", 0, QApplication::UnicodeUTF8));
         lDb->setText(QApplication::translate("Connection", "Database", 0, QApplication::UnicodeUTF8));
         lPort->setText(QApplication::translate("Connection", "Port", 0, QApplication::UnicodeUTF8));
