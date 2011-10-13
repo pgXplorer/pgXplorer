@@ -5,7 +5,7 @@
 
 int main(int argc, char** argv)
 {
-    Q_INIT_RESOURCE(portedcanvas);
+    Q_INIT_RESOURCE(pgXplorer);
     QApplication app(argc, argv);
     QTranslator translator;
     translator.load("pgXplorer_ja");
