@@ -31,8 +31,8 @@ private:
     bool collapsed;
     QList<SchemaLink *> edgeList;
     QPointF newPos;
-    QStringList history;
-    qint32 hit;
+    QStringList history;            // History
+    qint32 hit;                     // History iterator
 
 protected:
     QVariant itemChange(GraphicsItemChange change, const QVariant &value);
