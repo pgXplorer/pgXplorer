@@ -65,6 +65,7 @@ private slots:
     void open(QString);
     void saveDbFile();
     void save(QString);
+    int saveState(QString);
     void newDb();
     void console();
     void addSchema(Database*);
@@ -85,6 +86,19 @@ Q_SIGNALS:
     void clicked();
 
 private:
+    QMenuBar* menubar;
+    QMenu* fileMenu;
+    QMenu* editMenu;
+    QMenu* viewMenu;
+    QMenu* helpMenu;
+    /*QAction *newDb;
+    QAction *openDb;
+    QAction *savDb;
+    QAction *exit;
+    QAction *console;
+    QAction *tools;*/
+    void createActions();
+    void createMenus();
     virtual void mousePressEvent(QGraphicsSceneMouseEvent * );
     virtual void mouseMoveEvent(QGraphicsSceneMouseEvent * );
     virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent * );
