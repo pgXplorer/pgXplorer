@@ -47,6 +47,7 @@ public:
     {
         this->lEPass = lEPass;
     }
+
     QLineEdit* getSrv()
     {
         return this->lESrv;
