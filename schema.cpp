@@ -3,14 +3,15 @@
 
 Schema::Schema(Database* db, QString schName)
 {
-    int radius = 200;
+    int aradius = A_RADIUS;
+    int bradius = B_RADIUS;
     qreal dtheta;
     int siz = db->getSchList().size();
-    int i = db->getSchList().findIndex(schName);
+    int i = db->getSchList().indexOf(schName);
     dtheta = -2*M_PI*i/siz - M_PI_2;
     setParent(db);
     setParentItem(db);
-    setPos(radius*sin(dtheta), radius*cos(dtheta));
+    setPos(aradius*sin(dtheta), bradius*cos(dtheta));
     setName(schName);
     setStatus(false);
     setCollapsed(true);
@@ -47,7 +48,7 @@ void Schema::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *)
 void Schema::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 {
     QMenu menu;
-    menu.setBackgroundColor(QColor(205,205,205));
+    //menu.setBackgroundColor(QColor(205,205,205));
     menu.addAction("Expand");
     menu.addAction("Delete");
     QAction *a = menu.exec(event->screenPos());
