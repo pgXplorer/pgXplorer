@@ -5,7 +5,7 @@ Database::Database()
 {
     setStatus(false);
     setCollapsed(true);
-    setFlag(QGraphicsItem::ItemIsMovable);
+    setFlag(QGraphicsItem::ItemIsMovable, false);
     setFlag(QGraphicsItem::ItemIsSelectable);
     setToolTip(getName());
     setFlag(ItemSendsGeometryChanges);
@@ -38,7 +38,7 @@ void Database::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 void Database::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 {
     QMenu menu;
-    menu.setBackgroundColor(QColor(205,205,205));
+    //menu.setBackgroundColor(QColor(205,205,205));
     if(getCollapsed())
         menu.addAction("Expand");
     else
