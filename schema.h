@@ -7,6 +7,11 @@
 #include "schemaLink.h"
 #include "tableLink.h"
 
+#define SCHEMA_WIDTH 70
+#define SCHEMA_HEIGHT 40
+#define A_RADIUS (SCHEMA_WIDTH*5)
+#define B_RADIUS (SCHEMA_HEIGHT*6)
+
 class Schema : public QObject, public QGraphicsItem
 {
     Q_OBJECT
@@ -49,7 +54,7 @@ public:
             painter->setPen(QColor(0,0,0,0));
         if(this->getCollapsed()) {
             painter->setBrush(QColor(200,200,200));
-            painter->drawRect(-35,-20,70,40);
+            painter->drawRect(-35,-20,SCHEMA_WIDTH,SCHEMA_HEIGHT);
             painter->setBrush(QColor(190,190,190));
             QPointF right[4] = {
                  QPointF(+35,-20),
@@ -72,7 +77,7 @@ public:
         }
         else {
             painter->setBrush(QColor(150,150,200));
-            painter->drawRect(-35,-20,70,40);
+            painter->drawRect(-35,-20,SCHEMA_WIDTH,SCHEMA_HEIGHT);
             painter->setBrush(QColor(120,120,150));
             QPointF right[4] = {
                  QPointF(+35,-20),
