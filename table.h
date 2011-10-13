@@ -6,6 +6,9 @@
 #include <QtGui>
 #include "tableLink.h"
 
+#define TABLE_WIDTH 80
+#define TABLE_HEIGHT 20
+
 class Table : public QObject, public QGraphicsItem
 {
     Q_OBJECT
@@ -45,7 +48,7 @@ public:
             painter->setPen(QColor(0,0,0,0));
         if(!this->getCollapsed()) {
             painter->setBrush(QColor(220,220,220));
-            painter->drawRect(-40,-10,80,20);
+            painter->drawRect(-40,-10,TABLE_WIDTH,TABLE_HEIGHT);
             painter->setBrush(QColor(200,200,200));
             QPointF right[4] = {
                  QPointF(+40,-10),
@@ -69,7 +72,7 @@ public:
         }
         else {
             painter->setBrush(QColor(200,150,150));
-            painter->drawRect(-40,-10,80,20);
+            painter->drawRect(-40,-10,TABLE_WIDTH,TABLE_HEIGHT);
             painter->setBrush(QColor(230,200,200));
             QPointF right[4] = {
                 QPointF(+40,-10),
