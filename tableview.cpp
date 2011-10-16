@@ -2,7 +2,6 @@
 
 TableView::TableView(QString const tblName, QString const name, Qt::WidgetAttribute f)
 {
-    QTime t;
     t.start();
     quickFetch = true;
     tb = new QToolBar("Edit");
@@ -10,43 +9,25 @@ TableView::TableView(QString const tblName, QString const name, Qt::WidgetAttrib
     tb->addSeparator();
     tb->setMovable(false);
     sql = "SELECT * FROM " + tblName;
-    qryMdl = new QSqlQueryModel;
-    if(quickFetch) {
-        fetchSiz = 1000;
-        QString offset = " OFFSET " + QString::number(fetchSiz);
-        limit = " LIMIT " + QString::number(fetchSiz);
-        qryMdl->setQuery(sql + limit + offset);
-        if(qryMdl->rowCount() == 0)
-            canFetchMore = false;
-        else
-            canFetchMore = true;
-        offsetList.append(" OFFSET 0");
-        qryMdl->setQuery(sql + limit + offsetList.last());
-    }
-    else
-        qryMdl->setQuery(sql);
-    //qryMdl->removeColumn(0);
-    qint32 rowcount = qryMdl->rowCount();
-    qint32 colcount = qryMdl->columnCount();
+    QFuture<void> future = QtConcurrent::run(this, &TableView::fetchData);
+
     tview = new QTableView(this);
     tview->resizeColumnsToContents();
-    tview->setModel(qryMdl);
+    //tview->setModel(qryMdl);
+
     this->setWindowTitle(name);
     tview->setStyleSheet("QTableView {font-weight: 400;}");
     tview->setAlternatingRowColors(true);
     this->setGeometry(100,100,640,480);
-    //vb->valueChanged(QScrollBar::SliderToMaximum);
     connect(tview->verticalScrollBar(), SIGNAL(valueChanged(int)),
             this, SLOT(fetchMore()));
     QShortcut* shortcut_ctrl_c = new QShortcut(QKeySequence::Copy, this);
     connect(shortcut_ctrl_c, SIGNAL(activated()), this, SLOT(copyc()));
     QShortcut* shortcut_ctrl_shft_c = new QShortcut(QKeySequence("Ctrl+Shift+C"), this);
     connect(shortcut_ctrl_shft_c, SIGNAL(activated()), this, SLOT(copych()));
+    connect(this, SIGNAL(updRowCntSignal(qint32,qint32,int)), this, SLOT(updRowCntSlot()));
     setCentralWidget(tview);
     show();
-    statusBar()->showMessage("Time elapsed: " + QString::number((double)t.elapsed()/1000) +
-                             " s \t Rows: " + QString::number(rowcount) +
-                             " \t Columns: " + QString::number(colcount));
 }
 
 void TableView::contextMenuEvent(QContextMenuEvent *event)
@@ -68,9 +49,6 @@ void TableView::contextMenuEvent(QContextMenuEvent *event)
     QVariant data = tview->model()->data(index);
     if(data.canConvert<QString>()) {
         QMenu menu;
-        //QPalette palette;
-        //palette.setColor(menu.backgroundRole(), QColor(205,205,205));
-        //menu.setPalette(palette);
         menu.addAction("Select");
         menu.addAction("~Select");
         QMenu* deselectMenu = new QMenu("Deselect");
@@ -146,8 +124,8 @@ void TableView::contextMenuEvent(QContextMenuEvent *event)
                 statusBar()->showMessage("An error occurred.");
                 return;
             }
-            qint32 rowcount = qryMdl->rowCount();
-            qint32 colcount = qryMdl->columnCount();
+            rowcount = qryMdl->rowCount();
+            colcount = qryMdl->columnCount();
             tview->setModel(qryMdl);
             //tview->hideColumn(0);
             statusBar()->showMessage("Time elapsed: " + QString::number((double)t.elapsed()/1000) +
@@ -183,8 +161,8 @@ void TableView::contextMenuEvent(QContextMenuEvent *event)
                 statusBar()->showMessage("An error occurred.");
                 return;
             }
-            qint32 rowcount = qryMdl->rowCount();
-            qint32 colcount = qryMdl->columnCount();
+            rowcount = qryMdl->rowCount();
+            colcount = qryMdl->columnCount();
             tview->setModel(qryMdl);
             //tview->hideColumn(0);
             statusBar()->showMessage("Time elapsed: " + QString::number((double)t.elapsed()/1000) +
@@ -210,8 +188,8 @@ void TableView::contextMenuEvent(QContextMenuEvent *event)
                 statusBar()->showMessage("An error occurred.");
                 return;
             }
-            qint32 rowcount = qryMdl->rowCount();
-            qint32 colcount = qryMdl->columnCount();
+            rowcount = qryMdl->rowCount();
+            colcount = qryMdl->columnCount();
             tview->setModel(qryMdl);
             //tview->hideColumn(0);
             statusBar()->showMessage("Time elapsed: " + QString::number((double)t.elapsed()/1000) +
@@ -238,8 +216,8 @@ void TableView::contextMenuEvent(QContextMenuEvent *event)
                 statusBar()->showMessage("An error occurred.");
                 return;
             }
-            qint32 rowcount = qryMdl->rowCount();
-            qint32 colcount = qryMdl->columnCount();
+            rowcount = qryMdl->rowCount();
+            colcount = qryMdl->columnCount();
             tview->setModel(qryMdl);
             //tview->hideColumn(0);
             statusBar()->showMessage("Time elapsed: " + QString::number((double)t.elapsed()/1000) +
@@ -266,8 +244,8 @@ void TableView::contextMenuEvent(QContextMenuEvent *event)
                 statusBar()->showMessage("An error occurred.");
                 return;
             }
-            qint32 rowcount = qryMdl->rowCount();
-            qint32 colcount = qryMdl->columnCount();
+            rowcount = qryMdl->rowCount();
+            colcount = qryMdl->columnCount();
             tview->setModel(qryMdl);
             //tview->hideColumn(0);
             statusBar()->showMessage("Time elapsed: " + QString::number((double)t.elapsed()/1000) +
@@ -301,8 +279,8 @@ void TableView::contextMenuEvent(QContextMenuEvent *event)
                 statusBar()->showMessage("An error occurred.");
                 return;
             }
-            qint32 rowcount = qryMdl->rowCount();
-            qint32 colcount = qryMdl->columnCount();
+            rowcount = qryMdl->rowCount();
+            colcount = qryMdl->columnCount();
             tview->setModel(qryMdl);
             //tview->hideColumn(0);
             statusBar()->showMessage("Time elapsed: " + QString::number((double)t.elapsed()/1000) +
@@ -344,8 +322,8 @@ void TableView::contextMenuEvent(QContextMenuEvent *event)
                         statusBar()->showMessage("An error occurred.");
                         return;
                     }
-                    qint32 rowcount = qryMdl->rowCount();
-                    qint32 colcount = qryMdl->columnCount();
+                    rowcount = qryMdl->rowCount();
+                    colcount = qryMdl->columnCount();
                     tview->setModel(qryMdl);
                     //tview->hideColumn(0);
                     statusBar()->showMessage("Time elapsed: " + QString::number((double)t.elapsed()/1000) +
@@ -384,8 +362,8 @@ void TableView::contextMenuEvent(QContextMenuEvent *event)
                         statusBar()->showMessage("An error occurred.");
                         return;
                     }
-                    qint32 rowcount = qryMdl->rowCount();
-                    qint32 colcount = qryMdl->columnCount();
+                    rowcount = qryMdl->rowCount();
+                    colcount = qryMdl->columnCount();
                     tview->setModel(qryMdl);
                     //tview->hideColumn(0);
                     statusBar()->showMessage("Time elapsed: " + QString::number((double)t.elapsed()/1000) +
@@ -401,18 +379,42 @@ void TableView::contextMenuEvent(QContextMenuEvent *event)
 
 void TableView::fetchData()
 {
-
+    qryMdl = new QSqlQueryModel;
+    if(quickFetch) {
+        QString offset = " OFFSET " + QString::number(FETCHSIZ);
+        limit = " LIMIT " + QString::number(FETCHSIZ);
+        qryMdl->setQuery(sql + limit + offset);
+        if(qryMdl->rowCount() == 0)
+            canFetchMore = false;
+        else
+            canFetchMore = true;
+        offsetList.append(" OFFSET 0");
+        qryMdl->setQuery(sql + limit + offsetList.last());
+    }
+    else {
+        qryMdl->setQuery(sql);
+    }
+    rowcount = qryMdl->rowCount();
+    colcount = qryMdl->columnCount();
+    updRowCntSignal(rowcount,colcount,t.elapsed());
+}
+void TableView::updRowCntSlot()
+{
+    tview->setModel(qryMdl);
+    statusBar()->showMessage("Time elapsed: " + QString::number((double)t.elapsed()/1000) +
+                             " s \t Rows: " + QString::number(rowcount) +
+                             " \t Columns: " + QString::number(colcount));
 }
 
 void TableView::fetchMore()
 {
-    if(qryMdl->rowCount() >= fetchSiz &&
+    if(qryMdl->rowCount() >= FETCHSIZ &&
        tview->verticalScrollBar()->value() == tview->verticalScrollBar()->maximum())
         if(canFetchMore) {
             statusBar()->showMessage("Fetching more data...");
             QTime t;
             t.start();
-            QString offset = " OFFSET " + QString::number((offsetList.size()+1)*fetchSiz);
+            QString offset = " OFFSET " + QString::number((offsetList.size()+1)*FETCHSIZ);
             if(whereCl.isEmpty())
                 qryMdl->setQuery(sql + (orderCl.size() > 0 ? " ORDER BY " + orderCl.join(","):"") + limit + offset);
             else
@@ -421,7 +423,7 @@ void TableView::fetchMore()
                 canFetchMore = false;
             else
                 canFetchMore = true;
-            offsetList.append(" OFFSET " + QString::number(offsetList.size()*fetchSiz));
+            offsetList.append(" OFFSET " + QString::number(offsetList.size()*FETCHSIZ));
             if(whereCl.isEmpty())
                 qryMdl->setQuery(sql + (orderCl.size() > 0 ? " ORDER BY " + orderCl.join(","):"") + limit + offsetList.last());
             else
@@ -434,8 +436,8 @@ void TableView::fetchMore()
                 statusBar()->showMessage("An error occurred.");
                 return;
             }
-            qint32 rowcount = qryMdl->rowCount();
-            qint32 colcount = qryMdl->columnCount();
+            rowcount = qryMdl->rowCount();
+            colcount = qryMdl->columnCount();
             tview->setModel(qryMdl);
             //tview->hideColumn(0);
             statusBar()->showMessage("Time elapsed: " + QString::number((double)t.elapsed()/1000) +
