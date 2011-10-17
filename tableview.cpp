@@ -9,11 +9,9 @@ TableView::TableView(QString const tblName, QString const name, Qt::WidgetAttrib
     tb->addSeparator();
     tb->setMovable(false);
     sql = "SELECT * FROM " + tblName;
-    QFuture<void> future = QtConcurrent::run(this, &TableView::fetchData);
-
+    
     tview = new QTableView(this);
     tview->resizeColumnsToContents();
-    //tview->setModel(qryMdl);
 
     this->setWindowTitle(name);
     tview->setStyleSheet("QTableView {font-weight: 400;}");
@@ -28,6 +26,8 @@ TableView::TableView(QString const tblName, QString const name, Qt::WidgetAttrib
     connect(this, SIGNAL(updRowCntSignal(qint32,qint32,int)), this, SLOT(updRowCntSlot()));
     setCentralWidget(tview);
     show();
+    
+    QFuture<void> future = QtConcurrent::run(this, &TableView::fetchData);
 }
 
 void TableView::contextMenuEvent(QContextMenuEvent *event)
@@ -398,6 +398,7 @@ void TableView::fetchData()
     colcount = qryMdl->columnCount();
     updRowCntSignal(rowcount,colcount,t.elapsed());
 }
+
 void TableView::updRowCntSlot()
 {
     tview->setModel(qryMdl);
