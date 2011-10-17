@@ -1,8 +1,7 @@
 pgXplorer
 ---------
-pgXplorer is a freely downloadable, BSD licensed administation client for PostgreSQL.
+pgXplorer is a freely downloadable, ISC licensed administation client for PostgreSQL.
 
 Key features are multithreaded queries and an intuitive UI and an SQL console that supports syntax highlighting.
 
-Currently Windows only. Hopefully, a Linux version will be out soon.
-
+Compiles fine on Windows7 and Linux 3.0 under Qt 4.7.4. Install packages shall be made available soon.
