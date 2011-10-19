@@ -21,6 +21,7 @@ class Database : public QObject, public QGraphicsItem
     Q_INTERFACES(QGraphicsItem)
 
 private:
+    QSqlDatabase db;
     QList<QString> schList;
     QString name;
     QString host;
@@ -79,6 +80,10 @@ public:
         painter->setRenderHint(QPainter::Antialiasing, true);
     }
 
+    QSqlDatabase getDb()
+    {
+        return this->db;
+    }
     QString getName()
     {
         return this->name;

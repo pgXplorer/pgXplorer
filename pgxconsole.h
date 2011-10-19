@@ -2,6 +2,8 @@
 #define PGXCONSOLE_H
 
 #include <QPlainTextEdit>
+#include <QSqlQueryModel>
+#include <QSqlQuery>
 #include <QSyntaxHighlighter>
 #include <QHash>
 #include <QTextCharFormat>
@@ -26,12 +28,16 @@ class PgxConsole : public QPlainTextEdit
 
 public:
     PgxConsole(QWidget *parent = 0);
+    ~PgxConsole() {
+    }
     void promptPaintEvent(QPaintEvent *event);
+    void setDbPros(QString, int, QString, QString, QString);
 
 protected:
     void resizeEvent(QResizeEvent *event);
     virtual void keyPressEvent(QKeyEvent *e);
     virtual void wheelEvent(QWheelEvent *e);
+    //virtual void closeEvent(QCloseEvent *);
 
 private slots:
     //void updatePromptWidth(int newBlockCount);
@@ -41,20 +47,28 @@ private slots:
     void histUpCmd();
     void histDnCmd();
     void paste_cmd();
+    void getErrMesg(QString, uint);
+    void finish();
 
 private:
+    QString cmd;
     QWidget *prompt;
     Highlighter *highlighter;
     QStringList history;
     qint32 hit;
     QCompleter *completer;
-    Database *db;
+    QString host;
+    int port;
+    QString dbname;
+    QString user;
+    QString password;
     void createWidgets();
 
 Q_SIGNALS:
-    void cmd(QKeyEvent *);
+    void cmdS(QKeyEvent *);
     void histUp();
     void histDn();
+    void getDbPros();
 };
 
 class Prompt : public QWidget
@@ -100,6 +114,18 @@ class Highlighter : public QSyntaxHighlighter
      QTextCharFormat singleQuotFormat;
      QTextCharFormat doubleQuotFormat;
      QTextCharFormat functionFormat;
+};
+
+class SqlMdl : public QSqlQueryModel
+{
+    Q_OBJECT
+
+public:
+    void fetchData(SqlMdl*, QString, QStringList);
+
+Q_SIGNALS:
+    void fetchDataSignal(SqlMdl*, int, qint32, qint32);
+    void busySignal();
 };
 
 #endif // PGXCONSOLE_H

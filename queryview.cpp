@@ -1,22 +1,27 @@
 #include "queryview.h"
 
+ulong QueryView::queryViewObjectId = 0;
+
 QueryView::QueryView(QWidget *parent, QSqlQueryModel* model, QString const name,
                      int const time, int const rows, int const cols, Qt::WidgetAttribute f)
 {
-    tview = new QTableView(this);
-    tview->resizeColumnsToContents();
-    setCentralWidget(tview);
-    show();
+    //Identify this object with thisTableViewId for constructing database connection
+    //specific to this object and this object alone.
+    thisQueryViewId = queryViewObjectId++;
+
+    qview = new QTableView(this);
+    qview->resizeColumnsToContents();
+    setCentralWidget(qview);
     QString timeel = QApplication::translate("QueryView", "Time elapsed:", 0, QApplication::UnicodeUTF8);
     QString rowsStr = QApplication::translate("QueryView", "Rows:", 0, QApplication::UnicodeUTF8);
     QString colsStr = QApplication::translate("QueryView", "Columns:", 0, QApplication::UnicodeUTF8);
     statusBar()->showMessage(timeel + QString::number((double)time/1000) +
                              " s \t " + rowsStr + QString::number(rows) +
                              " \t " + colsStr + QString::number(cols));
-    tview->setModel(model);
+    //qview->setModel(model);
     setWindowTitle(name);
-    tview->setStyleSheet("QTableView {font-weight: 400;}");
-    tview->setAlternatingRowColors(true);
+    qview->setStyleSheet("QTableView {font-weight: 400;}");
+    qview->setAlternatingRowColors(true);
     setGeometry(100,100,640,480);
     QShortcut* shortcut_ctrl_c = new QShortcut(QKeySequence::Copy, this);
     connect(shortcut_ctrl_c, SIGNAL(activated()), this, SLOT(copyc()));
@@ -26,8 +31,8 @@ QueryView::QueryView(QWidget *parent, QSqlQueryModel* model, QString const name,
 
 QueryView::~QueryView()
 {
-    delete tview->model();
-    delete tview;
+    delete qview->model();
+    delete qview;
     close();
 }
 
@@ -55,14 +60,14 @@ void QueryView::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 void QueryView::closeEvent(QCloseEvent *event)
 {
     event->accept();
-    delete tview->model();
-    delete tview;
+    delete qview->model();
+    delete qview;
     close();
 }
 
 void QueryView::copyc()
 {
-    QItemSelectionModel* s = tview->selectionModel();
+    QItemSelectionModel* s = qview->selectionModel();
     QModelIndexList indices = s->selectedIndexes();
     if(indices.isEmpty()) {
         return;
@@ -75,7 +80,7 @@ void QueryView::copyc()
     QString selectedText;
 
     foreach(current, indices) {
-        QVariant data = tview->model()->data(prev);
+        QVariant data = qview->model()->data(prev);
         selectedText.append(data.toString());
         if(current.row() != prev.row())
             selectedText.append(QLatin1Char('\n'));
@@ -83,15 +88,15 @@ void QueryView::copyc()
             selectedText.append(QLatin1Char('\t'));
         prev = current;
     }
-    selectedText.append(tview->model()->data(last).toString());
+    selectedText.append(qview->model()->data(last).toString());
     selectedText.append(QLatin1Char('\n'));
     qApp->clipboard()->setText(selectedText);
 }
 
 void QueryView::copych()
 {
-    QAbstractItemModel* atm = tview->model();
-    QItemSelectionModel* s = tview->selectionModel();
+    QAbstractItemModel* atm = qview->model();
+    QItemSelectionModel* s = qview->selectionModel();
     QModelIndexList indices = s->selectedIndexes();
     if(indices.isEmpty())
         return;
@@ -129,4 +134,31 @@ void QueryView::copych()
     selectedText.append(atm->data(last).toString());
     selectedText.append(QLatin1Char('\n'));
     qApp->clipboard()->setText(headerText + selectedText);
+}
+
+void QueryView::fetchDataSlot(SqlMdl* smdl, int time, qint32 rows, qint32 cols)
+{
+    if(smdl->lastError().isValid()) {
+        emit errMesg(smdl->lastError().databaseText(), 1);
+        return;
+    }
+    if(smdl->rowCount() == 0) {
+        emit errMesg(smdl->lastError().databaseText(), 0);
+        return;
+    }
+    QString timeel = QApplication::translate("QueryView", "Time elapsed:", 0, QApplication::UnicodeUTF8);
+    QString rowsStr = QApplication::translate("QueryView", "Rows:", 0, QApplication::UnicodeUTF8);
+    QString colsStr = QApplication::translate("QueryView", "Columns:", 0, QApplication::UnicodeUTF8);
+    statusBar()->showMessage(timeel + QString::number((double)time/1000) +
+                             " s \t " + rowsStr + QString::number(rows) +
+                             " \t " + colsStr + QString::number(cols));
+    qview->setModel(smdl);
+    this->show();
+    setCursor(Qt::ArrowCursor);
+    emit finished();
+}
+
+void QueryView::busySlot()
+{
+    setCursor(Qt::WaitCursor);
 }

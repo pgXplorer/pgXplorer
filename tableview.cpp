@@ -1,33 +1,64 @@
 #include "tableview.h"
 
-TableView::TableView(QString const tblName, QString const name, Qt::WidgetAttribute f)
+ulong TableView::tableViewObjectId = 0;
+
+TableView::TableView(Database* db, QString const tblName, QString const name, Qt::WidgetAttribute f)
 {
+    //Identify this object with thisTableViewId for constructing database connection
+    //specific to this object and this object alone.
+    thisTableViewId = tableViewObjectId++;
+
+    //Thread busy indicator to avoid overlapping of threads.
+    //Initialise to false because obviously we don't have TableView
+    //GUI artifacts to create overlapping threads.
+    threadBusy = false;
+
+    //Bring in database connection parameters from Database object.
+    host =  db->getDb().hostName();
+    port = db->getDb().port();
+    dbname = db->getDb().databaseName();
+    user = db->getDb().userName();
+    password = db->getDb().password();
     t.start();
+
+    //
     quickFetch = true;
     tb = new QToolBar("Edit");
     this->addToolBar(Qt::TopToolBarArea, tb);
     tb->addSeparator();
     tb->setMovable(false);
     sql = "SELECT * FROM " + tblName;
-    
     tview = new QTableView(this);
     tview->resizeColumnsToContents();
-
     this->setWindowTitle(name);
+    this->setObjectName(name);
     tview->setStyleSheet("QTableView {font-weight: 400;}");
     tview->setAlternatingRowColors(true);
     this->setGeometry(100,100,640,480);
+
+    //Tie vertical scrollbar of TableView to fetch more data
     connect(tview->verticalScrollBar(), SIGNAL(valueChanged(int)),
             this, SLOT(fetchMore()));
+
+    //Create Ctrl+Shift+C key combo to copy selected table contents without headers.
     QShortcut* shortcut_ctrl_c = new QShortcut(QKeySequence::Copy, this);
     connect(shortcut_ctrl_c, SIGNAL(activated()), this, SLOT(copyc()));
+
+    //Create Ctrl+Shift+C key combo to copy selected table contents with headers.
     QShortcut* shortcut_ctrl_shft_c = new QShortcut(QKeySequence("Ctrl+Shift+C"), this);
     connect(shortcut_ctrl_shft_c, SIGNAL(activated()), this, SLOT(copych()));
-    connect(this, SIGNAL(updRowCntSignal(qint32,qint32,int)), this, SLOT(updRowCntSlot()));
+
+    //Tie thread finish to an update slot that refreshes meta-information.
+    connect(this, SIGNAL(updRowCntSignal()), this, SLOT(updRowCntSlot()));
+
+    //Tie a busy signal to a slot that changes the cursor to wait cursor.
+    connect(this, SIGNAL(busySignal()), this, SLOT(busySlot()));
     setCentralWidget(tview);
+    statusBar()->showMessage("Fetching data...");
     show();
-    
-    QFuture<void> future = QtConcurrent::run(this, &TableView::fetchData);
+
+    //Launch data retrieval as a future object (a different thread).
+    QFuture<void> future = QtConcurrent::run(this, &TableView::fetchData, host, port, dbname, user, password);
 }
 
 void TableView::contextMenuEvent(QContextMenuEvent *event)
@@ -49,20 +80,20 @@ void TableView::contextMenuEvent(QContextMenuEvent *event)
     QVariant data = tview->model()->data(index);
     if(data.canConvert<QString>()) {
         QMenu menu;
-        menu.addAction("Select");
-        menu.addAction("~Select");
-        QMenu* deselectMenu = new QMenu("Deselect");
+        menu.addAction("Filter");
+        menu.addAction("Exclude");
+        QMenu* deselectMenu = new QMenu("Remove filter");
         for(int i=0; i<whereCl.size(); i++)
             deselectMenu->addAction(whereCl.at(i));
         if(whereCl.size() > 1) {
             deselectMenu->addSeparator();
-            deselectMenu->addAction("All");
+            deselectMenu->addAction("All filters");
         }
         menu.addMenu(deselectMenu);
         menu.addSeparator();
         menu.addAction(QString(QChar(0x21e9)).append("Order"));
         menu.addAction(QString(QChar(0x21e7)).append("Order"));
-        QMenu* disarrangeMenu = new QMenu("Disarrange");
+        QMenu* disarrangeMenu = new QMenu("Remove order");
         int orderClSiz = orderCl.size();
         for(int i=0; i<orderClSiz; i++) {
             QString order = orderCl.at(i);
@@ -72,7 +103,7 @@ void TableView::contextMenuEvent(QContextMenuEvent *event)
         }
         if(orderClSiz > 1) {
             disarrangeMenu->addSeparator();
-            disarrangeMenu->addAction("All");
+            disarrangeMenu->addAction("All orders");
         }
         menu.addMenu(disarrangeMenu);
         /*
@@ -94,7 +125,7 @@ void TableView::contextMenuEvent(QContextMenuEvent *event)
         menu.addAction("Copy query");
 
         QAction *a = menu.exec(QCursor::pos());
-        if(a && QString::compare(a->text(),"Select")==0) {
+        if(a && QString::compare(a->text(),"Filter")==0) {
             statusBar()->showMessage("Fetching data...");
             QTime t;
             t.start();
@@ -124,16 +155,16 @@ void TableView::contextMenuEvent(QContextMenuEvent *event)
                 statusBar()->showMessage("An error occurred.");
                 return;
             }
-            rowcount = qryMdl->rowCount();
+            rowsTo  = qryMdl->rowCount();
             colcount = qryMdl->columnCount();
             tview->setModel(qryMdl);
-            //tview->hideColumn(0);
             statusBar()->showMessage("Time elapsed: " + QString::number((double)t.elapsed()/1000) +
-                                     " s \t Rows: " + QString::number(rowcount) +
+                                     " s \t Rows: " + QString::number(rowsFrom) +
+                                     " - " + QString::number(rowsTo) +
                                      " \t Columns: " + QString::number(colcount));
             return;
         }
-        else if(a && QString::compare(a->text(),"~Select")==0) {
+        else if(a && QString::compare(a->text(),"Exclude")==0) {
             statusBar()->showMessage("Fetching data...");
             QTime t;
             t.start();
@@ -161,16 +192,17 @@ void TableView::contextMenuEvent(QContextMenuEvent *event)
                 statusBar()->showMessage("An error occurred.");
                 return;
             }
-            rowcount = qryMdl->rowCount();
+            rowsTo = rowsFrom + qryMdl->rowCount();
             colcount = qryMdl->columnCount();
             tview->setModel(qryMdl);
             //tview->hideColumn(0);
             statusBar()->showMessage("Time elapsed: " + QString::number((double)t.elapsed()/1000) +
-                                     " s \t Rows: " + QString::number(rowcount) +
+                                     " s \t Rows: " + QString::number(rowsFrom) +
+                                     " - " + QString::number(rowsTo) +
                                      " \t Columns: " + QString::number(colcount));
             return;
         }
-        else if(a && QString::compare(a->text(),"All")==0) {
+        else if(a && QString::compare(a->text(),"All filters")==0) {
             statusBar()->showMessage("Fetching data...");
             whereCl.clear();
             QTime t;
@@ -188,12 +220,13 @@ void TableView::contextMenuEvent(QContextMenuEvent *event)
                 statusBar()->showMessage("An error occurred.");
                 return;
             }
-            rowcount = qryMdl->rowCount();
+            rowsTo = rowsFrom + qryMdl->rowCount();
             colcount = qryMdl->columnCount();
             tview->setModel(qryMdl);
             //tview->hideColumn(0);
             statusBar()->showMessage("Time elapsed: " + QString::number((double)t.elapsed()/1000) +
-                                     " s \t Rows: " + QString::number(rowcount) +
+                                     " s \t Rows: " + QString::number(rowsFrom) +
+                                     " - " + QString::number(rowsTo) +
                                      " \t Columns: " + QString::number(colcount));
             return;
         }
@@ -216,12 +249,13 @@ void TableView::contextMenuEvent(QContextMenuEvent *event)
                 statusBar()->showMessage("An error occurred.");
                 return;
             }
-            rowcount = qryMdl->rowCount();
+            rowsTo = rowsFrom + qryMdl->rowCount();
             colcount = qryMdl->columnCount();
             tview->setModel(qryMdl);
             //tview->hideColumn(0);
             statusBar()->showMessage("Time elapsed: " + QString::number((double)t.elapsed()/1000) +
-                                     " s \t Rows: " + QString::number(rowcount) +
+                                     " s \t Rows: " + QString::number(rowsFrom) +
+                                     " - " + QString::number(rowsTo) +
                                      " \t Columns: " + QString::number(colcount));
             return;
         }
@@ -244,12 +278,41 @@ void TableView::contextMenuEvent(QContextMenuEvent *event)
                 statusBar()->showMessage("An error occurred.");
                 return;
             }
-            rowcount = qryMdl->rowCount();
+            rowsTo = rowsFrom + qryMdl->rowCount();
             colcount = qryMdl->columnCount();
             tview->setModel(qryMdl);
             //tview->hideColumn(0);
             statusBar()->showMessage("Time elapsed: " + QString::number((double)t.elapsed()/1000) +
-                                     " s \t Rows: " + QString::number(rowcount) +
+                                     " s \t Rows: " + QString::number(rowsFrom) +
+                                     " - " + QString::number(rowsTo) +
+                                     " \t Columns: " + QString::number(colcount));
+            return;
+        }
+        else if(a && QString::compare(a->text(),"All orders")==0) {
+            statusBar()->showMessage("Fetching data...");
+            whereCl.clear();
+            QTime t;
+            t.start();
+            offsetList.clear();
+            offsetList.append(" OFFSET 0");
+            orderCl.clear();
+            orderClSiz = 0;
+            qryMdl->setQuery(sql + limit+ offsetList.last());
+            if (qryMdl->lastError().isValid()) {
+                QMessageBox* dbErr = new QMessageBox("pgXplorer", qryMdl->lastError().text(),
+                                                       QMessageBox::Critical, 1, 0, 0, this, 0, FALSE );
+                dbErr->setButtonText(1, "Close");
+                dbErr->show();
+                statusBar()->showMessage("An error occurred.");
+                return;
+            }
+            rowsTo = rowsFrom + qryMdl->rowCount();
+            colcount = qryMdl->columnCount();
+            tview->setModel(qryMdl);
+            //tview->hideColumn(0);
+            statusBar()->showMessage("Time elapsed: " + QString::number((double)t.elapsed()/1000) +
+                                     " s \t Rows: " + QString::number(rowsFrom) +
+                                     " - " + QString::number(rowsTo) +
                                      " \t Columns: " + QString::number(colcount));
             return;
         }
@@ -279,7 +342,7 @@ void TableView::contextMenuEvent(QContextMenuEvent *event)
                 statusBar()->showMessage("An error occurred.");
                 return;
             }
-            rowcount = qryMdl->rowCount();
+            rowsTo = rowsFrom + qryMdl->rowCount();
             colcount = qryMdl->columnCount();
             tview->setModel(qryMdl);
             //tview->hideColumn(0);
@@ -322,12 +385,13 @@ void TableView::contextMenuEvent(QContextMenuEvent *event)
                         statusBar()->showMessage("An error occurred.");
                         return;
                     }
-                    rowcount = qryMdl->rowCount();
+                    rowsTo = rowsFrom + qryMdl->rowCount();
                     colcount = qryMdl->columnCount();
                     tview->setModel(qryMdl);
                     //tview->hideColumn(0);
                     statusBar()->showMessage("Time elapsed: " + QString::number((double)t.elapsed()/1000) +
-                                             " s \t Rows: " + QString::number(rowcount) +
+                                             " s \t Rows: " + QString::number(rowsFrom) +
+                                             " - " + QString::number(rowsTo) +
                                              " \t Columns: " + QString::number(colcount));
                     return;
                 }
@@ -362,12 +426,13 @@ void TableView::contextMenuEvent(QContextMenuEvent *event)
                         statusBar()->showMessage("An error occurred.");
                         return;
                     }
-                    rowcount = qryMdl->rowCount();
+                    rowsTo = rowsFrom + qryMdl->rowCount();
                     colcount = qryMdl->columnCount();
                     tview->setModel(qryMdl);
                     //tview->hideColumn(0);
                     statusBar()->showMessage("Time elapsed: " + QString::number((double)t.elapsed()/1000) +
-                                             " s \t Rows: " + QString::number(rowcount) +
+                                             " s \t Rows: " + QString::number(rowsFrom) +
+                                             " - " + QString::number(rowsTo) +
                                              " \t Columns: " + QString::number(colcount));
                     return;
                 }
@@ -377,81 +442,205 @@ void TableView::contextMenuEvent(QContextMenuEvent *event)
     }
 }
 
-void TableView::fetchData()
+void TableView::fetchData(const QString srv, const qint32 port, const QString datab, const QString user, const QString pass)
 {
-    qryMdl = new QSqlQueryModel;
-    if(quickFetch) {
-        QString offset = " OFFSET " + QString::number(FETCHSIZ);
-        limit = " LIMIT " + QString::number(FETCHSIZ);
-        qryMdl->setQuery(sql + limit + offset);
-        if(qryMdl->rowCount() == 0)
-            canFetchMore = false;
-        else
-            canFetchMore = true;
-        offsetList.append(" OFFSET 0");
-        qryMdl->setQuery(sql + limit + offsetList.last());
+    {
+        emit busySignal();
+        QSqlDatabase sqldb;
+        sqldb = QSqlDatabase::addDatabase("QPSQL", "tableview" + sql + QString::number(thisTableViewId));
+        sqldb.setHostName(srv);
+        sqldb.setPort(port);
+        sqldb.setDatabaseName(datab);
+        sqldb.setUserName(user);
+        sqldb.setPassword(pass);
+        if (!sqldb.open()) {
+            qDebug() << qApp->tr("Couldn't connect to database.\n"
+                         "Check connection parameters.\n");
+            return;
+        }
+        qryMdl = new QSqlQueryModel;
+        if(quickFetch) {
+            QString offset = " OFFSET " + QString::number(FETCHSIZ);
+            limit = " LIMIT " + QString::number(FETCHSIZ);
+            qryMdl->setQuery(sql + limit + offset, sqldb);
+            if(qryMdl->rowCount() == 0)
+                canFetchMore = false;
+            else
+                canFetchMore = true;
+            offsetList.append(" OFFSET 0");
+            qryMdl->setQuery(sql + limit + offsetList.last(), sqldb);
+        }
+        else {
+            qryMdl->setQuery(sql, sqldb);
+        }
+
+        rowsFrom = 1;
+        rowsTo = qryMdl->rowCount();
+        colcount = qryMdl->columnCount();
+        emit updRowCntSignal();
     }
-    else {
-        qryMdl->setQuery(sql);
-    }
-    rowcount = qryMdl->rowCount();
-    colcount = qryMdl->columnCount();
-    updRowCntSignal(rowcount,colcount,t.elapsed());
+}
+
+void TableView::busySlot()
+{
+    threadBusy = true;
+    setCursor(Qt::WaitCursor);
 }
 
 void TableView::updRowCntSlot()
 {
     tview->setModel(qryMdl);
-    statusBar()->showMessage("Time elapsed: " + QString::number((double)t.elapsed()/1000) +
-                             " s \t Rows: " + QString::number(rowcount) +
-                             " \t Columns: " + QString::number(colcount));
+    tview->verticalScrollBar()->setValue(0);
+    if(rowsTo == 0)
+    {
+        statusBar()->showMessage("Time elapsed: " + QString::number((double)t.elapsed()/1000) +
+                                 " s \t Rows: 0" +
+                                 " \t Columns: " + QString::number(colcount));
+    }
+    else
+    {
+        statusBar()->showMessage("Time elapsed: " + QString::number((double)t.elapsed()/1000) +
+                                 " s \t Rows: " + QString::number(rowsFrom) +
+                                 " - " + QString::number(rowsTo) +
+                                 " \t Columns: " + QString::number(colcount));
+    }
+    setCursor(Qt::ArrowCursor);
+    threadBusy = false;
+}
+
+void TableView::fetchMoreData(const QString srv, const qint32 port, const QString datab, const QString user, const QString pass)
+{
+    {
+        //If previous thread is not done with, abort.
+        if(threadBusy)
+            return;
+        //Indicate that we are going to be retrieving data and busy.
+        emit busySignal();
+
+        QSqlDatabase::removeDatabase("tableview" + sql + QString::number(thisTableViewId));
+        QSqlDatabase sqldb;
+        sqldb = QSqlDatabase::addDatabase("QPSQL", "tableview" + sql + QString::number(thisTableViewId));
+        sqldb.setHostName(srv);
+        sqldb.setPort(port);
+        sqldb.setDatabaseName(datab);
+        sqldb.setUserName(user);
+        sqldb.setPassword(pass);
+        if (!sqldb.open()) {
+            qDebug() << qApp->tr("Couldn't connect to database.\n"
+                         "Check connection parameters.\n");
+            return;
+        }
+
+        // Test the next batch of offset to set 'canFetchMore'.
+        // This boolean variable determines if we need to fetch more data
+        // after current batch.
+        qryMdl = new QSqlQueryModel;
+        QString offset = " OFFSET " + QString::number((offsetList.size()+1)*FETCHSIZ);
+        if(whereCl.isEmpty())
+            qryMdl->setQuery(sql + (orderCl.size() > 0 ? " ORDER BY " + orderCl.join(","):"") + limit + offset, sqldb);
+        else
+            qryMdl->setQuery(sql + " WHERE " + whereCl.join(" AND ") + (orderCl.size() > 0 ? " ORDER BY " + orderCl.join(","):"") + limit + offset, sqldb);
+        if(qryMdl->rowCount() == 0)
+            canFetchMore = false;
+        else
+            canFetchMore = true;
+        rowsFrom = offsetList.size()*FETCHSIZ + 1;
+        offsetList.append(" OFFSET " + QString::number(rowsFrom - 1));
+        if(whereCl.isEmpty())
+            qryMdl->setQuery(sql + (orderCl.size() > 0 ? " ORDER BY " + orderCl.join(","):"") + limit + offsetList.last(), sqldb);
+        else
+            qryMdl->setQuery(sql + " WHERE " + whereCl.join(" AND ") + (orderCl.size() > 0 ? " ORDER BY " + orderCl.join(","):"") + limit + offsetList.last(), sqldb);
+        // Cannot call GUI objects in non-GUI thread.
+        // So commenting out the sql error box.
+        /*if (qryMdl->lastError().isValid()) {
+            QMessageBox* dbErr = new QMessageBox("pgXplorer", qryMdl->lastError().text(),
+                                                   QMessageBox::Critical, 1, 0, 0, this, 0, FALSE );
+            dbErr->setButtonText(1, "Close");
+            dbErr->show();
+            statusBar()->showMessage("An error occurred.");
+            return;
+        }*/
+        rowsTo = rowsFrom + qryMdl->rowCount() - 1;
+        colcount = qryMdl->columnCount();
+        emit updRowCntSignal();
+    }
+}
+
+void TableView::fetchMoreData2(const QString srv, const qint32 port, const QString datab, const QString user, const QString pass)
+{
+    {
+        QSqlDatabase sqldb;
+        sqldb = QSqlDatabase::addDatabase("QPSQL", "tableviewMore2" + sql + offsetList.last());
+        sqldb.setHostName(srv);
+        sqldb.setPort(port);
+        sqldb.setDatabaseName(datab);
+        sqldb.setUserName(user);
+        sqldb.setPassword(pass);
+        if (!sqldb.open()) {
+            qDebug() << qApp->tr("Couldn't connect to database.\n"
+                         "Check connection parameters.\n");
+            return;
+        }
+
+        // Test the next batch of offset to set 'canFetchMore'.
+        // This boolean variable determines if we need to fetch more data
+        // after current batch.
+        qryMdl = new QSqlQueryModel;
+        QString offset = " OFFSET " + QString::number(offsetList.size()*FETCHSIZ);
+        if(whereCl.isEmpty())
+            qryMdl->setQuery(sql + (orderCl.size() > 0 ? " ORDER BY " + orderCl.join(","):"") + limit + offset, sqldb);
+        else
+            qryMdl->setQuery(sql + " WHERE " + whereCl.join(" AND ") + (orderCl.size() > 0 ? " ORDER BY " + orderCl.join(","):"") + limit + offset, sqldb);
+        if(qryMdl->rowCount() == 0)
+            canFetchMore = false;
+        else
+            canFetchMore = true;
+
+        offsetList.append(" OFFSET " + QString::number((offsetList.size()-1)*FETCHSIZ));
+        if(whereCl.isEmpty())
+            qryMdl->setQuery(sql + (orderCl.size() > 0 ? " ORDER BY " + orderCl.join(","):"") + limit + offsetList.last(), sqldb);
+        else
+            qryMdl->setQuery(sql + " WHERE " + whereCl.join(" AND ") + (orderCl.size() > 0 ? " ORDER BY " + orderCl.join(","):"") + limit + offsetList.last(), sqldb);
+        // Cannot call GUI objects in non-GUI thread.
+        // So commenting out the sql error box.
+        /*if (qryMdl->lastError().isValid()) {
+            QMessageBox* dbErr = new QMessageBox("pgXplorer", qryMdl->lastError().text(),
+                                                   QMessageBox::Critical, 1, 0, 0, this, 0, FALSE );
+            dbErr->setButtonText(1, "Close");
+            dbErr->show();
+            statusBar()->showMessage("An error occurred.");
+            return;
+        }*/
+        rowsTo = rowsFrom + qryMdl->rowCount();
+        colcount = qryMdl->columnCount();
+        updRowCntSignal();
+    }
 }
 
 void TableView::fetchMore()
 {
+    //Check if vertical scrollbar is at the bottom-most position to trigger
+    //fetching of more data from database. Data retrieval launched as a
+    //future object (separate thread).
     if(qryMdl->rowCount() >= FETCHSIZ &&
-       tview->verticalScrollBar()->value() == tview->verticalScrollBar()->maximum())
+        tview->verticalScrollBar()->value() == tview->verticalScrollBar()->maximum()) {
         if(canFetchMore) {
             statusBar()->showMessage("Fetching more data...");
-            QTime t;
             t.start();
-            QString offset = " OFFSET " + QString::number((offsetList.size()+1)*FETCHSIZ);
-            if(whereCl.isEmpty())
-                qryMdl->setQuery(sql + (orderCl.size() > 0 ? " ORDER BY " + orderCl.join(","):"") + limit + offset);
-            else
-                qryMdl->setQuery(sql + " WHERE " + whereCl.join(" AND ") + (orderCl.size() > 0 ? " ORDER BY " + orderCl.join(","):"") + limit+ offset);
-            if(qryMdl->rowCount() == 0)
-                canFetchMore = false;
-            else
-                canFetchMore = true;
-            offsetList.append(" OFFSET " + QString::number(offsetList.size()*FETCHSIZ));
-            if(whereCl.isEmpty())
-                qryMdl->setQuery(sql + (orderCl.size() > 0 ? " ORDER BY " + orderCl.join(","):"") + limit + offsetList.last());
-            else
-                qryMdl->setQuery(sql + " WHERE " + whereCl.join(" AND ") + (orderCl.size() > 0 ? " ORDER BY " + orderCl.join(","):"") + limit+ offsetList.last());
-            if (qryMdl->lastError().isValid()) {
-                QMessageBox* dbErr = new QMessageBox("pgXplorer", qryMdl->lastError().text(),
-                                                       QMessageBox::Critical, 1, 0, 0, this, 0, FALSE );
-                dbErr->setButtonText(1, "Close");
-                dbErr->show();
-                statusBar()->showMessage("An error occurred.");
-                return;
-            }
-            rowcount = qryMdl->rowCount();
-            colcount = qryMdl->columnCount();
-            tview->setModel(qryMdl);
-            //tview->hideColumn(0);
-            statusBar()->showMessage("Time elapsed: " + QString::number((double)t.elapsed()/1000) +
-                                     " s \t Rows: " + QString::number(rowcount) +
-                                     " \t Columns: " + QString::number(colcount));
+            QFuture<void> future = QtConcurrent::run(this, &TableView::fetchMoreData, host, port, dbname, user, password);
         }
+    }
 }
 
 void TableView::closeEvent(QCloseEvent *event)
 {
-    delete tview;
-    delete qryMdl;
-    close();
+    if(!threadBusy)
+    {
+        delete tview;
+        delete qryMdl;
+        QSqlDatabase::removeDatabase("tableview" + sql + QString::number(thisTableViewId));
+        QWidget::close();
+    }
 }
 
 void TableView::copyc()

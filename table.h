@@ -4,6 +4,7 @@
 #include <QMouseEvent>
 #include <QSqlTableModel>
 #include <QtGui>
+#include "database.h"
 #include "tableLink.h"
 
 #define TABLE_WIDTH 80
@@ -15,6 +16,7 @@ class Table : public QObject, public QGraphicsItem
     Q_INTERFACES(QGraphicsItem)
 
 private:
+    Database* db;
     QSqlQueryModel* model;
     Schema* schPar;
     QString name;
@@ -30,7 +32,7 @@ public:
     {
         return Type;
     }
-    Table(Schema* parent, QString tblName);
+    Table(Database* db, Schema* parent, QString tblName);
     ~Table(){};
     bool advance();
     void addEdge(TableLink *edge);
@@ -142,12 +144,12 @@ public:
     void showView2(Table*);
 
 private slots:
-    void showView(Schema*,Table*);
-    void hideView(Schema*,Table*);
+    void showView(Database*, Schema*, Table*);
+    void hideView(Database*, Schema*, Table*);
 
 Q_SIGNALS:
-    void expand(Schema*,Table*);
-    void collapse(Schema*,Table*);
+    void expand(Database*, Schema*, Table*);
+    void collapse(Database*, Schema*, Table*);
 };
 
 #endif // TABLE_H

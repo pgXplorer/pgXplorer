@@ -1,9 +1,11 @@
+#include "mainWin.h"
+#include "database.h"
 #include "table.h"
 #include "schema.h"
-#include "mainWin.h"
 
-Table::Table(Schema* sch, QString tblName)
+Table::Table(Database* db, Schema* sch, QString tblName)
 {
+    this->db = db;
     int xs = sch->x();
     int ys = sch->y();
     int siz = sch->getTblList().size();
@@ -72,35 +74,18 @@ void Table::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *)
         this->setCollapsed(true);
         emit collapse(this);
     }*/
-    emit expand(this->getParent(),this);
+    emit expand(this->db, this->getParent(), this);
     update();
 }
 
-void Table::showView(Schema* sch, Table *tbl)
+void Table::showView(Database* db, Schema* sch, Table *tbl)
 {
-    /*
-    QSqlTableModel* model = new QSqlTableModel;
-
-    // Construct proper tablename name for data
-    // retrieval as well as the titlebar.
-    QString tblName = sch->getName();
-    tblName.append(".");
-    tblName.append(tbl->getName());
-
-    model->setTable(tblName);
-    model->setEditStrategy(QSqlTableModel::OnManualSubmit);
-    model->select();
-
-    tbl->setModel(model);
-
-    View* view = new View(model, tblName, Qt::WA_DeleteOnClose);
-    */
     LaunchTable* lt = new LaunchTable;
     lt->start();
-    lt->showTbl(sch,tbl);
+    lt->showTbl(db, sch, tbl);
 }
 
-void Table::hideView(Schema*, Table*)
+void Table::hideView(Database*, Schema*, Table*)
 {
 
 }

@@ -18,6 +18,12 @@
 #include "libpq-fe.h"
 #include "pgxconsole.h"
 
+QString MainWin::hostS = "127.0.0.1";
+int MainWin::portS = 5432;
+QString MainWin::dbnameS = "";
+QString MainWin::userS = "postgres";
+QString MainWin::passwordS = "postgres";
+
 FigureEditor::FigureEditor(
         QGraphicsScene& s, QWidget* parent,
         const char* name, Qt::WindowFlags f) :
@@ -77,6 +83,11 @@ MainWin::MainWin(QGraphicsScene& c, QWidget* parent, const char* name, Qt::Windo
 
 void MainWin::closeEvent(QCloseEvent *event)
 {
+    {
+        QSqlDatabase sqldb = QSqlDatabase::database("base");
+        sqldb.close();
+    }
+    QSqlDatabase::removeDatabase("base");
     writeSettings();
     qApp->quit();
 }
@@ -139,17 +150,13 @@ void MainWin::open(QString fileName)
     scn.addItem(db);
     QObject::connect(db, SIGNAL(expand(Database*)), this, SLOT(addSchema(Database*)));
     QObject::connect(db, SIGNAL(collapse(Database*)), this, SLOT(delSchema(Database*)));
-    QString srv;
-    fileStrm >> srv;
-    quint32 port;
-    fileStrm >> port;
-    QString datab;
-    fileStrm >> datab;
-    QString user;
-    fileStrm >> user;
-    QString pass;
-    fileStrm >> pass;
-    db->setConnProps(srv, port, datab, user, pass);
+
+    fileStrm >> hostS;
+    fileStrm >> portS;
+    fileStrm >> dbnameS;
+    fileStrm >> userS;
+    fileStrm >> passwordS;
+    db->setConnProps(hostS, portS, dbnameS, userS, passwordS);
 
     this->setWindowTitle("pgXplorer - " + fileName);
 }
@@ -334,8 +341,9 @@ void MainWin::console()
     // Goal: Accept all possible Postgresql related
     // DDL and DML commands and produce output
     // accordingly.
-    PgxConsole *pgxconsole = new PgxConsole();
+    PgxConsole *pgxconsole = new PgxConsole(0);
     pgxconsole->insertPlainText("");
+    pgxconsole->setDbPros(MainWin::hostS, MainWin::portS, MainWin::dbnameS, MainWin::userS, MainWin::passwordS);
     pgxconsole->show();
 }
 
@@ -350,8 +358,8 @@ void MainWin::addSchema(Database* db)
             SchemaLink* lnk = new SchemaLink(db, sch);
             lnk->setParentItem(db);
             lnk->setFlag(QGraphicsItem::ItemStacksBehindParent);
-            QObject::connect(sch, SIGNAL(expand(Schema*)), this, SLOT(addTable(Schema*)));
-            QObject::connect(sch, SIGNAL(collapse(Schema*)), this, SLOT(delTable(Schema*)));
+            QObject::connect(sch, SIGNAL(expand(Database*, Schema*)), this, SLOT(addTable(Database*, Schema*)));
+            QObject::connect(sch, SIGNAL(collapse(Database*, Schema*)), this, SLOT(delTable(Database*, Schema*)));
         }
     }
     else {
@@ -371,19 +379,19 @@ void MainWin::delSchema(Database* db)
         L.at(i)->setVisible(false);
 }
 
-void MainWin::addTable(Schema* sch)
+void MainWin::addTable(Database* db, Schema* sch)
 {
     // If table list not populated, populate it.
     // Afterwards, display the table list.
     if(sch->childItems().count() == 0) {
         int tblListSiz = sch->getTblList().size();
         for (int i = 0; i < tblListSiz; ++i) {
-            Table* tbl = new Table(sch, sch->getTblList().at(i));
+            Table* tbl = new Table(db, sch, sch->getTblList().at(i));
             TableLink* lnk = new TableLink(sch, tbl);
             lnk->setParentItem(sch);
             lnk->setFlag(QGraphicsItem::ItemStacksBehindParent);
-            QObject::connect(tbl, SIGNAL(expand(Schema*,Table*)), tbl, SLOT(showView(Schema*,Table*)));
-            QObject::connect(tbl, SIGNAL(collapse(Schema*,Table*)), tbl, SLOT(hideView(Schema*,Table*)));
+            QObject::connect(tbl, SIGNAL(expand(Database*, Schema*, Table*)), tbl, SLOT(showView(Database*, Schema*, Table*)));
+            QObject::connect(tbl, SIGNAL(collapse(Database*, Schema*, Table*)), tbl, SLOT(hideView(Database*, Schema*, Table*)));
         }
     }
     else {
@@ -394,7 +402,7 @@ void MainWin::addTable(Schema* sch)
     }
 }
 
-void MainWin::delTable(Schema* sch)
+void MainWin::delTable(Database* db, Schema* sch)
 {
     // Remove a schema from the database.
     QList<QGraphicsItem*> L = sch->childItems();
@@ -403,22 +411,16 @@ void MainWin::delTable(Schema* sch)
         //Table* t = qgraphicsitem_cast<Table *>(L.at(i));
 }
 
-void LaunchTable::showTbl(Schema* sch, Table *tbl)
+void LaunchTable::showTbl(Database* db, Schema* sch, Table *tbl)
 {
-    //QSqlQueryModel* model = new QSqlQueryModel;
     // Construct proper tablename name for data
     // retrieval as well as the titlebar.
     QString tblName = sch->getName();
     tblName.append(".");
     tblName.append(tbl->getName());
-    //QTime t;
-    //t.start();
-    //model->setQuery("SELECT * FROM " + tblName + " LIMIT 200000 OFFSET 0;");
-    //model->setEditStrategy(QSqlQueryModel::OnManualSubmit);
-    //model->select();
-    //model->rowCount();
-    //tbl->setModel(model);
-    TableView* tview = new TableView(tblName, tblName, Qt::WA_DeleteOnClose);
+
+    TableView* tview = new TableView(db, tblName, tblName, Qt::WA_DeleteOnClose);
+    //tview->setParent();
     tview->show();
 }
 

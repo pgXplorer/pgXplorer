@@ -149,8 +149,8 @@ public:
     virtual void contextMenuEvent ( QGraphicsSceneContextMenuEvent *);
 
 Q_SIGNALS:
-    void expand(Schema*);
-    void collapse(Schema*);
+    void expand(Database*, Schema*);
+    void collapse(Database*, Schema*);
 };
 
 #endif // SCHEMA_H

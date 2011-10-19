@@ -5,8 +5,9 @@
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QtGui>
+#include "database.h"
 
-#define FETCHSIZ 10000
+#define FETCHSIZ 100000
 
 class TableView : public QMainWindow
 {
@@ -25,15 +26,24 @@ private:
     QStringList offsetList;
     bool quickFetch;
     bool canFetchMore;
-    qint32 rowcount;
+    qint32 rowsFrom;
+    qint32 rowsTo;
     qint32 colcount;
+    QString host;
+    int port;
+    QString dbname;
+    QString user;
+    QString password;
+    bool threadBusy;
+    ulong thisTableViewId;
 
 public:
-    TableView(QString const, QString const, Qt::WidgetAttribute f);
-    ~TableView() {
-        delete qryMdl;
-        delete tview;
-    }
+    static ulong tableViewObjectId;
+    TableView(Database*, QString const, QString const, Qt::WidgetAttribute f);
+    ~TableView()
+    {
+    };
+
     virtual void contextMenuEvent(QContextMenuEvent *);
     virtual void closeEvent(QCloseEvent *);
     QSqlQueryModel* getMdl()
@@ -46,15 +56,20 @@ public:
         this->qryMdl = qryMdl;
     }
 
+    void fetchMoreData(const QString, const qint32, const QString, const QString, const QString);
+    void fetchMoreData2(const QString, const qint32, const QString, const QString, const QString);
+
 private slots:
-    void fetchData();
+    void fetchData(const QString, const qint32, const QString, const QString, const QString);
     void fetchMore();
     void copyc();
     void copych();
+    void busySlot();
     void updRowCntSlot();
 
 Q_SIGNALS:
-    void updRowCntSignal(qint32,qint32,int);
+    void busySignal();
+    void updRowCntSignal();
 };
 
 #endif // TABLEVIEW_H

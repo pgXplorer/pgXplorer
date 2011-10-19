@@ -49,7 +49,7 @@ void Database::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
     QAction *a = menu.exec(event->screenPos());
     if(a && QString::compare(a->text(),"Remove")==0) {
         if(QSqlDatabase::connectionNames().length()>0)
-            QSqlDatabase::removeDatabase(QSqlDatabase::connectionNames().at(0));
+            QSqlDatabase::removeDatabase("base");
         delDatabase(this);
     }
     else if(a && QString::compare(a->text(),"Expand")==0) {
@@ -79,11 +79,12 @@ bool Database::populate()
     QList<QString> schlist;
     setSchList(schlist);
     {
-        QSqlQuery query;
-        query.exec("SELECT DISTINCT nspname FROM pg_namespace WHERE nspname \
-                    NOT LIKE 'pg_%' AND nspname<>'information_schema' ORDER BY nspname;");
-        while (query.next())
-             schlist << query.value(0).toString();
+        QSqlQuery* query = new QSqlQuery(db);
+        query->exec("SELECT DISTINCT nspname FROM pg_namespace WHERE \
+                   nspname NOT LIKE 'pg_%' AND nspname<>'information_schema' \
+                   ORDER BY nspname;");
+        while (query->next())
+             schlist << query->value(0).toString();
     }
     setSchList(schlist);
     setStatus(true);
@@ -93,8 +94,8 @@ bool Database::populate()
 bool Database::setConnProps(const QString srv, const qint32 port, const QString datab, const QString user, const QString pass)
 {
     if(QSqlDatabase::connectionNames().length()>0)
-        QSqlDatabase::removeDatabase(QSqlDatabase::connectionNames().at(0));
-    QSqlDatabase db;
+        QSqlDatabase::removeDatabase("base");
+
     QStringList drvs(db.drivers());
     if(!drvs.contains("QPSQL")) {
         QMessageBox::critical(0, qApp->tr("Database error"),
@@ -102,7 +103,7 @@ bool Database::setConnProps(const QString srv, const qint32 port, const QString 
                      "No PostgreSQL support.\n"), QMessageBox::Cancel);
         return false;
     }
-    db = QSqlDatabase::addDatabase("QPSQL");
+    db = QSqlDatabase::addDatabase("QPSQL", "base");
     db.setHostName(srv);
     db.setPort(port);
     db.setDatabaseName(datab);

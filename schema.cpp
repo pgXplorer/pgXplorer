@@ -16,13 +16,14 @@ Schema::Schema(Database* db, QString schName)
     setStatus(false);
     setCollapsed(true);
     QList<QString> tbllist;
-    QSqlQuery query;
+    setParent(db);
+    QSqlQuery* query = new QSqlQuery(db->getDb());
     //query.prepare("SELECT tablename FROM pg_tables WHERE schemaname=?");
     //query.addBindValue(schName);
     //query.exec();
-    query.exec("SELECT tablename FROM pg_tables WHERE schemaname='" + schName + "'");
-    while (query.next())
-         tbllist << query.value(0).toString();
+    query->exec("SELECT tablename FROM pg_tables WHERE schemaname='" + schName + "'");
+    while (query->next())
+         tbllist << query->value(0).toString();
     setTblList(tbllist);
     setFlag(QGraphicsItem::ItemIsMovable);
     setFlag(QGraphicsItem::ItemIsSelectable);
@@ -36,11 +37,11 @@ void Schema::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *)
 {
     if(getCollapsed()) {
         this->setCollapsed(false);
-        emit expand(this);
+        emit expand(getParent(), this);
     }
     else {
         this->setCollapsed(true);
-        emit collapse(this);
+        emit collapse(getParent(), this);
     }
     update();
 }

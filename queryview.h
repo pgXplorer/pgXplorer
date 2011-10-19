@@ -5,16 +5,20 @@
 #include <QSqlError>
 #include <QtGui>
 #include <QObject>
+#include "pgxconsole.h"
 
 class QueryView : public QMainWindow
 {
     Q_OBJECT
 private:
-    QTableView *tview;
+    QTableView *qview;
+    QString sql;
+    QStringList whereCl;
+    QStringList orderCl;
+    ulong thisQueryViewId;
 
 public:
-    /*! QueryView2 launch the query.
-     */
+    static ulong queryViewObjectId;
     QueryView(QWidget *parent, QSqlQueryModel*, QString const,
                int const, int const, int const, Qt::WidgetAttribute);
     ~QueryView();
@@ -23,15 +27,22 @@ public:
     //virtual void keyPressEvent(QKeyEvent *e);
     void setMod(QSqlQueryModel* mod)
     {
-       tview->setModel(mod);
+       qview->setModel(mod);
+    }
+    ulong getId()
+    {
+        return this->thisQueryViewId;
     }
 
 private slots:
     void copyc();
     void copych();
+    void fetchDataSlot(SqlMdl*, int, qint32, qint32);
+    void busySlot();
 
 Q_SIGNALS:
-
+    void errMesg(QString, uint);
+    void finished();
 };
 
 #endif // QUERYVIEW_H

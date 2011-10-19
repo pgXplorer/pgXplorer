@@ -51,6 +51,11 @@ public:
     {
         return scn;
     }
+    static QString hostS;
+    static int portS;
+    static QString dbnameS;
+    static QString userS;
+    static QString passwordS;
 
 public slots:
     void help();
@@ -70,8 +75,8 @@ private slots:
     void console();
     void addSchema(Database*);
     void delSchema(Database*);
-    void addTable(Schema*);
-    void delTable(Schema*);
+    void addTable(Database*, Schema*);
+    void delTable(Database*, Schema*);
     void enlarge();
     void shrink();
     void zoomIn();
@@ -117,7 +122,7 @@ private:
 class LaunchTable : public QThread
 {
 public:
-     void showTbl(Schema*, Table*);
+     void showTbl(Database*, Schema*, Table*);
      void runQry(QString);
 };
 

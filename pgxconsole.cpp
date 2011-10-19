@@ -1,11 +1,14 @@
 #include "pgxconsole.h"
 #include "queryview.h"
 #include "explainview.h"
-#include <QSqlQueryModel>
-#include <QSqlQuery>
 
 PgxConsole::PgxConsole(QWidget *parent) : QPlainTextEdit(parent)
 {
+    //host =  db->getDb().hostName();
+    //port = db->getDb().port();
+    //dbname = db->getDb().databaseName();
+    //user = db->getDb().userName();
+    //password = db->getDb().password();
     setViewportMargins(10, 0, 0, 0);
     setTabStopWidth(40);
     setUndoRedoEnabled(false);
@@ -15,22 +18,21 @@ PgxConsole::PgxConsole(QWidget *parent) : QPlainTextEdit(parent)
     highlighter = new Highlighter(document());
     prompt = new Prompt(this);
     QShortcut *shortcut_paste = new QShortcut(QKeySequence::Paste, this);
+
+    //Enable pasting of text from clipboard.
     connect(shortcut_paste, SIGNAL(activated()), this, SLOT(paste_cmd()));
+
     connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(curChanged()));
-    connect(this, SIGNAL(cmd(QKeyEvent *)), this, SLOT(showView(QKeyEvent *)));
+
+    //Tie command with QueryView creation.
+    connect(this, SIGNAL(cmdS(QKeyEvent *)), this, SLOT(showView(QKeyEvent *)));
+
+    //Tie up and down keys with command history scolling
     connect(this, SIGNAL(histUp()), this, SLOT(histUpCmd()));
     connect(this, SIGNAL(histDn()), this, SLOT(histDnCmd()));
     //connect(this, SIGNAL(blockCountChanged(int)), this, SLOT(updatePromptWidth(int)));
     connect(this, SIGNAL(updateRequest(QRect,int)), this, SLOT(updatePrompt(QRect,int)));
-    //updatePromptWidth(0);
 }
-
-/*
-void PgxConsole::updatePromptWidth(int)
-{
-    setViewportMargins(10, 0, 0, 0);
-}
-*/
 
 void PgxConsole::updatePrompt(const QRect &rect, int dy)
 {
@@ -63,17 +65,18 @@ void PgxConsole::promptPaintEvent(QPaintEvent *event)
                  pr = QString("x");
                  painter.setPen(QColor(255,127,127));
              }
+             else if(block.text().startsWith("LINE 1")) {
+                 pr = QString(" ");
+             }
              else if(block.text().startsWith("Driver not loaded")) {
                  pr = QString("x");
                  painter.setPen(QColor(255,127,127));
              }
              else if(block.text().startsWith("WARNING")) {
                  pr = QString(" ");
-                 painter.setPen(QColor(255,127,127));
              }
              else if(block.text().startsWith("MESSAGE")) {
                  pr = QString(" ");
-                 painter.setPen(QColor(255,127,127));
              }
              else// if(block == firstVisibleBlock()) {
              {
@@ -131,7 +134,7 @@ void PgxConsole::keyPressEvent(QKeyEvent * e)
         break;
     case Qt::Key_Return:
     case Qt::Key_Enter:
-        emit cmd(e);
+        emit cmdS(e);
         //QPlainTextEdit::keyPressEvent(e);
         break;
     case Qt::Key_Backslash:
@@ -145,10 +148,8 @@ void PgxConsole::keyPressEvent(QKeyEvent * e)
 
 void PgxConsole::wheelEvent(QWheelEvent *wheelEvent)
 {
-    // BEGIN TODO 2
     wheelEvent->accept();
     QFontMetrics df = fontMetrics();
-    // END TODO 2
 }
 
 void PgxConsole::showView(QKeyEvent * e)
@@ -161,7 +162,7 @@ void PgxConsole::showView(QKeyEvent * e)
     QTextBlock block = document()->end();
     if(!block.isValid())
         block = block.previous();
-    QString cmd = block.text().trimmed();
+    cmd = block.text().trimmed();
     for (block = block.previous(); block.text().endsWith("\\"); block = block.previous())
         cmd.insert(0, block.text().trimmed().replace(QString("\\"), QString(" ")));
     // Do nothing on whitespace input.
@@ -269,6 +270,7 @@ void PgxConsole::showView(QKeyEvent * e)
         eview->setColumnWidth(0, eview->width() - width);
         eview->resizeRowsToContents();
         eview->show();
+        appendPlainText("");
     }
     // DDL, DML queries display.
     else
@@ -293,6 +295,7 @@ void PgxConsole::showView(QKeyEvent * e)
         }
         else
         {
+            /*
             QSqlQueryModel* model = new QSqlQueryModel;
             model->setQuery(cmd);
             if (model->lastError().isValid()) {
@@ -307,9 +310,44 @@ void PgxConsole::showView(QKeyEvent * e)
             QueryView* qview = new QueryView(0, model, cmd, t.elapsed(), model->rowCount(),
                                                model->columnCount(), Qt::WA_DeleteOnClose);
             qview->show();
+            */
+            SqlMdl* smdl = new SqlMdl;
+            QueryView* qview = new QueryView(0, smdl, cmd, t.elapsed(), smdl->rowCount(),
+                                               smdl->columnCount(), Qt::WA_DeleteOnClose);
+            connect(smdl, SIGNAL(fetchDataSignal(SqlMdl*, int, qint32, qint32)), qview, SLOT(fetchDataSlot(SqlMdl*, int, qint32, qint32)));
+            connect(qview, SIGNAL(errMesg(QString, uint)), this, SLOT(getErrMesg(QString, uint)));
+            //connect(qview, SIGNAL(finished()), this, SLOT(finish()));
+            connect(smdl, SIGNAL(busySignal()), qview, SLOT(busySlot()));
+            connect(smdl, SIGNAL(busySignal()), this, SLOT(finish()));
+            QStringList runVars;
+            runVars << host << QString::number(port) << dbname << user << password << QString::number(qview->getId());
+            QFuture<void> future = QtConcurrent::run(smdl, &SqlMdl::fetchData, smdl, cmd, runVars);
         }
     }
-    appendPlainText("");
+    //appendPlainText("");
+    //appendHtml("");
+}
+
+void SqlMdl::fetchData(SqlMdl* smdl, QString cmd, QStringList vars)
+{
+    emit busySignal();
+    QTime ts;
+    ts.start();
+    QSqlDatabase sqldb;
+    sqldb = QSqlDatabase::addDatabase("QPSQL", "queryview" + cmd + vars.at(5));
+    sqldb.setHostName(vars.at(0));
+    sqldb.setPort(vars.at(1).toInt());
+    sqldb.setDatabaseName(vars.at(2));
+    sqldb.setUserName(vars.at(3));
+    sqldb.setPassword(vars.at(4));
+    if (!sqldb.open()) {
+        qDebug() << qApp->tr("Couldn't connect to database.\n"
+                     "Check connection parameters.\n");
+        return;
+    }
+    smdl->setQuery(cmd, sqldb);
+
+    fetchDataSignal(smdl, ts.elapsed(), smdl->rowCount(), smdl->columnCount());
 }
 
 void PgxConsole::curChanged()
@@ -339,6 +377,26 @@ void PgxConsole::paste_cmd()
         }*/
         paste();
     }
+}
+
+void PgxConsole::getErrMesg(QString mesg, uint count)
+{
+    if(count == 1)
+    {
+        QStringList mesgs = mesg.split("\n");
+        this->insertPlainText(mesgs.at(0) + "\n" + mesgs.at(1));
+        this->appendPlainText("");
+    }
+    else
+    {
+        //this->appendPlainText(QApplication::translate("PgxConsole", "MESSAGE: No rows to display.\n", 0, QApplication::UnicodeUTF8));
+        this->insertPlainText(QApplication::translate("PgxConsole", "MESSAGE: No rows to display.\n", 0, QApplication::UnicodeUTF8));
+    }
+}
+
+void PgxConsole::finish()
+{
+    this->appendPlainText("");
 }
 
 void PgxConsole::histUpCmd()
@@ -384,6 +442,15 @@ void PgxConsole::createWidgets()
     completer->setWidget(this);
     completer->setCompletionMode(QCompleter::PopupCompletion);
     completer->setWrapAround(true);
+}
+
+void PgxConsole::setDbPros(QString hostS, int portS, QString dbnameS, QString userS, QString passwordS)
+{
+    host = hostS;
+    port = portS;
+    dbname = dbnameS;
+    user = userS;
+    password = passwordS;
 }
 
 Highlighter::Highlighter(QTextDocument *parent)
@@ -448,3 +515,12 @@ void Highlighter::highlightBlock(const QString &text)
     }
     setCurrentBlockState(0);
 }
+
+/*
+void PgxConsole::closeEvent(QCloseEvent *event)
+{
+    delete highlighter;
+    delete prompt;
+    close();
+}
+*/
