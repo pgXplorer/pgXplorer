@@ -9,31 +9,54 @@ QueryView::QueryView(QWidget *parent, QSqlQueryModel* model, QString const name,
     //specific to this object and this object alone.
     thisQueryViewId = queryViewObjectId++;
 
+    //Thread busy indicator to avoid crashing of app when
+    //QueryView receives a close signal before data retrieval.
+    threadBusy = false;
+
     qview = new QTableView(this);
     qview->resizeColumnsToContents();
     setCentralWidget(qview);
     QString timeel = QApplication::translate("QueryView", "Time elapsed:", 0, QApplication::UnicodeUTF8);
     QString rowsStr = QApplication::translate("QueryView", "Rows:", 0, QApplication::UnicodeUTF8);
     QString colsStr = QApplication::translate("QueryView", "Columns:", 0, QApplication::UnicodeUTF8);
-    statusBar()->showMessage(timeel + QString::number((double)time/1000) +
-                             " s \t " + rowsStr + QString::number(rows) +
-                             " \t " + colsStr + QString::number(cols));
+    statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0, QApplication::UnicodeUTF8));
     //qview->setModel(model);
     setWindowTitle(name);
     qview->setStyleSheet("QTableView {font-weight: 400;}");
     qview->setAlternatingRowColors(true);
     setGeometry(100,100,640,480);
+
+    //Create Ctrl+Shift+C key combo to copy selected table contents without headers.
     QShortcut* shortcut_ctrl_c = new QShortcut(QKeySequence::Copy, this);
     connect(shortcut_ctrl_c, SIGNAL(activated()), this, SLOT(copyc()));
+
+    //Create Ctrl+Shift+C key combo to copy selected table contents with headers.
     QShortcut* shortcut_ctrl_shft_c = new QShortcut(QKeySequence("Ctrl+Shift+C"), this);
     connect(shortcut_ctrl_shft_c, SIGNAL(activated()), this, SLOT(copych()));
+
+    //Create key-sequences for fullscreen and restore.
+    QShortcut* shortcut_fs_win = new QShortcut(QKeySequence::QKeySequence(Qt::Key_F11), this);
+    connect(shortcut_fs_win, SIGNAL(activated()), this, SLOT(fullscreen()));
+    QShortcut* shortcut_restore_win = new QShortcut(QKeySequence::QKeySequence(Qt::Key_Escape), this);
+    connect(shortcut_restore_win, SIGNAL(activated()), this, SLOT(restore()));
+    show();
 }
 
 QueryView::~QueryView()
 {
-    delete qview->model();
-    delete qview;
-    close();
+    //Clean-up only when there is no active thread.
+    //However, this will cause a memory leak when the
+    //QueryView is closed when the thread is busy.
+    //Proper solution is to create a Thread class
+    //and cancel that before we clean-up. We cannot do
+    //this now because we are using QFuture (per Qt docs).
+    if(!threadBusy)
+    {
+        QSqlQueryModel* sqlqmt = getMod();
+        delete qview;
+        delete sqlqmt;
+        close();
+    }
 }
 
 void QueryView::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
@@ -59,10 +82,12 @@ void QueryView::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 
 void QueryView::closeEvent(QCloseEvent *event)
 {
-    event->accept();
-    delete qview->model();
-    delete qview;
-    close();
+    if(!threadBusy)
+    {
+        emit cleanSignal();
+        delete qview;
+        close();
+    }
 }
 
 void QueryView::copyc()
@@ -139,26 +164,59 @@ void QueryView::copych()
 void QueryView::fetchDataSlot(SqlMdl* smdl, int time, qint32 rows, qint32 cols)
 {
     if(smdl->lastError().isValid()) {
-        emit errMesg(smdl->lastError().databaseText(), 1);
-        return;
+        //emit errMesg(smdl->lastError().databaseText(), 1);
+        //return;
+
+        QStandardItemModel* model = new QStandardItemModel(0,1);
+        QStringList mesgs = smdl->lastError().databaseText().split("\n");
+        QStandardItem *item = new QStandardItem(mesgs[0]);
+        model->appendRow(item);
+        item->appendRow(new QStandardItem(mesgs[1]));
+        model->appendRow(new QStandardItem(mesgs[1]));
+        item->appendRow(new QStandardItem(mesgs[2]));
+        model->appendRow(new QStandardItem(mesgs[2]));
+        QFont serifFont("Courier", 10, QFont::Bold);
+        qview->setFont(serifFont);
+        qview->setModel(model);
+        qview->resizeColumnToContents(0);
+        QStringList hdr;
+        hdr << "Error messages";
+        model->setHorizontalHeaderLabels(hdr);
+        QString timeel = QApplication::translate("QueryView", "Time elapsed:", 0, QApplication::UnicodeUTF8);
+        QString rowsStr = QApplication::translate("QueryView", "Rows:", 0, QApplication::UnicodeUTF8);
+        QString colsStr = QApplication::translate("QueryView", "Columns:", 0, QApplication::UnicodeUTF8);
+        statusBar()->showMessage(timeel + QString::number((double)time/1000) +
+                                 " s \t " + rowsStr + "3" +
+                                 " \t " + colsStr + "1");
     }
-    if(smdl->rowCount() == 0) {
-        emit errMesg(smdl->lastError().databaseText(), 0);
-        return;
+    else
+    {
+        QString timeel = QApplication::translate("QueryView", "Time elapsed:", 0, QApplication::UnicodeUTF8);
+        QString rowsStr = QApplication::translate("QueryView", "Rows:", 0, QApplication::UnicodeUTF8);
+        QString colsStr = QApplication::translate("QueryView", "Columns:", 0, QApplication::UnicodeUTF8);
+        statusBar()->showMessage(timeel + QString::number((double)time/1000) +
+                                 " s \t " + rowsStr + QString::number(rows) +
+                                 " \t " + colsStr + QString::number(cols));
+        qview->setModel(smdl);
     }
-    QString timeel = QApplication::translate("QueryView", "Time elapsed:", 0, QApplication::UnicodeUTF8);
-    QString rowsStr = QApplication::translate("QueryView", "Rows:", 0, QApplication::UnicodeUTF8);
-    QString colsStr = QApplication::translate("QueryView", "Columns:", 0, QApplication::UnicodeUTF8);
-    statusBar()->showMessage(timeel + QString::number((double)time/1000) +
-                             " s \t " + rowsStr + QString::number(rows) +
-                             " \t " + colsStr + QString::number(cols));
-    qview->setModel(smdl);
-    this->show();
     setCursor(Qt::ArrowCursor);
+    threadBusy = false;
     emit finished();
 }
 
 void QueryView::busySlot()
 {
+    threadBusy = true;
     setCursor(Qt::WaitCursor);
 }
+
+void QueryView::fullscreen()
+{
+    this->showFullScreen();
+}
+
+void QueryView::restore()
+{
+    this->showNormal();
+}
+

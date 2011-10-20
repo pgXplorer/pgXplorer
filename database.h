@@ -6,6 +6,7 @@
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QtGui>
+#include "mainWin.h"
 #include "schemaLink.h"
 
 //! Database class
@@ -42,7 +43,7 @@ public slots:
     bool setConnProps(const QString, const qint32, const QString, const QString, const QString);
 
 public:
-    Database();
+    Database(MainWin*);
     ~Database(){};
     void delDatabase(Database*);
     bool populate();
@@ -154,6 +155,7 @@ public:
 Q_SIGNALS:
     void expand(Database*);
     void collapse(Database*);
+    void setMainWinTitle(QString);
 };
 
 #endif // DATABASE_H

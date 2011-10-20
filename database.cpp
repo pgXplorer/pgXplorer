@@ -1,7 +1,7 @@
 #include "database.h"
 #include "properties.h"
 
-Database::Database()
+Database::Database(MainWin* mainwin)
 {
     setStatus(false);
     setCollapsed(true);
@@ -11,6 +11,9 @@ Database::Database()
     setFlag(ItemSendsGeometryChanges);
     setCacheMode(DeviceCoordinateCache);
     setZValue(-1);
+    connect(this, SIGNAL(setMainWinTitle(QString)), mainwin, SLOT(setWindowTitle(QString)));
+    connect(this, SIGNAL(expand(Database*)), mainwin, SLOT(addSchema(Database*)));
+    connect(this, SIGNAL(collapse(Database*)), mainwin, SLOT(delSchema(Database*)));
 }
 
 void Database::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
@@ -50,6 +53,7 @@ void Database::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
     if(a && QString::compare(a->text(),"Remove")==0) {
         if(QSqlDatabase::connectionNames().length()>0)
             QSqlDatabase::removeDatabase("base");
+        emit setMainWinTitle("pgXplorer");
         delDatabase(this);
     }
     else if(a && QString::compare(a->text(),"Expand")==0) {

@@ -66,13 +66,16 @@ protected:
 private slots:
     void newView();
     void clear();
-    void openDbFile();
+    void openFile();
     void open(QString);
-    void saveDbFile();
+    void saveFile();
+    void saveFileAs();
     void save(QString);
     int saveState(QString);
-    void newDb();
+    void newFile();
     void console();
+    void fullscreen();
+    void restore();
     void addSchema(Database*);
     void delSchema(Database*);
     void addTable(Database*, Schema*);
@@ -93,7 +96,7 @@ Q_SIGNALS:
 private:
     QMenuBar* menubar;
     QMenu* fileMenu;
-    QMenu* editMenu;
+    QMenu* toolMenu;
     QMenu* viewMenu;
     QMenu* helpMenu;
     /*QAction *newDb;

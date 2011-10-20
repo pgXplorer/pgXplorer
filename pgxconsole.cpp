@@ -4,11 +4,6 @@
 
 PgxConsole::PgxConsole(QWidget *parent) : QPlainTextEdit(parent)
 {
-    //host =  db->getDb().hostName();
-    //port = db->getDb().port();
-    //dbname = db->getDb().databaseName();
-    //user = db->getDb().userName();
-    //password = db->getDb().password();
     setViewportMargins(10, 0, 0, 0);
     setTabStopWidth(40);
     setUndoRedoEnabled(false);
@@ -27,10 +22,11 @@ PgxConsole::PgxConsole(QWidget *parent) : QPlainTextEdit(parent)
     //Tie command with QueryView creation.
     connect(this, SIGNAL(cmdS(QKeyEvent *)), this, SLOT(showView(QKeyEvent *)));
 
-    //Tie up and down keys with command history scolling
+    //Tie up and down keys with command history scolling.
     connect(this, SIGNAL(histUp()), this, SLOT(histUpCmd()));
     connect(this, SIGNAL(histDn()), this, SLOT(histDnCmd()));
-    //connect(this, SIGNAL(blockCountChanged(int)), this, SLOT(updatePromptWidth(int)));
+
+    //Console updates.
     connect(this, SIGNAL(updateRequest(QRect,int)), this, SLOT(updatePrompt(QRect,int)));
 }
 
@@ -276,10 +272,10 @@ void PgxConsole::showView(QKeyEvent * e)
     else
     {
         if((cmd.startsWith("update", Qt::CaseInsensitive) ||
-           cmd.startsWith("insert", Qt::CaseInsensitive) ||
-           cmd.startsWith("delete", Qt::CaseInsensitive) ||
-           cmd.startsWith("truncate", Qt::CaseInsensitive)) &&
-           !cmd.contains("returning", Qt::CaseInsensitive))
+            cmd.startsWith("insert", Qt::CaseInsensitive) ||
+            cmd.startsWith("delete", Qt::CaseInsensitive) ||
+            cmd.startsWith("truncate", Qt::CaseInsensitive)) &&
+            !cmd.contains("returning", Qt::CaseInsensitive))
         {
             QSqlQuery* sqlqry = new QSqlQuery;
             sqlqry->exec(cmd);
@@ -319,6 +315,7 @@ void PgxConsole::showView(QKeyEvent * e)
             //connect(qview, SIGNAL(finished()), this, SLOT(finish()));
             connect(smdl, SIGNAL(busySignal()), qview, SLOT(busySlot()));
             connect(smdl, SIGNAL(busySignal()), this, SLOT(finish()));
+            connect(qview, SIGNAL(cleanSignal()), smdl, SLOT(destry()));
             QStringList runVars;
             runVars << host << QString::number(port) << dbname << user << password << QString::number(qview->getId());
             QFuture<void> future = QtConcurrent::run(smdl, &SqlMdl::fetchData, smdl, cmd, runVars);
@@ -331,10 +328,12 @@ void PgxConsole::showView(QKeyEvent * e)
 void SqlMdl::fetchData(SqlMdl* smdl, QString cmd, QStringList vars)
 {
     emit busySignal();
+    dbConnId = cmd + vars.at(5);
     QTime ts;
     ts.start();
+    QSqlDatabase::removeDatabase("queryview" + dbConnId);
     QSqlDatabase sqldb;
-    sqldb = QSqlDatabase::addDatabase("QPSQL", "queryview" + cmd + vars.at(5));
+    sqldb = QSqlDatabase::addDatabase("QPSQL", "queryview" + dbConnId);
     sqldb.setHostName(vars.at(0));
     sqldb.setPort(vars.at(1).toInt());
     sqldb.setDatabaseName(vars.at(2));
@@ -346,8 +345,13 @@ void SqlMdl::fetchData(SqlMdl* smdl, QString cmd, QStringList vars)
         return;
     }
     smdl->setQuery(cmd, sqldb);
-
     fetchDataSignal(smdl, ts.elapsed(), smdl->rowCount(), smdl->columnCount());
+}
+
+void SqlMdl::destry()
+{
+    QSqlDatabase::removeDatabase("queryview" + dbConnId);
+    delete this;
 }
 
 void PgxConsole::curChanged()
@@ -387,11 +391,10 @@ void PgxConsole::getErrMesg(QString mesg, uint count)
         this->insertPlainText(mesgs.at(0) + "\n" + mesgs.at(1));
         this->appendPlainText("");
     }
-    else
+    /*else
     {
-        //this->appendPlainText(QApplication::translate("PgxConsole", "MESSAGE: No rows to display.\n", 0, QApplication::UnicodeUTF8));
         this->insertPlainText(QApplication::translate("PgxConsole", "MESSAGE: No rows to display.\n", 0, QApplication::UnicodeUTF8));
-    }
+    }*/
 }
 
 void PgxConsole::finish()

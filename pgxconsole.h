@@ -120,6 +120,12 @@ class SqlMdl : public QSqlQueryModel
 {
     Q_OBJECT
 
+private:
+    QString dbConnId;
+
+public slots:
+    void destry();
+
 public:
     void fetchData(SqlMdl*, QString, QStringList);
 

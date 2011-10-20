@@ -110,12 +110,6 @@ PropDialog::PropDialog(Database *db)
         getPort()->setText(db->getPort());
         getUser()->setText(db->getUser());
         getPass()->setText(db->getPassword());
-        lSrv->setText(QApplication::translate("Connection", "Server", 0, QApplication::UnicodeUTF8));
-        lDb->setText(QApplication::translate("Connection", "Database", 0, QApplication::UnicodeUTF8));
-        lPort->setText(QApplication::translate("Connection", "Port", 0, QApplication::UnicodeUTF8));
-        lUser->setText(QApplication::translate("Connection", "Username", 0, QApplication::UnicodeUTF8));
-        lPass->setText(QApplication::translate("Connection", "Password", 0, QApplication::UnicodeUTF8));
-        lTitle->setText(QApplication::translate("Connection", "Connection", 0, QApplication::UnicodeUTF8));
     }
     else {
         QSqlDatabase dbact;
@@ -127,13 +121,13 @@ PropDialog::PropDialog(Database *db)
         getPort()->setText(QString::number(dbact.port()));
         getUser()->setText(dbact.userName());
         getPass()->setText(dbact.password());
-        lSrv->setText(QApplication::translate("Connection", "Server", 0, QApplication::UnicodeUTF8));
-        lDb->setText(QApplication::translate("Connection", "Database", 0, QApplication::UnicodeUTF8));
-        lPort->setText(QApplication::translate("Connection", "Port", 0, QApplication::UnicodeUTF8));
-        lUser->setText(QApplication::translate("Connection", "Username", 0, QApplication::UnicodeUTF8));
-        lPass->setText(QApplication::translate("Connection", "Password", 0, QApplication::UnicodeUTF8));
-        lTitle->setText(QApplication::translate("Connection", "Connection", 0, QApplication::UnicodeUTF8));
     }
+    lSrv->setText(QApplication::translate("Connection", "Server", 0, QApplication::UnicodeUTF8));
+    lDb->setText(QApplication::translate("Connection", "Database", 0, QApplication::UnicodeUTF8));
+    lPort->setText(QApplication::translate("Connection", "Port", 0, QApplication::UnicodeUTF8));
+    lUser->setText(QApplication::translate("Connection", "Username", 0, QApplication::UnicodeUTF8));
+    lPass->setText(QApplication::translate("Connection", "Password", 0, QApplication::UnicodeUTF8));
+    lTitle->setText(QApplication::translate("Connection", "Connection", 0, QApplication::UnicodeUTF8));
 }
 
 PropDialog::~PropDialog(){}

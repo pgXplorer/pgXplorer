@@ -7,7 +7,7 @@
 #include <QtGui>
 #include "database.h"
 
-#define FETCHSIZ 100000
+#define FETCHSIZ 10000
 
 class TableView : public QMainWindow
 {
@@ -66,6 +66,8 @@ private slots:
     void copych();
     void busySlot();
     void updRowCntSlot();
+    void fullscreen();
+    void restore();
 
 Q_SIGNALS:
     void busySignal();

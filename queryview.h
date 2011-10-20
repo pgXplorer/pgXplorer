@@ -12,10 +12,12 @@ class QueryView : public QMainWindow
     Q_OBJECT
 private:
     QTableView *qview;
+    SqlMdl* sqlmd;
     QString sql;
     QStringList whereCl;
     QStringList orderCl;
     ulong thisQueryViewId;
+    bool threadBusy;
 
 public:
     static ulong queryViewObjectId;
@@ -25,10 +27,17 @@ public:
     virtual void contextMenuEvent(QGraphicsSceneContextMenuEvent *);
     virtual void closeEvent(QCloseEvent *);
     //virtual void keyPressEvent(QKeyEvent *e);
-    void setMod(QSqlQueryModel* mod)
+    void setMod(SqlMdl* mod)
     {
-       qview->setModel(mod);
+        sqlmd = mod;
+        qview->setModel(mod);
     }
+
+    SqlMdl* getMod()
+    {
+        return this->sqlmd;
+    }
+
     ulong getId()
     {
         return this->thisQueryViewId;
@@ -39,10 +48,13 @@ private slots:
     void copych();
     void fetchDataSlot(SqlMdl*, int, qint32, qint32);
     void busySlot();
+    void fullscreen();
+    void restore();
 
 Q_SIGNALS:
     void errMesg(QString, uint);
     void finished();
+    void cleanSignal();
 };
 
 #endif // QUERYVIEW_H

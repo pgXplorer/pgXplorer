@@ -22,7 +22,7 @@ QString MainWin::hostS = "127.0.0.1";
 int MainWin::portS = 5432;
 QString MainWin::dbnameS = "";
 QString MainWin::userS = "postgres";
-QString MainWin::passwordS = "postgres";
+QString MainWin::passwordS = "";
 
 FigureEditor::FigureEditor(
         QGraphicsScene& s, QWidget* parent,
@@ -50,15 +50,18 @@ MainWin::MainWin(QGraphicsScene& c, QWidget* parent, const char* name, Qt::Windo
     edt = new FigureEditor(scn, this);
     menubar = menuBar();
     fileMenu = new QMenu( menubar );
-    fileMenu->insertItem("&New db", this, SLOT(newDb()), Qt::CTRL+Qt::Key_N);
-    fileMenu->insertItem("&Open db", this, SLOT(openDbFile()), Qt::CTRL+Qt::Key_O);
-    fileMenu->insertItem("&Save db", this, SLOT(saveDbFile()), Qt::CTRL+Qt::Key_S);
+    fileMenu->insertItem("&New", this, SLOT(newFile()), Qt::CTRL+Qt::Key_N);
+
+    fileMenu->insertItem("&Open", this, SLOT(openFile()), Qt::CTRL+Qt::Key_O);
+    fileMenu->insertItem("&Save", this, SLOT(saveFile()), Qt::CTRL+Qt::Key_S);
+    fileMenu->insertItem("&Save As...", this, SLOT(saveFileAs()), Qt::CTRL+Qt::SHIFT+Qt::Key_S);
     fileMenu->addSeparator();
     fileMenu->insertItem("E&xit", qApp, SLOT(quit()), Qt::CTRL+Qt::Key_Q);
     menubar->insertItem("&File", fileMenu);
-    editMenu = new QMenu( menubar );
-    editMenu->insertItem("SQL Console", this, SLOT(console()), Qt::ALT+Qt::Key_C);
-    menubar->insertItem("&Tools", editMenu);
+    toolMenu = new QMenu( menubar );
+    toolMenu->insertItem("SQL Console", this, SLOT(console()), Qt::ALT+Qt::Key_C);
+    toolMenu->insertItem("Fullscreen", this, SLOT(fullscreen()), Qt::Key_F11);
+    menubar->insertItem("&Tools", toolMenu);
     /*viewMenu = new QMenu( menubar );
     viewMenu->insertItem("&Enlarge", this, SLOT(enlarge()), Qt::SHIFT+Qt::CTRL+Qt::Key_Plus);
     viewMenu->insertItem("Shr&ink", this, SLOT(shrink()), Qt::SHIFT+Qt::CTRL+Qt::Key_Minus);
@@ -75,7 +78,11 @@ MainWin::MainWin(QGraphicsScene& c, QWidget* parent, const char* name, Qt::Windo
     helpMenu = new QMenu( menubar );
     helpMenu->insertItem("&About", this, SLOT(help()), Qt::Key_F1);
     helpMenu->setItemChecked(dbf_id, TRUE);
-    menubar->insertItem("&Help",helpMenu);
+    menubar->insertItem("&Help", helpMenu);
+
+    QShortcut* shortcut_restore_win = new QShortcut(QKeySequence::QKeySequence(Qt::Key_Escape), this);
+    connect(shortcut_restore_win, SIGNAL(activated()), this, SLOT(restore()));
+
     setCentralWidget(edt);
     readSettings();
     prn = 0;
@@ -109,7 +116,7 @@ void MainWin::writeSettings()
     settings.setValue("size", size());
 }
 
-void MainWin::openDbFile()
+void MainWin::openFile()
 {
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"),
                                                      "C:/",
@@ -145,11 +152,9 @@ void MainWin::open(QString fileName)
         fileVerErr->show();
         return;
     }
-    Database* db = new Database();
+    Database* db = new Database(this);
     db->setPos(scn.width()/2, scn.height()/2);
     scn.addItem(db);
-    QObject::connect(db, SIGNAL(expand(Database*)), this, SLOT(addSchema(Database*)));
-    QObject::connect(db, SIGNAL(collapse(Database*)), this, SLOT(delSchema(Database*)));
 
     fileStrm >> hostS;
     fileStrm >> portS;
@@ -161,7 +166,12 @@ void MainWin::open(QString fileName)
     this->setWindowTitle("pgXplorer - " + fileName);
 }
 
-void MainWin::saveDbFile()
+void MainWin::saveFile()
+{
+
+}
+
+void MainWin::saveFileAs()
 {
     QString fileName = QFileDialog::getSaveFileName(this, tr("Open File"),
                                                      "C:/",
@@ -318,10 +328,10 @@ void MainWin::moveD()
     edt->translate( 0, +16 );
 }
 
-void MainWin::newDb()
+void MainWin::newFile()
 {
     // Add a database object to canvas
-    Database* db = new Database();
+    Database* db = new Database(this);
     db->setPos(scn.width()/2, scn.height()/2);
     scn.addItem(db);
     db->setHost("127.0.0.1");
@@ -345,6 +355,18 @@ void MainWin::console()
     pgxconsole->insertPlainText("");
     pgxconsole->setDbPros(MainWin::hostS, MainWin::portS, MainWin::dbnameS, MainWin::userS, MainWin::passwordS);
     pgxconsole->show();
+}
+
+void MainWin::fullscreen()
+{
+    this->showFullScreen();
+    menubar->hide();
+}
+
+void MainWin::restore()
+{
+    this->showNormal();
+    menubar->show();
 }
 
 void MainWin::addSchema(Database* db)
