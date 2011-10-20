@@ -110,6 +110,7 @@ class Highlighter : public QSyntaxHighlighter
      QVector<HighlightingRule> highlightingRules;
      QTextCharFormat keywordFormat;
      QTextCharFormat keywordFormat2;
+     QTextCharFormat keywordFormat3;
      QTextCharFormat classFormat;
      QTextCharFormat singleQuotFormat;
      QTextCharFormat doubleQuotFormat;

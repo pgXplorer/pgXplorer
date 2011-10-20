@@ -80,7 +80,7 @@ MainWin::MainWin(QGraphicsScene& c, QWidget* parent, const char* name, Qt::Windo
     helpMenu->setItemChecked(dbf_id, TRUE);
     menubar->insertItem("&Help", helpMenu);
 
-    QShortcut* shortcut_restore_win = new QShortcut(QKeySequence::QKeySequence(Qt::Key_Escape), this);
+    QShortcut* shortcut_restore_win = new QShortcut(QKeySequence(Qt::Key_Escape), this);
     connect(shortcut_restore_win, SIGNAL(activated()), this, SLOT(restore()));
 
     setCentralWidget(edt);

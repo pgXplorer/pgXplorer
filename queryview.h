@@ -12,7 +12,6 @@ class QueryView : public QMainWindow
     Q_OBJECT
 private:
     QTableView *qview;
-    SqlMdl* sqlmd;
     QString sql;
     QStringList whereCl;
     QStringList orderCl;
@@ -23,20 +22,9 @@ public:
     static ulong queryViewObjectId;
     QueryView(QWidget *parent, QSqlQueryModel*, QString const,
                int const, int const, int const, Qt::WidgetAttribute);
-    ~QueryView();
     virtual void contextMenuEvent(QGraphicsSceneContextMenuEvent *);
     virtual void closeEvent(QCloseEvent *);
     //virtual void keyPressEvent(QKeyEvent *e);
-    void setMod(SqlMdl* mod)
-    {
-        sqlmd = mod;
-        qview->setModel(mod);
-    }
-
-    SqlMdl* getMod()
-    {
-        return this->sqlmd;
-    }
 
     ulong getId()
     {

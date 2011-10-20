@@ -208,6 +208,7 @@ void PgxConsole::showView(QKeyEvent * e)
     // Reduce all groups of whitespace characters
     // to a single space between words.
     cmd = cmd.simplified();
+
     // Start a timer to count the seconds taken to display the
     // required output (used for queries and tables only).
     QTime t;
@@ -223,7 +224,7 @@ void PgxConsole::showView(QKeyEvent * e)
         return;
     }
     // EXPLAIN queries display.
-    else if(cmd.startsWith("explain", Qt::CaseInsensitive))
+    /*else if(cmd.startsWith("explain", Qt::CaseInsensitive))
     {
         /*!
            @todo EXPLAIN ANALYZE on DML statements.
@@ -239,7 +240,7 @@ void PgxConsole::showView(QKeyEvent * e)
          * @endcode
          * Yet to be implemented. EXPLAIN ANALYZE on
          * DML are disabled for now.
-         */
+
         if(cmd.startsWith("explain analyze update", Qt::CaseInsensitive) ||
            cmd.startsWith("explain analyze insert", Qt::CaseInsensitive) ||
            cmd.startsWith("explain analyze delete", Qt::CaseInsensitive) ||
@@ -247,8 +248,8 @@ void PgxConsole::showView(QKeyEvent * e)
            cmd.startsWith("explain analyze verbose insert", Qt::CaseInsensitive) ||
            cmd.startsWith("explain analyze verbose delete", Qt::CaseInsensitive))
         {
-            appendPlainText(QApplication::translate("PgxConsole", "WARNING: EXPLAIN ANAYZE for DML not supported at this time.\n", 0, QApplication::UnicodeUTF8));
-            return;
+            //appendPlainText(QApplication::translate("PgxConsole", "WARNING: EXPLAIN ANAYZE for DML not supported at this time.\n", 0, QApplication::UnicodeUTF8));
+            //return;
         }
 
         QSqlQueryModel* model = new QSqlQueryModel;
@@ -267,7 +268,7 @@ void PgxConsole::showView(QKeyEvent * e)
         eview->resizeRowsToContents();
         eview->show();
         appendPlainText("");
-    }
+    }*/
     // DDL, DML queries display.
     else
     {
@@ -465,6 +466,7 @@ Highlighter::Highlighter(QTextDocument *parent)
     rule.pattern = QRegExp("\\b[A-Za-z]+\\b");
     rule.format = classFormat;
     highlightingRules.append(rule);
+
     keywordFormat.setForeground(Qt::darkCyan);
     keywordFormat.setFontWeight(QFont::Bold);
     QStringList keywordPatterns;
@@ -476,6 +478,7 @@ Highlighter::Highlighter(QTextDocument *parent)
         rule.format = keywordFormat;
         highlightingRules.append(rule);
     }
+
     keywordFormat2.setForeground(Qt::darkGreen);
     keywordFormat2.setFontItalic(true);
     QStringList keywordPatterns2;
@@ -490,6 +493,17 @@ Highlighter::Highlighter(QTextDocument *parent)
         rule.format = keywordFormat2;
         highlightingRules.append(rule);
     }
+
+    keywordFormat3.setForeground(Qt::darkRed);
+    keywordFormat3.setFontWeight(QFont::Bold);
+    QStringList keywordPatterns3;
+    keywordPatterns3 << "\\bexplain\\b" << "\\banalyze\\b";
+    foreach (const QString &pattern, keywordPatterns3) {
+        rule.pattern = QRegExp(pattern, Qt::CaseInsensitive);
+        rule.format = keywordFormat3;
+        highlightingRules.append(rule);
+    }
+
     singleQuotFormat.setForeground(Qt::darkMagenta);
     rule.pattern = QRegExp("\'([^\']*)\'");
     rule.format = singleQuotFormat;

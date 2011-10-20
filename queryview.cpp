@@ -15,6 +15,7 @@ QueryView::QueryView(QWidget *parent, QSqlQueryModel* model, QString const name,
 
     qview = new QTableView(this);
     qview->resizeColumnsToContents();
+
     setCentralWidget(qview);
     QString timeel = QApplication::translate("QueryView", "Time elapsed:", 0, QApplication::UnicodeUTF8);
     QString rowsStr = QApplication::translate("QueryView", "Rows:", 0, QApplication::UnicodeUTF8);
@@ -35,28 +36,11 @@ QueryView::QueryView(QWidget *parent, QSqlQueryModel* model, QString const name,
     connect(shortcut_ctrl_shft_c, SIGNAL(activated()), this, SLOT(copych()));
 
     //Create key-sequences for fullscreen and restore.
-    QShortcut* shortcut_fs_win = new QShortcut(QKeySequence::QKeySequence(Qt::Key_F11), this);
+    QShortcut* shortcut_fs_win = new QShortcut(QKeySequence(Qt::Key_F11), this);
     connect(shortcut_fs_win, SIGNAL(activated()), this, SLOT(fullscreen()));
-    QShortcut* shortcut_restore_win = new QShortcut(QKeySequence::QKeySequence(Qt::Key_Escape), this);
+    QShortcut* shortcut_restore_win = new QShortcut(QKeySequence(Qt::Key_Escape), this);
     connect(shortcut_restore_win, SIGNAL(activated()), this, SLOT(restore()));
     show();
-}
-
-QueryView::~QueryView()
-{
-    //Clean-up only when there is no active thread.
-    //However, this will cause a memory leak when the
-    //QueryView is closed when the thread is busy.
-    //Proper solution is to create a Thread class
-    //and cancel that before we clean-up. We cannot do
-    //this now because we are using QFuture (per Qt docs).
-    if(!threadBusy)
-    {
-        QSqlQueryModel* sqlqmt = getMod();
-        delete qview;
-        delete sqlqmt;
-        close();
-    }
 }
 
 void QueryView::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
@@ -198,6 +182,11 @@ void QueryView::fetchDataSlot(SqlMdl* smdl, int time, qint32 rows, qint32 cols)
                                  " s \t " + rowsStr + QString::number(rows) +
                                  " \t " + colsStr + QString::number(cols));
         qview->setModel(smdl);
+        if(smdl->query().executedQuery().startsWith("explain",Qt::CaseInsensitive))
+        {
+            qview->resizeColumnToContents(0);
+            this->setGeometry(100,100,qview->columnWidth(0),480);
+        }
     }
     setCursor(Qt::ArrowCursor);
     threadBusy = false;

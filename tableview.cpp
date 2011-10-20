@@ -37,9 +37,9 @@ TableView::TableView(Database* db, QString const tblName, QString const name, Qt
     this->setGeometry(100,100,640,480);
 
     //Create key-sequences for fullscreen and restore.
-    QShortcut* shortcut_fs_win = new QShortcut(QKeySequence::QKeySequence(Qt::Key_F11), this);
+    QShortcut* shortcut_fs_win = new QShortcut(QKeySequence(Qt::Key_F11), this);
     connect(shortcut_fs_win, SIGNAL(activated()), this, SLOT(fullscreen()));
-    QShortcut* shortcut_restore_win = new QShortcut(QKeySequence::QKeySequence(Qt::Key_Escape), this);
+    QShortcut* shortcut_restore_win = new QShortcut(QKeySequence(Qt::Key_Escape), this);
     connect(shortcut_restore_win, SIGNAL(activated()), this, SLOT(restore()));
 
     //Tie vertical scrollbar of TableView to fetch more data
