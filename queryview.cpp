@@ -153,12 +153,12 @@ void QueryView::fetchDataSlot(SqlMdl* smdl, int time, qint32 rows, qint32 cols)
 
         QStandardItemModel* model = new QStandardItemModel(0,1);
         QStringList mesgs = smdl->lastError().databaseText().split("\n");
-        QStandardItem *item = new QStandardItem(mesgs[0]);
-        model->appendRow(item);
-        item->appendRow(new QStandardItem(mesgs[1]));
-        model->appendRow(new QStandardItem(mesgs[1]));
-        item->appendRow(new QStandardItem(mesgs[2]));
-        model->appendRow(new QStandardItem(mesgs[2]));
+        mesgs.removeLast();
+        foreach(const QString m , mesgs)
+        {
+            model->appendRow(new QStandardItem(m));
+        }
+
         QFont serifFont("Courier", 10, QFont::Bold);
         qview->setFont(serifFont);
         qview->setModel(model);
