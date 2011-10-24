@@ -152,7 +152,7 @@ void MainWin::open(QString fileName)
         fileVerErr->show();
         return;
     }
-    Database* db = new Database(this);
+    db = new Database(this);
     db->setPos(scn.width()/2, scn.height()/2);
     scn.addItem(db);
 
@@ -331,7 +331,7 @@ void MainWin::moveD()
 void MainWin::newFile()
 {
     // Add a database object to canvas
-    Database* db = new Database(this);
+    db = new Database(this);
     db->setPos(scn.width()/2, scn.height()/2);
     scn.addItem(db);
     db->setHost("127.0.0.1");
