@@ -116,7 +116,7 @@ private:
     QGraphicsScene& scn;
     QRubberBand* rubberBand;
     QPoint origin;
-    FigureEditor *edt;
+    FigureEditor* edt;
     QMenu* opt;
     QPrinter* prn;
     int dbf_id;
