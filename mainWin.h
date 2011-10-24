@@ -94,6 +94,7 @@ Q_SIGNALS:
     void clicked();
 
 private:
+    Database* db;
     QMenuBar* menubar;
     QMenu* fileMenu;
     QMenu* toolMenu;
