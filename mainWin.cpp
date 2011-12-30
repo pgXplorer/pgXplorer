@@ -640,7 +640,14 @@ void MainWin::newFile()
 void MainWin::newProcess()
 {
     QProcess *new_process = new QProcess;
-    new_process->start("pgXplorer.exe");
+
+#ifdef Q_WS_X11
+    new_process->start("./pgXplorer");
+#endif
+
+#ifdef Q_WS_WIN
+    new_process->start("./pgXplorer");
+#endif
 }
 
 void MainWin::newDatabase()
@@ -998,7 +1005,7 @@ void MainWin::hideOtherTables(Schema *schema)
 
 void MainWin::createActions()
 {
-    new_file_action = new QAction(QIcon("icons/new.png"), tr("&New"), this);
+    new_file_action = new QAction(QIcon("./icons/new.png"), tr("&New"), this);
     new_file_action->setShortcuts(QKeySequence::New);
     new_file_action->setStatusTip(tr("Create a new file"));
     connect(new_file_action, SIGNAL(triggered()), this, SLOT(newProcess()));
