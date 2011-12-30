@@ -19,7 +19,8 @@ HEADERS		= \
     functionlink.h \
     view.h \
     highlighter.h \
-    licensedialog.h
+    licensedialog.h \
+    querymodel.h
 SOURCES		= main.cpp \
     tableLink.cpp \
     schemaLink.cpp \
@@ -36,7 +37,8 @@ SOURCES		= main.cpp \
     functionlink.cpp \
     view.cpp \
     highlighter.cpp \
-    licensedialog.cpp
+    licensedialog.cpp \
+    querymodel.cpp
 QT += sql
 QT += translator
 
