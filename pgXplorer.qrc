@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/home/cirrus/pgXplorer2">
+    <qresource prefix="/trolltech/examples/graphicsview/pgXplorer">
         <file>pgXplorer.ico</file>
     </qresource>
 </RCC>

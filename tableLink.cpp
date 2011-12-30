@@ -1,3 +1,21 @@
+/*
+  LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
+
+  Copyright (c) 2011, davyjones <davyjones@github>
+
+  Permission to use, copy, modify, and/or distribute this software for any
+  purpose with or without fee is hereby granted, provided that the above
+  copyright notice and this permission notice appear in all copies.
+
+  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+  WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+  MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+  ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+  WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+  OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+*/
+
 #include <QPainter>
 #include "tableLink.h"
 #include "schema.h"
@@ -5,56 +23,38 @@
 #include "mainWin.h"
 #include <math.h>
 
-TableLink::TableLink(Schema *sourceNode, Table *destNode)
+TableLink::TableLink(Schema *source_node, Table *destination_node)
 {
-    source = sourceNode;
-    dest = destNode;
-    source->addEdge(this);
-    dest->addEdge(this);
-    this->setZValue(-100);
+    schema = source_node;
+    table = destination_node;
+    //schema->addEdge(this);
+    //table->addEdge(this);
+    setParentItem(source_node);
+    setFlag(QGraphicsItem::ItemStacksBehindParent);
+    setZValue(-100);
     adjust();
-}
-
-Schema *TableLink::sourceNode() const
-{
-    return source;
-}
-
-Table *TableLink::destNode() const
-{
-    return dest;
 }
 
 void TableLink::adjust()
 {
-    if (!source || !dest)
-        return;
-    QLineF line(0, 0, dest->x(), dest->y());
-    //qreal length = line.length();
+    QLineF line(0, 0, table->x(), table->y());
     prepareGeometryChange();
-    sourcePoint = line.p1();
-    destPoint = line.p2();
+    schema_point = line.p1();
+    table_point = line.p2();
 }
 
 QRectF TableLink::boundingRect() const
 {
-    if (!source || !dest)
-        return QRectF();
-    qreal penWidth = 1;
-    qreal extra = (penWidth)/2.0;
-    return QRectF(sourcePoint, QSizeF(destPoint.x() - sourcePoint.x(),
-                                      destPoint.y() - sourcePoint.y()))
-        .normalized().adjusted(-extra, -extra, extra, extra);
+    return QRectF(schema_point, QSizeF(table_point.x() - schema_point.x(),
+                                      table_point.y() - schema_point.y()))
+        .normalized().adjusted(-.5, -.5, .5, .5);
 }
 
 void TableLink::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 {
-    if (!source || !dest)
-        return;
-    QLineF line(sourcePoint, destPoint);
+    QLineF line(schema_point, table_point);
     if (qFuzzyCompare(line.length(), qreal(0.)))
         return;
-    // Draw the line itself
     painter->setPen(QPen(QColor(200,200,250), 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
     painter->drawLine(line);
 }

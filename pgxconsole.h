@@ -1,16 +1,33 @@
+/*
+  LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
+
+  Copyright (c) 2011, davyjones <davyjones@github.com>
+
+  Permission to use, copy, modify, and/or distribute this software for any
+  purpose with or without fee is hereby granted, provided that the above
+  copyright notice and this permission notice appear in all copies.
+
+  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+  WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+  MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+  ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+  WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+  OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+*/
+
 #ifndef PGXCONSOLE_H
 #define PGXCONSOLE_H
 
 #include <QPlainTextEdit>
-#include <QSqlQueryModel>
 #include <QSqlQuery>
-#include <QSyntaxHighlighter>
 #include <QHash>
 #include <QTextCharFormat>
 #include <QObject>
 #include <QTranslator>
 #include <QCompleter>
 #include "database.h"
+#include "highlighter.h"
 
 class QPaintEvent;
 class QResizeEvent;
@@ -19,56 +36,73 @@ class QWidget;
 class Prompt;
 class Highlighter;
 class QTextDocument;
-
-//! Pgx SQL Console
+class PgxConsoleMainWindow;
 
 class PgxConsole : public QPlainTextEdit
 {
     Q_OBJECT
 
 public:
-    PgxConsole(QWidget *parent = 0);
+    PgxConsole(Database*);
     ~PgxConsole() {
     }
-    void promptPaintEvent(QPaintEvent *event);
-    void setDbPros(QString, int, QString, QString, QString);
+    void highlightSearchedWord();
+    void removeSearchHighlighting();
+    void promptPaintEvent(QPaintEvent *);
+    void setConnectionProperties(QString, int, QString, QString, QString);
+    void insertFromMimeData(const QMimeData *);
+    void createActions();
+    void setResizePos(QSize, QPoint);
+    void closeMain();
 
 protected:
-    void resizeEvent(QResizeEvent *event);
-    virtual void keyPressEvent(QKeyEvent *e);
-    virtual void wheelEvent(QWheelEvent *e);
-    //virtual void closeEvent(QCloseEvent *);
+    void resizeEvent(QResizeEvent *);
+    void keyPressEvent(QKeyEvent *);
+    void wheelEvent(QWheelEvent *);
 
 private slots:
-    //void updatePromptWidth(int newBlockCount);
     void updatePrompt(const QRect &, int);
-    void curChanged();
-    void showView(QKeyEvent *);
-    void histUpCmd();
-    void histDnCmd();
-    void paste_cmd();
-    void getErrMesg(QString, uint);
-    void finish();
+    void makePreviousBlocksReadonly();
+    void showView(QString);
+    void historyUpCommand();
+    void historyDownCommand();
+    void pasteFromClipboard();
+    void pasteAsSingleFromClipboard();
+    void toggleFindBar();
+    void findText();
+    void pgxconsoleClosing();
 
 private:
-    QString cmd;
+    PgxConsoleMainWindow *mainwin;
+    Database *database;
     QWidget *prompt;
+    QLineEdit *find_bar;
     Highlighter *highlighter;
+    QTextCursor find_cursor;
+    QToolBar *toolbar;
     QStringList history;
     qint32 hit;
     QCompleter *completer;
-    QString host;
-    int port;
-    QString dbname;
-    QString user;
-    QString password;
-    void createWidgets();
+    QAction *cut_action;
+    QAction *copy_action;
+    QAction *paste_action;
+    QAction *clear_action;
+    QAction *find_action;
+    QAction *casesensitivity_action;
+    QAction *wholeword_action;
+    QAction *backwards_action;
+    QToolButton *casesensitivity_button;
+    QToolButton *wholeword_button;
+    QToolButton *backwards_button;
+    void __createWidgets();
 
 Q_SIGNALS:
-    void cmdS(QKeyEvent *);
-    void histUp();
-    void histDn();
+    void commandSignal(QString);
+    void historyUp();
+    void historyDown();
     void getDbPros();
+    void showQueryView(Database *, QString);
+    void pgxconsoleClosing(PgxConsole *);
 };
 
 class Prompt : public QWidget
@@ -91,48 +125,15 @@ private:
     PgxConsole *pgxConsole;
 };
 
-class Highlighter : public QSyntaxHighlighter
-{
-     Q_OBJECT
-
- public:
-     Highlighter(QTextDocument *parent = 0);
-
- protected:
-     void highlightBlock(const QString &text);
-
- private:
-     struct HighlightingRule
-     {
-         QRegExp pattern;
-         QTextCharFormat format;
-     };
-     QVector<HighlightingRule> highlightingRules;
-     QTextCharFormat keywordFormat;
-     QTextCharFormat keywordFormat2;
-     QTextCharFormat keywordFormat3;
-     QTextCharFormat classFormat;
-     QTextCharFormat singleQuotFormat;
-     QTextCharFormat doubleQuotFormat;
-     QTextCharFormat functionFormat;
-};
-
-class SqlMdl : public QSqlQueryModel
+class PgxConsoleMainWindow : public QMainWindow
 {
     Q_OBJECT
 
-private:
-    QString dbConnId;
-
-public slots:
-    void destry();
-
-public:
-    void fetchData(SqlMdl*, QString, QStringList);
+protected:
+    void closeEvent(QCloseEvent *);
 
 Q_SIGNALS:
-    void fetchDataSignal(SqlMdl*, int, qint32, qint32);
-    void busySignal();
+    void pgxconsoleClosing();
 };
 
 #endif // PGXCONSOLE_H

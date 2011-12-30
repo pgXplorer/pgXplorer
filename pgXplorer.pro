@@ -1,4 +1,4 @@
-TEMPLATE    = app
+TEMPLATE	= app
 TARGET		= pgXplorer
 
 CONFIG		+= qt warn_on
@@ -6,28 +6,43 @@ CONFIG		+= qt warn_on
 HEADERS		= \
     tableLink.h \
     schemaLink.h \
-    properties.h \
     database.h \
     schema.h \
     table.h \
     mainWin.h \
+    pgxconsole.h \
     queryview.h \
     tableview.h \
-    pgxconsole.h \
-    explainview.h
+    querymodel.h \
+    connectionproperties.h \
+    pgxeditor.h \
+    function.h \
+    functionlink.h \
+    view.h \
+    highlighter.h \
+    licensedialog.h \
+    dialog.h
 SOURCES		= main.cpp \
     tableLink.cpp \
     schemaLink.cpp \
-    properties.cpp \
     database.cpp \
     schema.cpp \
     table.cpp \
     mainWin.cpp \
+    pgxconsole.cpp \
     queryview.cpp \
     tableview.cpp \
-    pgxconsole.cpp \
-    explainview.cpp
-QT += qt3support sql translator
+    querymodel.cpp \
+    connectionproperties.cpp \
+    pgxeditor.cpp \
+    function.cpp \
+    functionlink.cpp \
+    view.cpp \
+    highlighter.cpp \
+    licensedialog.cpp \
+    dialog.cpp
+QT += sql
+QT += translator
 
 RESOURCES += pgXplorer.qrc
 
@@ -36,13 +51,13 @@ TRANSLATIONS = pgXplorer_ja.ts \
 
 RC_FILE = pgXplorer.rc
 
-# CODECFORTR = UTF-8
+CODECFORTR = UTF-8
 
 # install
-target.path = $$[QT_INSTALL_EXAMPLES]/graphicsview/portedcanvas
-sources.files = $$SOURCES $$HEADERS $$RESOURCES $$FORMS pgXplorer.pro
-sources.path = $$[QT_INSTALL_EXAMPLES]/graphicsview/portedcanvas
+target.path = C:/QtSDK/Examples/4.7/graphicsview/pgXplorer
+sources.files = $$SOURCES $$HEADERS $$RESOURCES pgXplorer.pro
+sources.path = C:/QtSDK/Examples/4.7/graphicsview/pgXplorer
 INSTALLS += target sources
 
-OTHER_FILES +=\
+OTHER_FILES += \
     pgXplorer.rc

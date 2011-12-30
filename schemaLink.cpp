@@ -1,3 +1,21 @@
+/*
+  LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
+
+  Copyright (c) 2011, davyjones <davyjones@github.com>
+
+  Permission to use, copy, modify, and/or distribute this software for any
+  purpose with or without fee is hereby granted, provided that the above
+  copyright notice and this permission notice appear in all copies.
+
+  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+  WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+  MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+  ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+  WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+  OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+*/
+
 #include <QPainter>
 #include "schemaLink.h"
 #include "database.h"
@@ -5,56 +23,38 @@
 #include "mainWin.h"
 #include <math.h>
 
-SchemaLink::SchemaLink(Database *sourceNode, Schema *destNode)
+SchemaLink::SchemaLink(Database *source_node, Schema *destination_node)
 {
-    source = sourceNode;
-    dest = destNode;
-    source->addEdge(this);
-    dest->addEdge(this);
-    this->setZValue(-100);
+    database = source_node;
+    schema = destination_node;
+    database->addEdge(this);
+    schema->addEdge(this);
+    setParentItem(source_node);
+    setFlag(QGraphicsItem::ItemStacksBehindParent);
+    setZValue(-100);
     adjust();
-}
-
-Database *SchemaLink::sourceNode() const
-{
-    return source;
-}
-
-Schema *SchemaLink::destNode() const
-{
-    return dest;
 }
 
 void SchemaLink::adjust()
 {
-    if (!source || !dest)
-        return;
-    QLineF line(0, 0, dest->x(), dest->y());
-    //qreal length = line.length();
+    QLineF line(0, 0, schema->x(), schema->y());
     prepareGeometryChange();
-    sourcePoint = line.p1();
-    destPoint = line.p2();
+    database_point = line.p1();
+    schema_point = line.p2();
 }
 
 QRectF SchemaLink::boundingRect() const
 {
-    if (!source || !dest)
-        return QRectF();
-    qreal penWidth = 1;
-    qreal extra = (penWidth)/2.0;
-    return QRectF(sourcePoint, QSizeF(destPoint.x() - sourcePoint.x(),
-                                      destPoint.y() - sourcePoint.y()))
-        .normalized().adjusted(-extra, -extra, extra, extra);
+    return QRectF(database_point, QSizeF(schema_point.x() - database_point.x(),
+                                      schema_point.y() - database_point.y()))
+        .normalized().adjusted(-.5, -.5, .5, .5);
 }
 
 void SchemaLink::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 {
-    if (!source || !dest)
-        return;
-    QLineF line(sourcePoint, destPoint);
+    QLineF line(database_point, schema_point);
     if (qFuzzyCompare(line.length(), qreal(0.)))
         return;
-    // Draw the line itself
     painter->setPen(QPen(QColor(200,200,200), 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
     painter->drawLine(line);
 }

@@ -1,16 +1,39 @@
+/*
+  LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
+
+  Copyright (c) 2011, davyjones <davyjones@github.com>
+
+  Permission to use, copy, modify, and/or distribute this software for any
+  purpose with or without fee is hereby granted, provided that the above
+  copyright notice and this permission notice appear in all copies.
+
+  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+  WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+  MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+  ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+  WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+  OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+*/
+
 #ifndef SCHEMA_H
 #define SCHEMA_H
 
 #include <QMouseEvent>
 #include <QSqlDatabase>
 #include <QtGui>
+#include "mainWin.h"
 #include "schemaLink.h"
 #include "tableLink.h"
+#include "view.h"
+#include "functionlink.h"
 
 #define SCHEMA_WIDTH 70
 #define SCHEMA_HEIGHT 40
 #define A_RADIUS (SCHEMA_WIDTH*5)
 #define B_RADIUS (SCHEMA_HEIGHT*6)
+
+class View;
 
 class Schema : public QObject, public QGraphicsItem
 {
@@ -18,41 +41,59 @@ class Schema : public QObject, public QGraphicsItem
     Q_INTERFACES(QGraphicsItem)
 
 private:
-    QList<QString> tblList;
-    Database* dbPar;
+    MainWin *mainwin;
+    int number_of_tables;
+    int number_of_views;
+    int number_of_functions;
+    QList<Table*> table_list;
+    QList<View*> view_list;
+    QList<Function*> function_list;
+    Database *parent_database;
     QString name;
     bool status;
     bool collapsed;
-    QList<SchemaLink *> edgeList;
-    QList<TableLink *> linkList;
+    int schema_index;
+    SchemaLink *schema_link;
+    //QList<TableLink *> table_link_list;
+    //QList<FunctionLink *> function_link_list;
     QPointF newPos;
+
 protected:
-    QVariant itemChange(GraphicsItemChange change, const QVariant &value);
+    //QVariant itemChange(GraphicsItemChange change, const QVariant &value);
+    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *);
+    void contextMenuEvent(QGraphicsSceneContextMenuEvent *);
+
 public:
-    enum { Type = 10101 };
+    enum { Types = UserType + 2000 };
     int type() const
     {
-        return Type;
+        return Types;
     }
-    Schema(Database* parent, QString schName);
-    ~Schema(){};
+    Schema(MainWin *mainwin, Database *parent, QString schema_name, int schema_index, uint number_of_schemas);
+    ~Schema()
+    {
+    };
     bool advance();
-    void addEdge(SchemaLink *edge);
-    void addEdge(TableLink *edge);
-    QList<SchemaLink *> dblink() const;
-    QList<TableLink *> tablelinks() const;
+    void populateSchemaTables();
+    void populateSchemaViews();
+    void populateSchemaFunctions();
+    void addEdge(SchemaLink *schema_link);
+    //void addEdge(TableLink *table_link);
+    //void addEdge(FunctionLink *table_link);
+    //SchemaLink *dblink() const;
+    //QList<TableLink*> tablelinks() const;
     QRectF boundingRect() const
     {
         return QRectF(-35, -30, 80, 50);
     }
-    void paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
-               QWidget* widget)
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
+               QWidget *widget)
     {
         if(this->isSelected())
             painter->setPen(QColor(100,100,100));
         else
             painter->setPen(QColor(0,0,0,0));
-        if(this->getCollapsed()) {
+        if(this->getSchemaCollapsed()) {
             painter->setBrush(QColor(200,200,200));
             painter->drawRect(-35,-20,SCHEMA_WIDTH,SCHEMA_HEIGHT);
             painter->setBrush(QColor(190,190,190));
@@ -73,7 +114,8 @@ public:
             painter->drawPolygon(top, 4);
             painter->setPen(Qt::darkGray);
             QPointF textPos(-3*this->name.left(8).length(),+5);
-            painter->drawText(textPos, this->name.left(8));
+            painter->drawText(textPos, this->name.length()>8?this->name.left(8)+
+                              "..":this->name);
         }
         else {
             painter->setBrush(QColor(150,150,200));
@@ -96,7 +138,8 @@ public:
             painter->drawPolygon(top, 4);
             painter->setPen(QColor(50,50,100));
             QPointF textPos(-3*this->name.left(8).length(),+5);
-            painter->drawText(textPos, this->name.left(8));
+            painter->drawText(textPos, this->name.length()>8?this->name.left(8)+
+                              "..":this->name);
         }
         painter->setRenderHint(QPainter::Antialiasing, true);
     }
@@ -108,11 +151,11 @@ public:
     {
         this->name = name;
     }
-    bool getCollapsed()
+    bool getSchemaCollapsed()
     {
         return this->collapsed;
     }
-    void setCollapsed(bool collapsed)
+    void setSchemaCollapsed(bool collapsed)
     {
         this->collapsed = collapsed;
     }
@@ -129,28 +172,83 @@ public:
         this->setX(x + radius*sin(dtheta));
         this->setY(y + radius*cos(dtheta));
     }
-    Database* getParent()
+    Database *getParent()
     {
-        return this->dbPar;
+        return this->parent_database;
     }
-    void setParent(Database* db)
+    void setParent(Database *database)
     {
-        this->dbPar = db;
+        this->parent_database = database;
     }
-    QList<QString> getTblList()
+    int getTableCount()
     {
-        return this->tblList;
+        return number_of_tables;
     }
-    void setTblList(QList<QString> tblList)
+    void setTableCount(int number_of_tables)
     {
-        this->tblList = tblList;
+        this->number_of_tables = number_of_tables;
     }
-    virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *);
-    virtual void contextMenuEvent ( QGraphicsSceneContextMenuEvent *);
+    int getViewCount()
+    {
+        return number_of_views;
+    }
+    void setViewCount(int number_of_views)
+    {
+        this->number_of_views = number_of_views;
+    }
+    int getFunctionCount()
+    {
+        return number_of_functions;
+    }
+    void setFunctionCount(int number_of_functions)
+    {
+        this->number_of_functions = number_of_functions;
+    }
+    QList<Table*> getTableList()
+    {
+        return this->table_list;
+    }
+    void setTableList(QList<Table*> table_list)
+    {
+        this->table_list = table_list;
+    }
+    QList<View*> getViewList()
+    {
+        return this->view_list;
+    }
+    void setViewList(QList<View*> view_list)
+    {
+        this->view_list = view_list;
+    }
+    QList<Function*> getFunctionList()
+    {
+        return this->function_list;
+    }
+    void setFunctionList(QList<Function*> function_list)
+    {
+        this->function_list = function_list;
+    }
+//    QList<TableLink*> getTableLinkList()
+//    {
+//        return this->table_link_list;
+//    }
+//    QList<FunctionLink*> getFunctionLinkList()
+//    {
+//        return this->function_link_list;
+//    }
+    void resetTables();
+    void resetViews();
+    void resetTableVertically();
+    void horizontalPosition();
 
 Q_SIGNALS:
-    void expand(Database*, Schema*);
-    void collapse(Database*, Schema*);
+    void expandSchemaTables(Schema*);
+    void collapseSchemaTables(Schema*);
+    void expandSchemaViews(Schema*);
+    void collapseSchemaViews(Schema*);
+    void collapseOtherSchemas(Schema*);
+    void expandSchemaFunctions(Schema*);
+    void collapseSchemaFunctions(Schema*);
 };
 
 #endif // SCHEMA_H

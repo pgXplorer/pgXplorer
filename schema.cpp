@@ -1,61 +1,144 @@
+/*
+  LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
+
+  Copyright (c) 2011, davyjones <davyjones@github.com>
+
+  Permission to use, copy, modify, and/or distribute this software for any
+  purpose with or without fee is hereby granted, provided that the above
+  copyright notice and this permission notice appear in all copies.
+
+  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+  WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+  MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+  ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+  WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+  OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+*/
+
 #include "schema.h"
 #include "database.h"
 
-Schema::Schema(Database* db, QString schName)
+Schema::Schema(MainWin *mainwin, Database *database, QString schema_name, int schema_index, uint number_of_schemas)
 {
-    int aradius = A_RADIUS;
-    int bradius = B_RADIUS;
-    qreal dtheta;
-    int siz = db->getSchList().size();
-    int i = db->getSchList().indexOf(schName);
-    dtheta = -2*M_PI*i/siz - M_PI_2;
-    setParent(db);
-    setParentItem(db);
-    setPos(aradius*sin(dtheta), bradius*cos(dtheta));
-    setName(schName);
+    this->mainwin = mainwin;
+    this->schema_index = schema_index;
+    int a_radius = A_RADIUS;
+    int b_radius = B_RADIUS;
+    qreal dtheta = -2*M_PI*schema_index/number_of_schemas - M_PI_2;
+    setParent(database);
+    setParentItem(database);
+    if(mainwin->isColumnView()) {
+        if(parent_database->getSchemaCount()%2 == 0)
+            setPos((a_radius/2)*(schema_index) + a_radius/2/2 -(parent_database->getSchemaCount()*a_radius/2/2), b_radius/2);
+        else
+            setPos((a_radius/2)*(schema_index)-(parent_database->getSchemaCount()*a_radius/2/2), b_radius/2);
+    }
+    else
+        setPos(a_radius*sin(dtheta), b_radius*cos(dtheta));
+
+    setName(schema_name);
     setStatus(false);
-    setCollapsed(true);
-    QList<QString> tbllist;
-    setParent(db);
-    QSqlQuery* query = new QSqlQuery(db->getDb());
-    //query.prepare("SELECT tablename FROM pg_tables WHERE schemaname=?");
-    //query.addBindValue(schName);
-    //query.exec();
-    query->exec("SELECT tablename FROM pg_tables WHERE schemaname='" + schName + "'");
-    while (query->next())
-         tbllist << query->value(0).toString();
-    setTblList(tbllist);
-    setFlag(QGraphicsItem::ItemIsMovable);
-    setFlag(QGraphicsItem::ItemIsSelectable);
+    setSchemaCollapsed(true);
+
+    setFlag(ItemIsSelectable);
+    //setFlag(ItemSendsGeometryChanges);
+
     setToolTip(this->getName());
-    setFlag(ItemSendsGeometryChanges);
     setCacheMode(DeviceCoordinateCache);
     setZValue(-1);
+    /*if(mainwin->isColumnView()) {
+        populateSchemaTablesColumnwise();
+        populateSchemaFunctionsColumnwise();
+    }
+    else {
+        populateSchemaTables();
+        populateSchemaFunctions();
+    }*/
+    populateSchemaTables();
+    populateSchemaViews();
+    populateSchemaFunctions();
 }
 
 void Schema::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *)
 {
-    if(getCollapsed()) {
-        this->setCollapsed(false);
-        emit expand(getParent(), this);
+    if(getSchemaCollapsed()) {
+        this->setSchemaCollapsed(false);
+        if(mainwin->isColumnView()) {
+            if(mainwin->isTableView())
+                emit expandSchemaTables(this);
+            else if(mainwin->isViewView())
+                emit expandSchemaViews(this);
+            else if(mainwin->isFunctionView())
+                emit expandSchemaFunctions(this);
+        }
+        else {
+            emit expandSchemaTables(this);
+        }
     }
     else {
-        this->setCollapsed(true);
-        emit collapse(getParent(), this);
+        this->setSchemaCollapsed(true);
+        if(mainwin->isColumnView()) {
+            if(mainwin->isTableView())
+                emit collapseSchemaTables(this);
+            else if(mainwin->isViewView())
+                emit collapseSchemaViews(this);
+            else if(mainwin->isFunctionView())
+                emit collapseSchemaFunctions(this);
+        }
+        else {
+            emit expandSchemaTables(this);
+        }
     }
-    update();
 }
 
 void Schema::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 {
     QMenu menu;
-    //menu.setBackgroundColor(QColor(205,205,205));
-    menu.addAction("Expand");
-    menu.addAction("Delete");
-    QAction *a = menu.exec(event->screenPos());
-    if(a && QString::compare(a->text(),"Delete") == 0) {
-        //this;
+    if(collapsed) {
+        menu.addAction(tr("Explode"));
+        menu.addAction(tr("Explode vertically"));
     }
+    else {
+        menu.addAction(tr("Collapse"));
+        menu.addAction(tr("Collapse others"));
+        menu.addSeparator();
+        menu.addAction(tr("Reset"));
+        menu.addAction(tr("Arrange vertically"));
+    }
+    menu.addSeparator();
+    menu.addAction(tr("Explode functions"));
+    /*QAction *a = menu.exec(event->screenPos());
+
+    if(a && QString::compare(a->text(),"Explode") == 0)
+    {
+        emit expandSchemaTables(this);
+    }
+    else if(a && QString::compare(a->text(),"Explode vertically") == 0)
+    {
+        emit expandSchemaTables(this);
+        resetTableVertically();
+    }
+    else if(a && QString::compare(a->text(),"Collapse") == 0)
+    {
+        emit collapseSchemaTables(this);
+    }
+    else if(a && QString::compare(a->text(),"Collapse others") == 0)
+    {
+        emit collapseOtherSchemas(this);
+    }
+    else if(a && QString::compare(a->text(),"Reset") == 0)
+    {
+        resetTables();
+    }
+    else if(a && QString::compare(a->text(),"Arrange vertically") == 0)
+    {
+        resetTableVertically();
+    }
+    else if(a && QString::compare(a->text(),"Explode functions") == 0)
+    {
+        emit expandSchemaFunctions(this);
+    }*/
 }
 
 bool Schema::advance()
@@ -66,38 +149,270 @@ bool Schema::advance()
     return true;
 }
 
+void Schema::populateSchemaTables()
+{
+    foreach (Table *table, getTableList())
+        delete table;
+    this->table_list.clear();
+
+    QList<Table*> table_list;
+    QSqlQuery table_query(parent_database->getDatabaseConnection());
+    QString table_query_string = "SELECT 0, tablename FROM pg_tables WHERE schemaname='"+this->getName()+"' ORDER BY 1,2";
+    table_query.exec(table_query_string);
+    setTableCount(table_query.size());
+    if(table_query.lastError().isValid())
+    {
+        QMessageBox *error_message = new QMessageBox(QMessageBox::Critical,
+                                    tr("Database error"),
+                                    tr("Unable to retrieve schema tables.\n"
+                                    "Check your database connection or permissions.\n"), QMessageBox::Cancel,0,Qt::Dialog);
+        error_message->setWindowModality(Qt::NonModal);
+        error_message->show();
+        return;
+    }
+    while (table_query.next())
+    {
+        QString table_name = table_query.value(1).toString();
+        Table *table;
+        if(table_query.value(0).toInt() == 0) {
+            table = new Table(parent_database, this, table_name, table_list.size(), QColor(100,50,50));
+            table->setView(false);
+        }
+        else
+        {
+            return;
+        }
+
+        table->setSearched(true);
+        if(mainwin->isColumnView())
+            table->verticalPosition2();
+        else
+            table->defaultPosition();
+
+        QObject::connect(mainwin->getSearchBox(), SIGNAL(textChanged(QString)), table, SLOT(getSearchTerm(QString)));
+        QObject::connect(mainwin, SIGNAL(showColumnView()), table, SLOT(verticalPosition2()));
+        QObject::connect(table, SIGNAL(expandTable(Database *, Schema *, Table*)), mainwin, SLOT(showTableView(Database *, Schema *, Table*)));
+        QObject::connect(table, SIGNAL(clearTable(Database *, Schema *, Table*)), mainwin, SLOT(clearTableView(Database *, Schema *, Table*)));
+        QObject::connect(table, SIGNAL(dropTable(Database *, Schema *, Table*)), mainwin, SLOT(dropTableView(Database *, Schema *, Table*)));
+
+        table_list.append(table);
+        if(!mainwin->table_completer_list.contains(table_name))
+            mainwin->table_completer_list.append(table_name);
+    }
+    setTableList(table_list);
+}
+
+void Schema::populateSchemaViews()
+{
+    foreach (View *view, getViewList())
+        delete view;
+    this->view_list.clear();
+
+    QList<View*> view_list;
+    QSqlQuery *view_query = new QSqlQuery(parent_database->getDatabaseConnection());
+    QString view_query_string = "SELECT 1, viewname FROM pg_views WHERE schemaname='"+this->getName()+"' ORDER BY 1,2";
+    view_query->exec(view_query_string);
+    setViewCount(view_query->size());
+    if(view_query->lastError().isValid())
+    {
+        QMessageBox *error_message = new QMessageBox(QMessageBox::Critical,
+                                    tr("Database error"),
+                                    tr("Unable to retrieve schema views.\n"
+                                    "Check your database connection or permissions.\n"), QMessageBox::Cancel,0,Qt::Dialog);
+        error_message->setWindowModality(Qt::NonModal);
+        error_message->show();
+        return;
+    }
+    while (view_query->next())
+    {
+        QString view_name = view_query->value(1).toString();
+        View *view;
+        if(view_query->value(0).toInt() == 1) {
+            view = new View(parent_database, this, view_name, view_list.size(), QColor(100,50,50));
+        }
+        else
+        {
+            return;
+        }
+
+        view->setSearched(true);
+        if(mainwin->isColumnView())
+            view->verticalPosition2();
+        else
+            view->defaultPosition();
+
+        QObject::connect(mainwin->getSearchBox(), SIGNAL(textChanged(QString)), view, SLOT(getSearchTerm(QString)));
+        QObject::connect(mainwin, SIGNAL(showColumnView()), view, SLOT(verticalPosition2()));
+        QObject::connect(view, SIGNAL(expandView(Database *, Schema *, View*)), mainwin, SLOT(showViewView(Database *, Schema *, View*)));
+        QObject::connect(view, SIGNAL(dropView(Database *, Schema *, View*)), mainwin, SLOT(dropViewView(Database *, Schema *, View*)));
+
+        view_list.append(view);
+        if(!mainwin->view_completer_list.contains(view_name))
+            mainwin->view_completer_list.append(view_name);
+    }
+    setViewList(view_list);
+}
+
+void Schema::populateSchemaFunctions()
+{
+    foreach (Function *func, getFunctionList())
+        delete func;
+    this->function_list.clear();
+
+    QList<Function*> function_list;
+    QSqlQuery *function_query = new QSqlQuery(parent_database->getDatabaseConnection());
+    QString function_query_string = "SELECT proname,proargnames,proargtypes FROM pg_catalog.pg_namespace n JOIN pg_catalog.pg_proc p ON pronamespace = n.oid WHERE nspname='"+this->getName()+"' ORDER BY 1,2,3";
+    function_query->exec(function_query_string);
+
+    setFunctionCount(function_query->size());
+    if(function_query->lastError().isValid())
+    {
+        QMessageBox *error_message = new QMessageBox(QMessageBox::Critical,
+                                    tr("Database error"),
+                                    tr("Unable to retrieve schema tables.\n"
+                                    "Check your database connection or permissions.\n"), QMessageBox::Cancel,0,Qt::Dialog);
+        error_message->setWindowModality(Qt::NonModal);
+        error_message->show();
+        return;
+    }
+    while (function_query->next())
+    {
+        QString function_name = function_query->value(0).toString();
+        QString function_args = function_query->value(1).toString();
+        QString function_arg_types = function_query->value(2).toString();
+
+        Function *function = new Function(parent_database, this, function_name, function_args, function_arg_types, function_list.size(), QColor(100,100,50));
+        function->setSearched(true);
+
+        if(mainwin->isColumnView())
+            function->verticalPosition2();
+        else
+            function->defaultPosition();
+
+        QObject::connect(mainwin->getSearchBox(), SIGNAL(textChanged(QString)), function, SLOT(getSearchTerm(QString)));
+        //QObject::connect(mainwin, SIGNAL(), function, SLOT(getSearchTerm(QString)));
+        QObject::connect(mainwin, SIGNAL(showColumnView()), function, SLOT(verticalPosition2()));
+        QObject::connect(function, SIGNAL(expandFunction(Schema*, Function*)), mainwin, SLOT(showFunctionEditor(Schema*, Function*)));
+        //QObject::connect(function, SIGNAL(runFunction(Database *, Schema *, Function*)), mainwin, SLOT(runFunction(Database *, Schema *, Function*)));
+        //QObject::connect(function, SIGNAL(dropFunction(Database *, Schema *, Function*)), mainwin, SLOT(dropFunction(Database *, Schema *, Function*)));
+
+        function_list.append(function);
+        if(!mainwin->function_completer_list.contains(function_name))
+            mainwin->function_completer_list.append(function_name);
+    }
+    setFunctionList(function_list);
+}
+
+void Schema::resetTables()
+{
+    populateSchemaTables();
+    QList<Table*> table_list = getTableList();
+    foreach(Table *table, table_list)
+    {
+        if(mainwin->getSearchBox()->isVisible())
+            table->getSearchTerm(mainwin->getSearchBox()->text());
+        table->defaultPosition();
+    }
+    scene()->setSceneRect(QRectF());
+}
+
+void Schema::resetViews()
+{
+    populateSchemaViews();
+    QList<View*> view_list = getViewList();
+    foreach(View *view, view_list)
+    {
+        if(mainwin->getSearchBox()->isVisible())
+            view->getSearchTerm(mainwin->getSearchBox()->text());
+        view->defaultPosition();
+    }
+    scene()->setSceneRect(QRectF());
+}
+
+void Schema::resetTableVertically()
+{
+    populateSchemaTables();
+    QList<Table*> table_list = getTableList();
+    foreach(Table *table, table_list)
+    {
+        if(mainwin->getSearchBox()->isVisible())
+            table->getSearchTerm(mainwin->getSearchBox()->text());
+        table->verticalPosition();
+    }
+    scene()->setSceneRect(QRectF());
+}
+
+void Schema::horizontalPosition()
+{
+    float xs = parent_database->x();
+    float ys = 0;
+    float i;
+    int schema_count = parent_database->getSchemaCount();
+    if(schema_count%2 == 0) {
+        if (xs < 0)
+            i = -schema_index+(schema_count/2)-0.5;
+        else
+            i = schema_index-(schema_count/2)+0.5;
+    }
+    else {
+        if (xs < 0)
+            i = -schema_index+(schema_count/2);
+        else
+            i = schema_index-(schema_count/2);
+    }
+    int radius = 8*schema_count;
+    if(radius < 100) radius = 100;
+    qreal dtheta = 2*M_PI*i/schema_count;
+    if(xs < 0)
+    {
+        this->setPos((-radius*cos(atan(ys/xs))+radius*(dtheta)*sin(atan(ys/xs))),
+                     (-radius*sin(atan(ys/xs))-radius*(dtheta)*cos(atan(ys/xs))));
+    }
+    else if(xs > 0)
+    {
+        this->setPos(radius*cos(atan(ys/xs))-radius*(dtheta)*sin(atan(ys/xs)),
+                     radius*sin(atan(ys/xs))+radius*(dtheta)*cos(atan(ys/xs)));
+    }
+}
+/*
 QVariant Schema::itemChange(GraphicsItemChange change, const QVariant &value)
 {
     switch (change) {
     case ItemPositionHasChanged:
-        foreach (SchemaLink *edge, edgeList)
-            edge->adjust();
+        schema_link->adjust();
         break;
     default:
         break;
     };
 
     return QGraphicsItem::itemChange(change, value);
+}*/
+
+void Schema::addEdge(SchemaLink *a_schema_link)
+{
+    schema_link = a_schema_link;
+    a_schema_link->adjust();
+}
+/*
+void Schema::addEdge(TableLink *a_table_link)
+{
+    table_link_list << a_table_link;
+    a_table_link->adjust();
 }
 
-void Schema::addEdge(SchemaLink *edge)
+void Schema::addEdge(FunctionLink *a_function_link)
 {
-    edgeList << edge;
-    edge->adjust();
+    function_link_list << a_function_link;
+    a_function_link->adjust();
 }
 
-void Schema::addEdge(TableLink *edge)
+SchemaLink *Schema::dblink() const
 {
-    linkList << edge;
-    edge->adjust();
-}
-
-QList<SchemaLink *> Schema::dblink() const
-{
-    return edgeList;
+    return schema_link;
 }
 
 QList<TableLink *> Schema::tablelinks() const
 {
-    return linkList;
+    return table_link_list;
 }
+*/
