@@ -13,7 +13,6 @@ HEADERS		= \
     pgxconsole.h \
     queryview.h \
     tableview.h \
-    querymodel.h \
     connectionproperties.h \
     pgxeditor.h \
     function.h \
@@ -32,7 +31,6 @@ SOURCES		= main.cpp \
     pgxconsole.cpp \
     queryview.cpp \
     tableview.cpp \
-    querymodel.cpp \
     connectionproperties.cpp \
     pgxeditor.cpp \
     function.cpp \
