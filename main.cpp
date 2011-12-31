@@ -22,18 +22,22 @@
 #include "mainWin.h"
 #include "licensedialog.h"
 
-int main(int argc, char* *argv)
+int main(int argc, char **argv)
 {
     Q_INIT_RESOURCE(pgXplorer);
     QApplication pgXplorer(argc, argv);
 
-    MainWin *mainwin = new MainWin(0, QString(""), Qt::Widget);
+    QString arg1;
+    if(argc > 1)
+        arg1.append(QString::fromLocal8Bit(argv[1]));
+
+    MainWin *mainwin = new MainWin(0, arg1, Qt::Widget);
     QCoreApplication::setOrganizationName("pgXplorer");
     QCoreApplication::setOrganizationDomain("pgXplorer.com");
     QCoreApplication::setApplicationName("pgXplorer");
 
     QSettings settings("pgXplorer","pgXplorer");
-    //settings.remove("license");
+
     QString user = settings.value("license/user", QString()).toString();
     bool site_wide = settings.value("license/site_wide", false).toBool();
     QByteArray key = settings.value("license/key", QString()).toByteArray();
@@ -42,7 +46,6 @@ int main(int argc, char* *argv)
     if(!license_dialog->validLicense(user, site_wide, key)) {
         uint tries = settings.value("license/tries", 0).toUInt();
         settings.setValue("license/tries", ++tries);
-        qDebug() << tries;
         license_dialog->exec();
     }
     else {

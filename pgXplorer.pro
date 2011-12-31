@@ -13,14 +13,14 @@ HEADERS		= \
     pgxconsole.h \
     queryview.h \
     tableview.h \
+    querymodel.h \
     connectionproperties.h \
     pgxeditor.h \
     function.h \
     functionlink.h \
     view.h \
     highlighter.h \
-    licensedialog.h \
-    querymodel.h
+    licensedialog.h
 SOURCES		= main.cpp \
     tableLink.cpp \
     schemaLink.cpp \
@@ -31,16 +31,15 @@ SOURCES		= main.cpp \
     pgxconsole.cpp \
     queryview.cpp \
     tableview.cpp \
+    querymodel.cpp \
     connectionproperties.cpp \
     pgxeditor.cpp \
     function.cpp \
     functionlink.cpp \
     view.cpp \
     highlighter.cpp \
-    licensedialog.cpp \
-    querymodel.cpp
-QT += sql
-QT += translator
+    licensedialog.cpp
+QT += sql translator
 
 RESOURCES += pgXplorer.qrc
 
@@ -59,3 +58,5 @@ INSTALLS += target sources
 
 OTHER_FILES += \
     pgXplorer.rc
+
+

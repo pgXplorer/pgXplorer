@@ -197,43 +197,43 @@ void PgxEditor::breakpointAreaPaintEvent(QPaintEvent *event)
 
 void PgxEditor::createActions()
 {
-    cut_action = new QAction(QIcon("icons/cut.png"), tr("Cut"), this);
+    cut_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/cut.png")), tr("Cut"), this);
     cut_action->setText(tr("Cut"));
     cut_action->setShortcuts(QKeySequence::Cut);
     cut_action->setStatusTip(tr("Cut selected text and copy to clipboard"));
     connect(cut_action, SIGNAL(triggered()), this, SLOT(cut()));
 
-    copy_action = new QAction(QIcon("icons/copy.png"), tr("Copy"), this);
+    copy_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/copy.png")), tr("Copy"), this);
     copy_action->setShortcuts(QKeySequence::Copy);
     copy_action->setStatusTip(tr("Copy selected text to clipboard"));
     connect(copy_action, SIGNAL(triggered()), this, SLOT(copy()));
 
-    paste_action = new QAction(QIcon("icons/paste.png"), tr("Paste"), this);
+    paste_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/paste.png")), tr("Paste"), this);
     paste_action->setShortcuts(QKeySequence::Paste);
     paste_action->setStatusTip(tr("Save function"));
     connect(paste_action, SIGNAL(triggered()), this, SLOT(paste()));
 
     if(!editor_name.isEmpty()) {
-        save_action = new QAction(QIcon("icons/save.png"), tr("&Save"), this);
+        save_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/save.png")), tr("&Save"), this);
         save_action->setShortcuts(QKeySequence::Save);
         save_action->setStatusTip(tr("Save function"));
         save_action->setEnabled(false);
         connect(save_action, SIGNAL(triggered()), this, SLOT(saveFunction()));
 
-        execute_action = new QAction(QIcon("icons/execute.png"), tr("&Execute"), this);
+        execute_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/execute.png")), tr("&Execute"), this);
         execute_action->setShortcuts(QKeySequence::Save);
         execute_action->setStatusTip(tr("Execute function"));
         connect(execute_action, SIGNAL(triggered()), this, SLOT(executeFunction()));
     }
 
-    selected_execute_action = new QAction(QIcon("icons/selected_execute.png"), tr("&Run"), this);
+    selected_execute_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/selected_execute.png")), tr("&Run"), this);
     selected_execute_action->setShortcuts(QKeySequence::Save);
     selected_execute_action->setStatusTip(tr("Execute function"));
     if(!editor_name.isEmpty())
         selected_execute_action->setEnabled(false);
     connect(selected_execute_action, SIGNAL(triggered()), this, SLOT(executeText()));
 
-    find_action = new QAction(QIcon("icons/find.png"), tr("Find"), this);
+    find_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/find.png")), tr("Find"), this);
     find_action->setShortcuts(QKeySequence::Find);
     find_action->setStatusTip(tr("Find/replace text"));
     connect(find_action, SIGNAL(triggered()), this, SLOT(toggleFindBar()));

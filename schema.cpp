@@ -193,7 +193,7 @@ void Schema::populateSchemaTables()
         QObject::connect(mainwin, SIGNAL(showColumnView()), table, SLOT(verticalPosition2()));
         QObject::connect(table, SIGNAL(expandTable(Database *, Schema *, Table*)), mainwin, SLOT(showTableView(Database *, Schema *, Table*)));
         QObject::connect(table, SIGNAL(clearTable(Database *, Schema *, Table*)), mainwin, SLOT(clearTableView(Database *, Schema *, Table*)));
-        QObject::connect(table, SIGNAL(dropTable(Database *, Schema *, Table*)), mainwin, SLOT(dropTableView(Database *, Schema *, Table*)));
+        QObject::connect(table, SIGNAL(dropTable(Database *, Schema *, Table*)), mainwin, SLOT(dropTable(Database *, Schema *, Table*)));
 
         table_list.append(table);
         if(!mainwin->table_completer_list.contains(table_name))
@@ -244,7 +244,7 @@ void Schema::populateSchemaViews()
         QObject::connect(mainwin->getSearchBox(), SIGNAL(textChanged(QString)), view, SLOT(getSearchTerm(QString)));
         QObject::connect(mainwin, SIGNAL(showColumnView()), view, SLOT(verticalPosition2()));
         QObject::connect(view, SIGNAL(expandView(Database *, Schema *, View*)), mainwin, SLOT(showViewView(Database *, Schema *, View*)));
-        QObject::connect(view, SIGNAL(dropView(Database *, Schema *, View*)), mainwin, SLOT(dropViewView(Database *, Schema *, View*)));
+        QObject::connect(view, SIGNAL(dropView(Database *, Schema *, View*)), mainwin, SLOT(dropView(Database *, Schema *, View*)));
 
         view_list.append(view);
         if(!mainwin->view_completer_list.contains(view_name))
@@ -294,7 +294,7 @@ void Schema::populateSchemaFunctions()
         QObject::connect(mainwin, SIGNAL(showColumnView()), function, SLOT(verticalPosition2()));
         QObject::connect(function, SIGNAL(expandFunction(Schema*, Function*)), mainwin, SLOT(showFunctionEditor(Schema*, Function*)));
         //QObject::connect(function, SIGNAL(runFunction(Database *, Schema *, Function*)), mainwin, SLOT(runFunction(Database *, Schema *, Function*)));
-        //QObject::connect(function, SIGNAL(dropFunction(Database *, Schema *, Function*)), mainwin, SLOT(dropFunction(Database *, Schema *, Function*)));
+        QObject::connect(function, SIGNAL(dropFunction(Database *, Schema *, Function*)), mainwin, SLOT(dropFunction(Database *, Schema *, Function*)));
 
         function_list.append(function);
         if(!mainwin->function_completer_list.contains(function_name))
@@ -316,6 +316,32 @@ void Schema::resetTables()
     scene()->setSceneRect(QRectF());
 }
 
+void Schema::resetTablesVertically()
+{
+    populateSchemaTables();
+    QList<Table*> table_list = getTableList();
+    foreach(Table *table, table_list)
+    {
+        if(mainwin->getSearchBox()->isVisible())
+            table->getSearchTerm(mainwin->getSearchBox()->text());
+        table->verticalPosition();
+    }
+    scene()->setSceneRect(QRectF());
+}
+
+void Schema::resetTablesVertically2()
+{
+    populateSchemaTables();
+    QList<Table*> table_list = getTableList();
+    foreach(Table *table, table_list)
+    {
+        if(mainwin->getSearchBox()->isVisible())
+            table->getSearchTerm(mainwin->getSearchBox()->text());
+        table->verticalPosition2();
+    }
+    scene()->setSceneRect(QRectF());
+}
+
 void Schema::resetViews()
 {
     populateSchemaViews();
@@ -329,15 +355,41 @@ void Schema::resetViews()
     scene()->setSceneRect(QRectF());
 }
 
-void Schema::resetTableVertically()
+void Schema::resetViewsVertically2()
 {
-    populateSchemaTables();
-    QList<Table*> table_list = getTableList();
-    foreach(Table *table, table_list)
+    populateSchemaViews();
+    QList<View*> view_list = getViewList();
+    foreach(View *view, view_list)
     {
         if(mainwin->getSearchBox()->isVisible())
-            table->getSearchTerm(mainwin->getSearchBox()->text());
-        table->verticalPosition();
+            view->getSearchTerm(mainwin->getSearchBox()->text());
+        view->verticalPosition2();
+    }
+    scene()->setSceneRect(QRectF());
+}
+
+void Schema::resetFunctions()
+{
+    populateSchemaFunctions();
+    QList<Function*> function_list = getFunctionList();
+    foreach(Function *function, function_list)
+    {
+        if(mainwin->getSearchBox()->isVisible())
+            function->getSearchTerm(mainwin->getSearchBox()->text());
+        function->defaultPosition();
+    }
+    scene()->setSceneRect(QRectF());
+}
+
+void Schema::resetFunctionsVertically2()
+{
+    populateSchemaFunctions();
+    QList<Function*> function_list = getFunctionList();
+    foreach(Function *function, function_list)
+    {
+        if(mainwin->getSearchBox()->isVisible())
+            function->getSearchTerm(mainwin->getSearchBox()->text());
+        function->verticalPosition2();
     }
     scene()->setSceneRect(QRectF());
 }

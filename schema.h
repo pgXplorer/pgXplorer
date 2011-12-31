@@ -237,8 +237,12 @@ public:
 //        return this->function_link_list;
 //    }
     void resetTables();
+    void resetTablesVertically();
+    void resetTablesVertically2();
     void resetViews();
-    void resetTableVertically();
+    void resetViewsVertically2();
+    void resetFunctions();
+    void resetFunctionsVertically2();
     void horizontalPosition();
 
 Q_SIGNALS:

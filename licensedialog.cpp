@@ -54,8 +54,9 @@ LicenseDialog::LicenseDialog(MainWin *mainwin)
     setAttribute(Qt::WA_DeleteOnClose);
     resize(512, 288);
     setModal(true);
-    setParent(mainwin);
-    setWindowFlags(Qt::Window | Qt::FramelessWindowHint);
+    if(mainwin->isVisible())
+        setParent(mainwin);
+    setWindowFlags(Qt::Popup);
     setWindowModality(Qt::WindowModal);
 
     QFont font;

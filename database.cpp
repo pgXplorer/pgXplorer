@@ -71,7 +71,7 @@ void Database::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
         //menu.addAction("Explode all vertically");
         menu.addSeparator();
     }
-    menu.addAction(QIcon("icons/properties.png"), QApplication::translate("Database", "Properties", 0, QApplication::UnicodeUTF8));
+    menu.addAction(QIcon(qApp->applicationDirPath().append("/icons/properties.png")), QApplication::translate("Database", "Properties", 0, QApplication::UnicodeUTF8));
     QAction *a = menu.exec(event->screenPos());
     if(a && QString::compare(a->text(),"Explode")==0) {
         emit expandDatabase(this);

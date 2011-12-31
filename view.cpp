@@ -118,7 +118,7 @@ void View::setColumnList()
     {
         QMessageBox *error_message = new QMessageBox(QMessageBox::Critical,
                                     tr("Database error"),
-                                    tr("Unable to retrieve schema tables.\n"
+                                    tr("Unable to retrieve schema views.\n"
                                     "Check your database connection or permissions.\n"), QMessageBox::Cancel,0,Qt::Dialog);
         error_message->setWindowModality(Qt::NonModal);
         error_message->show();
@@ -132,7 +132,7 @@ void View::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 {
     QMenu menu;
     //menu.setStyleSheet("QMenu { font-size:12px; width: 100px; color:white; left: 20px; background-color:qlineargradient(x1:0, y1:0, x2:0, y2:1, stop: 0 #cccccc, stop: 1 #333333);}");
-    menu.addAction(QIcon("icons/view2.svgz"), tr("View contents"));
+    menu.addAction(QIcon(qApp->applicationDirPath().append("/icons/view2.png")), tr("View contents"));
     if(!is_view) {
         menu.addSeparator();
         menu.addAction("Drop view");

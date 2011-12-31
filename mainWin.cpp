@@ -47,7 +47,7 @@ Canvas::Canvas(
 {
     setMouseTracking(false);
     zoom = false;
-    zoom_cursor = QCursor(QPixmap("icons/zoom.png"));
+    zoom_cursor = QCursor(QPixmap(qApp->applicationDirPath().append("/icons/zoom.png")));
     setOptimizationFlags(QGraphicsView::DontSavePainterState);
     setViewportUpdateMode(QGraphicsView::SmartViewportUpdate);
     setObjectName(name);
@@ -81,7 +81,7 @@ void Canvas::mouseReleaseEvent(QMouseEvent *event)
     QGraphicsView::mouseReleaseEvent(event);
 }
 
-MainWin::MainWin(QWidget *parent, const QString name, Qt::WindowFlags f)
+MainWin::MainWin(QWidget *parent, const QString arg1, Qt::WindowFlags f)
 {
     setAttribute(Qt::WA_DeleteOnClose);
     readSettings();
@@ -134,7 +134,6 @@ MainWin::MainWin(QWidget *parent, const QString name, Qt::WindowFlags f)
     setCentralWidget(canvas);
 
     printer = 0;
-    newFile();
 
     search_box = new QLineEdit(canvas);
     search_box->hide();
@@ -152,6 +151,10 @@ MainWin::MainWin(QWidget *parent, const QString name, Qt::WindowFlags f)
     if(is_maximized) {
        showMaximized();
     }
+
+    newFile();
+    if(!arg1.isEmpty())
+        open(arg1);
 }
 
 void MainWin::changeEvent(QEvent *event)
@@ -641,11 +644,11 @@ void MainWin::newProcess()
 {
     QProcess *new_process = new QProcess;
 
-#ifdef Q_WS_X11
-    new_process->start("./pgXplorer");
+#ifdef Q_WS_WIN
+    new_process->start("pgXplorer.exe");
 #endif
 
-#ifdef Q_WS_WIN
+#ifdef Q_WS_X11
     new_process->start("./pgXplorer");
 #endif
 }
@@ -802,10 +805,10 @@ void MainWin::search()
 
 void MainWin::setLanguageDefault()
 {
-    translator.load("pgXplorer_ja");
+    translator.load(qApp->applicationDirPath().append("/pgXplorer_ja"));
     qApp->removeTranslator(&translator);
     japanese_action->setIconVisibleInMenu(false);
-    translator.load("pgXplorer_fr");
+    translator.load(qApp->applicationDirPath().append("/pgXplorer_fr"));
     qApp->removeTranslator(&translator);
     french_action->setIconVisibleInMenu(false);
     english_action->setIconVisibleInMenu(true);
@@ -814,7 +817,7 @@ void MainWin::setLanguageDefault()
 
 void MainWin::setLanguageJapanese()
 {
-    translator.load("pgXplorer_ja");
+    translator.load(qApp->applicationDirPath().append("/pgXplorer_ja"));
     qApp->installTranslator(&translator);
     japanese_action->setIconVisibleInMenu(true);
     french_action->setIconVisibleInMenu(false);
@@ -824,7 +827,7 @@ void MainWin::setLanguageJapanese()
 
 void MainWin::setLanguageFrench()
 {
-    translator.load("pgXplorer_fr");
+    translator.load(qApp->applicationDirPath().append("/pgXplorer_fr"));
     qApp->installTranslator(&translator);
     japanese_action->setIconVisibleInMenu(false);
     french_action->setIconVisibleInMenu(true);
@@ -872,7 +875,7 @@ void MainWin::explodeAndShowSchemasVertically()
     {
         showTables(schema);
         schema->setSchemaCollapsed(false);
-        schema->resetTableVertically();
+        schema->resetTablesVertically();
         schema->update();
     }
     showSchemas();
@@ -1005,22 +1008,22 @@ void MainWin::hideOtherTables(Schema *schema)
 
 void MainWin::createActions()
 {
-    new_file_action = new QAction(QIcon("./icons/new.png"), tr("&New"), this);
+    new_file_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/new.png")), tr("&New"), this);
     new_file_action->setShortcuts(QKeySequence::New);
     new_file_action->setStatusTip(tr("Create a new file"));
     connect(new_file_action, SIGNAL(triggered()), this, SLOT(newProcess()));
 
-    open_file_action = new QAction(QIcon("icons/open.png"), tr("&Open..."), this);
+    open_file_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/open.png")), tr("&Open..."), this);
     open_file_action->setShortcuts(QKeySequence::Open);
     open_file_action->setStatusTip(tr("Open an existing file"));
     connect(open_file_action, SIGNAL(triggered()), this, SLOT(openFile()));
 
-    save_file_action = new QAction(QIcon("icons/save.png"), tr("&Save"), this);
+    save_file_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/save.png")), tr("&Save"), this);
     save_file_action->setShortcuts(QKeySequence::Save);
     save_file_action->setStatusTip(tr("Save the document to disk"));
     connect(save_file_action, SIGNAL(triggered()), this, SLOT(saveFile()));
 
-    save_file_as_action = new QAction(QIcon("icons/save_as.png"), tr("Save &As..."), this);
+    save_file_as_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/save_as.png")), tr("Save &As..."), this);
     save_file_as_action->setShortcuts(QKeySequence::SaveAs);
     save_file_as_action->setStatusTip(tr("Save the document under a new name"));
     connect(save_file_as_action, SIGNAL(triggered()), this, SLOT(saveFileAs()));
@@ -1030,41 +1033,41 @@ void MainWin::createActions()
     exit_action->setStatusTip(tr("Exit the application"));
     connect(exit_action, SIGNAL(triggered()), this, SLOT(quitApp()));
 
-    connection_properties_action = new QAction(QIcon("icons/properties.png"), tr("Connection properties"), this);
+    connection_properties_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/properties.png")), tr("Connection properties"), this);
     connection_properties_action->setShortcuts(QKeySequence::SaveAs);
     connection_properties_action->setStatusTip(tr("Set connection properties"));
     connect(connection_properties_action, SIGNAL(triggered()), this, SLOT(openDatabaseProperties()));
 
-    console_action = new QAction(QIcon("icons/console.png"), tr("SQL Console"), this);
+    console_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/console.png")), tr("SQL Console"), this);
     console_action->setShortcuts(QKeySequence::SaveAs);
     console_action->setEnabled(false);
     console_action->setStatusTip(tr("Launch SQL console"));
     connect(console_action, SIGNAL(triggered()), this, SLOT(showPgxconsole()));
 
-    editor_action = new QAction(QIcon("icons/editor.png"), tr("SQL Editor"), this);
+    editor_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/editor.png")), tr("SQL Editor"), this);
     editor_action->setShortcuts(QKeySequence::SaveAs);
     editor_action->setEnabled(false);
     editor_action->setStatusTip(tr("Launch SQL editor"));
     connect(editor_action, SIGNAL(triggered()), this, SLOT(showPgxeditor()));
 
-    search_action = new QAction(QIcon("icons/search.png"), tr("Search for items"), this);
+    search_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/search.png")), tr("Search for items"), this);
     //search_action->setShortcuts(QKeySequence::Find);
     search_action->setStatusTip(tr("Highlight items that match"));
     search_action->setCheckable(true);
     connect(search_action, SIGNAL(triggered()), this, SLOT(search()));
 
-    fullscreen_action = new QAction(QIcon("icons/fullscreen.png"), tr("Fullscreen"), this);
+    fullscreen_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/fullscreen.png")), tr("Fullscreen"), this);
     fullscreen_action->setShortcut(QKeySequence(Qt::Key_F11));
     fullscreen_action->setStatusTip(tr("Occupy full desktop"));
     connect(fullscreen_action, SIGNAL(triggered()), this, SLOT(toggleFullscreen()));
 
-    treeview_action = new QAction(QIcon("icons/treeview.png"), tr("Treeview"), this);
+    treeview_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/treeview.png")), tr("Treeview"), this);
     treeview_action->setShortcut(QKeySequence(Qt::Key_T));
     treeview_action->setStatusTip(tr("Show database contents in tree view"));
     treeview_action->setCheckable(true);
     connect(treeview_action, SIGNAL(triggered()), this, SLOT(showTreeview()));
 
-    columnview_action = new QAction(QIcon("icons/columnview.png"), tr("Column view"), this);
+    columnview_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/columnview.png")), tr("Column view"), this);
     columnview_action->setShortcut(QKeySequence(Qt::Key_T));
     columnview_action->setStatusTip(tr("Show database contents in column view"));
     columnview_action->setCheckable(true);
@@ -1075,19 +1078,19 @@ void MainWin::createActions()
     layout_view_actiongroup->addAction(columnview_action);
     columnview_action->setChecked(true);
 
-    tableview_action = new QAction(QIcon("icons/table.png"), tr("Tables"), this);
+    tableview_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/table.png")), tr("Tables"), this);
     tableview_action->setShortcut(QKeySequence(Qt::Key_T));
     tableview_action->setStatusTip(tr("Show database tables"));
     tableview_action->setCheckable(true);
     connect(tableview_action, SIGNAL(triggered()), this, SLOT(showAllTables()));
 
-    viewview_action = new QAction(QIcon("icons/view2.png"), tr("Views"), this);
+    viewview_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/view2.png")), tr("Views"), this);
     viewview_action->setShortcut(QKeySequence(Qt::Key_V));
     viewview_action->setStatusTip(tr("Show database views"));
     viewview_action->setCheckable(true);
     connect(viewview_action, SIGNAL(triggered()), this, SLOT(showAllViews()));
 
-    functionview_action = new QAction(QIcon("icons/function.png"), tr("Functions"), this);
+    functionview_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/function.png")), tr("Functions"), this);
     functionview_action->setShortcut(QKeySequence(Qt::Key_F));
     functionview_action->setStatusTip(tr("Show database functions"));
     functionview_action->setCheckable(true);
@@ -1099,22 +1102,22 @@ void MainWin::createActions()
     content_view_actiongroup->addAction(functionview_action);
     tableview_action->setChecked(true);
 
-    english_action = new QAction(QIcon("icons/ok.png"), tr("English (default)"), this);
+    english_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/ok.png")), tr("English (default)"), this);
     connect(english_action, SIGNAL(triggered()), this, SLOT(setLanguageDefault()));
     if(language_setting.compare("english"))
         english_action->setIconVisibleInMenu(false);
 
-    japanese_action = new QAction(QIcon("icons/ok.png"), tr("Japanese"), this);
+    japanese_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/ok.png")), tr("Japanese"), this);
     connect(japanese_action, SIGNAL(triggered()), this, SLOT(setLanguageJapanese()));
     if(language_setting.compare("japanese"))
         japanese_action->setIconVisibleInMenu(false);
 
-    french_action = new QAction(QIcon("icons/ok.png"), tr("French"), this);
+    french_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/ok.png")), tr("French"), this);
     connect(french_action, SIGNAL(triggered()), this, SLOT(setLanguageFrench()));
     if(language_setting.compare("french"))
         french_action->setIconVisibleInMenu(false);
 
-    help_action = new QAction(QIcon("icons/help.png"), tr("&Help"), this);
+    help_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/help.png")), tr("&Help"), this);
     help_action->setShortcuts(QKeySequence::HelpContents);
     help_action->setStatusTip(tr("Help contents"));
     //connect(help_action, SIGNAL(triggered()), this, SLOT(help()));
@@ -1212,7 +1215,7 @@ void MainWin::clearTableView(Database *database, Schema *schema, Table *table)
     table_name.append("\"");
 
     {
-        QSqlDatabase database_connection = QSqlDatabase::addDatabase("QPSQL", "clear" + table_name);
+        QSqlDatabase database_connection = QSqlDatabase::addDatabase("QPSQL", QString("clear ").append(table_name));
         database_connection.setHostName(database->getHost());
         database_connection.setPort(database->getPort().toInt());
         database_connection.setDatabaseName(database->getName());
@@ -1230,10 +1233,10 @@ void MainWin::clearTableView(Database *database, Schema *schema, Table *table)
         //    QMessageBox::critical(0, tr("Database error"),
         //    query.lastError().databaseText(), QMessageBox::Close);
     }
-    QSqlDatabase::removeDatabase("clear" + table_name);
+    QSqlDatabase::removeDatabase(QString("clear ").append(table_name));
 }
 
-void MainWin::dropTableView(Database *database, Schema *schema, Table *table)
+void MainWin::dropTable(Database *database, Schema *schema, Table *table)
 {
     int ret = QMessageBox::warning(this, tr("pgXplorer"),
                                     tr("This action will destroy this table and all its data and cannot be undone.\n"
@@ -1247,7 +1250,7 @@ void MainWin::dropTableView(Database *database, Schema *schema, Table *table)
     table_name.append("\"");
 
     {
-        QSqlDatabase database_connection = QSqlDatabase::addDatabase("QPSQL", "clear" + table_name);
+        QSqlDatabase database_connection = QSqlDatabase::addDatabase("QPSQL", "drop " + table_name);
         database_connection.setHostName(database->getHost());
         database_connection.setPort(database->getPort().toInt());
         database_connection.setDatabaseName(database->getName());
@@ -1265,11 +1268,11 @@ void MainWin::dropTableView(Database *database, Schema *schema, Table *table)
         //    QMessageBox::critical(0, tr("Database error"),
         //    query.lastError().databaseText(), QMessageBox::Close);
     }
-    QSqlDatabase::removeDatabase("clear" + table_name);
-    schema->resetTables();
+    QSqlDatabase::removeDatabase("drop " + table_name);
+    schema->resetTablesVertically2();
 }
 
-void MainWin::dropViewView(Database *database, Schema *schema, View *view)
+void MainWin::dropView(Database *database, Schema *schema, View *view)
 {
     int ret = QMessageBox::warning(this, tr("pgXplorer"),
                                     tr("This action will destroy this view and all its data and cannot be undone.\n"
@@ -1283,7 +1286,7 @@ void MainWin::dropViewView(Database *database, Schema *schema, View *view)
     view_name.append("\"");
 
     {
-        QSqlDatabase database_connection = QSqlDatabase::addDatabase("QPSQL", "clear" + view_name);
+        QSqlDatabase database_connection = QSqlDatabase::addDatabase("QPSQL", "drop " + view_name);
         database_connection.setHostName(database->getHost());
         database_connection.setPort(database->getPort().toInt());
         database_connection.setDatabaseName(database->getName());
@@ -1301,8 +1304,44 @@ void MainWin::dropViewView(Database *database, Schema *schema, View *view)
         //    QMessageBox::critical(0, tr("Database error"),
         //    query.lastError().databaseText(), QMessageBox::Close);
     }
-    QSqlDatabase::removeDatabase("clear" + view_name);
-    schema->resetViews();
+    QSqlDatabase::removeDatabase("drop " + view_name);
+    schema->resetViewsVertically2();
+}
+
+void MainWin::dropFunction(Database *database, Schema *schema, Function *function)
+{
+    int ret = QMessageBox::warning(this, tr("pgXplorer"),
+                                    tr("This action will destroy this function and cannot be undone.\n"
+                                       "Do you want to continue?"),
+                                    QMessageBox::Ok | QMessageBox::Cancel);
+    if(ret == QMessageBox::Cancel)
+        return;
+    QString function_name = schema->getName();
+    function_name.append(".\"");
+    function_name.append(function->getName());
+    function_name.append("\"");
+
+    {
+        QSqlDatabase database_connection = QSqlDatabase::addDatabase("QPSQL", "drop " + function_name);
+        database_connection.setHostName(database->getHost());
+        database_connection.setPort(database->getPort().toInt());
+        database_connection.setDatabaseName(database->getName());
+        database_connection.setUserName(database->getUser());
+        database_connection.setPassword(database->getPassword());
+        if (!database_connection.open()) {
+            QMessageBox::critical(0, tr("Database error"),
+                tr("Unable to establish a database connection.\n"
+                         "No PostgreSQL support.\n"), QMessageBox::Close);
+            return;
+        }
+        QSqlQuery query(QString("DROP FUNCTION ").append(function_name).append(function->getArgTypesToText()), database_connection);
+        query.exec();
+        //if(query.lastError().isValid())
+        //    QMessageBox::critical(0, tr("Database error"),
+        //    query.lastError().databaseText(), QMessageBox::Close);
+    }
+    QSqlDatabase::removeDatabase("drop " + function_name);
+    schema->resetFunctionsVertically2();
 }
 
 void MainWin::showQueryView(Database *database, QString command)

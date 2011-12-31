@@ -28,9 +28,9 @@ TableView::TableView(Database *database, QString const table_name, QString const
     filter_text = new QLineEdit;
     filter_text->setPlaceholderText(tr("custom filter"));
 
-    filter_icon = QIcon("icons/filter.png");
-    ascend_icon = QIcon("icons/ascending.png");
-    descend_icon = QIcon("icons/descending.png");
+    filter_icon = QIcon(qApp->applicationDirPath().append("/icons/filter.png"));
+    ascend_icon = QIcon(qApp->applicationDirPath().append("/icons/ascending.png"));
+    descend_icon = QIcon(qApp->applicationDirPath().append("/icons/descending.png"));
 
     createActions();
 
@@ -923,29 +923,29 @@ void TableView::disableActions()
 
 void TableView::createActions()
 {
-    default_action = new QAction(QIcon("icons/table.png"), tr("Default"), this);
+    default_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/table.png")), tr("Default"), this);
     default_action->setShortcut(QKeySequence("Ctrl+D"));
     default_action->setStatusTip(tr("Default"));
     connect(default_action, SIGNAL(triggered()), this, SLOT(defaultView()));
 
-    refresh_action = new QAction(QIcon("icons/refresh.png"), tr("Refresh"), this);
+    refresh_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/refresh.png")), tr("Refresh"), this);
     refresh_action->setShortcut(QKeySequence::Refresh);
     refresh_action->setStatusTip(tr("Refresh"));
     connect(refresh_action, SIGNAL(triggered()), this, SLOT(refreshView()));
 
-    copy_action = new QAction(QIcon("icons/copy.svgz"), tr("Copy"), this);
+    copy_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/copy.svgz")), tr("Copy"), this);
     copy_action->setShortcuts(QKeySequence::Copy);
     copy_action->setStatusTip(tr("Copy selected"));
     //copy_action->setEnabled(false);
     connect(copy_action, SIGNAL(triggered()), this, SLOT(copyc()));
 
-    copy_with_headers_action = new QAction(QIcon("icons/copy_with_headers.svg"), tr("Copy with headers"), this);
+    copy_with_headers_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/copy_with_headers.svg")), tr("Copy with headers"), this);
     copy_with_headers_action->setShortcut(QKeySequence("Ctrl+Shift+C"));
     copy_with_headers_action->setStatusTip(tr("Copy selected with headers"));
     //copy_with_headers_action->setEnabled(false);
     connect(copy_with_headers_action, SIGNAL(triggered()), this, SLOT(copych()));
 
-    remove_columns_action = new QAction(QIcon("icons/removecolumn.png"), tr("Remove column(s)"), this);
+    remove_columns_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/removecolumn.png")), tr("Remove column(s)"), this);
     remove_columns_action->setStatusTip(tr("Removes the column from this display."));
     connect(remove_columns_action, SIGNAL(triggered()), this, SLOT(removeColumns()));
 
@@ -954,7 +954,7 @@ void TableView::createActions()
     filter_action->setEnabled(false);
     connect(filter_action, SIGNAL(triggered()), this, SLOT(filter()));
 
-    exclude_action = new QAction(QIcon("icons/exclude.svg"), tr("Exclude"), this);
+    exclude_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/exclude.svg")), tr("Exclude"), this);
     exclude_action->setStatusTip(tr("Filter table exclusive of selected cell value on column"));
     exclude_action->setEnabled(false);
     connect(exclude_action, SIGNAL(triggered()), this, SLOT(exclude()));
@@ -983,11 +983,11 @@ void TableView::createActions()
     custom_filter_action->setDefaultWidget(filter_text);
     connect(filter_text, SIGNAL(returnPressed()), this, SLOT(customFilterReturnPressed()));
 
-    copy_query_action = new QAction(QIcon("icons/copy_sql.png"), tr("Copy query"), this);
+    copy_query_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/copy_sql.png")), tr("Copy query"), this);
     copy_query_action->setStatusTip(tr("Copy the query to clipboard"));
     connect(copy_query_action, SIGNAL(triggered()), this, SLOT(copyQuery()));
 
-    truncate_action = new QAction(QIcon("icons/truncate.png"), tr("Clear table"), this);
+    truncate_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/truncate.png")), tr("Clear table"), this);
     truncate_action->setStatusTip(tr("Delete the contents of the table"));
     connect(truncate_action, SIGNAL(triggered()), this, SLOT(truncateTable()));
 }

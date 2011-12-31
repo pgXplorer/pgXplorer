@@ -115,12 +115,12 @@ void Function::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 {
     QMenu menu;
     //menu.setStyleSheet("QMenu { font-size:12px; width: 100px; color:white; left: 20px; background-color:qlineargradient(x1:0, y1:0, x2:0, y2:1, stop: 0 #cccccc, stop: 1 #333333);}");
-    menu.addAction(QIcon("icons/function.png"), tr("View contents"));
+    menu.addAction(QIcon(qApp->applicationDirPath().append("/icons/function.png")), tr("Function definition"));
     menu.addSeparator();
     menu.addAction("Drop function");
 
     QAction *a = menu.exec(event->screenPos());
-    if(a && QString::compare(a->text(),tr("View definition")) == 0)
+    if(a && QString::compare(a->text(),tr("Function definition")) == 0)
     {
         emit expandFunction(parent_schema, this);
     }

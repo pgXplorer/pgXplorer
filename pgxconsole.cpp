@@ -429,26 +429,26 @@ void PgxConsole::__createWidgets()
 
 void PgxConsole::createActions()
 {
-    cut_action = new QAction(QIcon("icons/cut.png"), tr("Cut"), this);
+    cut_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/cut.png")), tr("Cut"), this);
     cut_action->setShortcuts(QKeySequence::Cut);
     cut_action->setStatusTip(tr("Cut selected text and copy to clipboard"));
     connect(cut_action, SIGNAL(triggered()), this, SLOT(cut()));
 
-    copy_action = new QAction(QIcon("icons/copy.png"), tr("Copy"), this);
+    copy_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/copy.png")), tr("Copy"), this);
     copy_action->setShortcuts(QKeySequence::Copy);
     copy_action->setStatusTip(tr("Copy selected text to clipboard"));
     connect(copy_action, SIGNAL(triggered()), this, SLOT(copy()));
 
-    paste_action = new QAction(QIcon("icons/paste.png"), tr("Paste"), this);
+    paste_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/paste.png")), tr("Paste"), this);
     paste_action->setShortcuts(QKeySequence::Paste);
     paste_action->setStatusTip(tr("Paste"));
     connect(paste_action, SIGNAL(triggered()), this, SLOT(pasteAsSingleFromClipboard()));
 
-    clear_action = new QAction(QIcon("icons/clear.png"), tr("&Clear"), this);
+    clear_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/clear.png")), tr("&Clear"), this);
     clear_action->setStatusTip(tr("Clear the console"));
     connect(clear_action, SIGNAL(triggered()), this, SLOT(clear()));
 
-    find_action = new QAction(QIcon("icons/search.png"), tr("Find"), this);
+    find_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/search.png")), tr("Find"), this);
     find_action->setShortcuts(QKeySequence::Find);
     find_action->setStatusTip(tr("Find/replace text"));
     find_action->setCheckable(true);

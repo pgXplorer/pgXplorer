@@ -132,7 +132,7 @@ void Table::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 {
     QMenu menu;
     //menu.setStyleSheet("QMenu { font-size:12px; width: 100px; color:white; left: 20px; background-color:qlineargradient(x1:0, y1:0, x2:0, y2:1, stop: 0 #cccccc, stop: 1 #333333);}");
-    menu.addAction(QIcon("icons/table.png"), tr("View contents"));
+    menu.addAction(QIcon(qApp->applicationDirPath().append("/icons/table.png")), tr("View contents"));
     if(!is_view) {
         menu.addSeparator();
         menu.addAction(tr("Clear contents"));

@@ -86,7 +86,7 @@ public:
     QStringList table_completer_list;
     QStringList view_completer_list;
     QStringList function_completer_list;
-    MainWin(QWidget *parent=0, const QString name=QString(""), Qt::WindowFlags f=0);
+    MainWin(QWidget *parent=0, const QString arg1=QString(""), Qt::WindowFlags f=0);
     ~MainWin();
     QGraphicsScene& getScn()
     {
@@ -178,9 +178,10 @@ private slots:
     void hideOtherTables(Schema*);
     void showTableView(Database *, Schema *, Table*);
     void clearTableView(Database *, Schema *, Table*);
-    void dropTableView(Database *, Schema *, Table*);
+    void dropTable(Database *, Schema *, Table*);
     void showViewView(Database *, Schema *, View*);
-    void dropViewView(Database *, Schema *, View*);
+    void dropView(Database *, Schema *, View*);
+    void dropFunction(Database *, Schema *, Function*);
     void showQueryView(Database *, QString);
     void fitView();
     void zoomIn(const QPointF);
