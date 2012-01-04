@@ -30,7 +30,7 @@ ConnectionProperties::ConnectionProperties(Database *database, MainWin *mainwin)
     resize(256, 288);
     setModal(true);
     setParent(mainwin);
-    setWindowFlags(Qt::Popup);
+    setWindowFlags(Qt::Window);
     setWindowModality(Qt::WindowModal);
     pBOK = new QPushButton(this);
     pBOK->setObjectName(QString::fromUtf8("pBOK"));
