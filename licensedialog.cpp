@@ -56,7 +56,7 @@ LicenseDialog::LicenseDialog(MainWin *mainwin)
     setModal(true);
     if(mainwin->isVisible())
         setParent(mainwin);
-    setWindowFlags(Qt::Popup);
+    setWindowFlags(Qt::Window);
     setWindowModality(Qt::WindowModal);
 
     QFont font;
