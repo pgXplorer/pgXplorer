@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011, davyjones <davyjones@github.com>
+  Copyright (c) 2011, davyjones <davyjones@github>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -30,6 +30,7 @@
   Features include a table viewer and the Pgx SQL console (PgxConsole).
  */
 
+class MainWin;
 class ConnectionProperties;
 class SchemaLink;
 class TableLink;
@@ -59,12 +60,19 @@ public:
     {
         this->zoom = zoom;
     }
+    void setMainWin(MainWin *mainwin)
+    {
+        this->mainwin = mainwin;
+    }
 
 protected:
     void wheelEvent(QWheelEvent *event);
     //void mousePressEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
+    void dragEnterEvent(QDragEnterEvent *);
+    void dragMoveEvent(QDragMoveEvent *);
+    void dropEvent(QDropEvent *);
 
 signals:
     void status(const QString&);
@@ -73,6 +81,7 @@ signals:
 
 private:
     bool zoom;
+    MainWin *mainwin;
     QCursor zoom_cursor;
     QRubberBand *rubberBand;
     QPoint origin;
@@ -114,25 +123,36 @@ public:
     {
         return functionview_action->isChecked();
     }
+    QString getDisplaySetting()
+    {
+        return display_setting;
+    }
+
     void clearTableViewList();
+    void clearViewViewList();
     void clearPgxconsoleList();
     void clearPgxeditorList();
     void clearQueryViewList();
+    void clearSchemas();
     void clearChildWindows();
 
 public slots:
     void about();
     void document_changed();
     void tableViewClosed(TableView *);
+    void viewViewClosed(TableView *);
     void queryViewClosed(QueryView *);
     void pgxconsoleClosed(PgxConsole *);
     void pgxeditorClosed(PgxEditor *);
     void newDatabase();
     bool newDatabase(QString, qint32, QString, QString, QString);
+    void newPgxplorer(QString);
 
 protected:
      void resizeEvent(QResizeEvent *event);
      void changeEvent(QEvent*);
+     void dragEnterEvent(QDragEnterEvent *);
+     void dropEvent(QDropEvent *);
      void contextMenuEvent(QContextMenuEvent*);
      void closeEvent(QCloseEvent*);
 
@@ -147,10 +167,11 @@ private slots:
     //int saveState(QString);
     void quitApp();
     void newFile();
-    void newProcess();
+    void newPgxplorer();
     void openDatabaseProperties();
     void showPgxconsole();
     void showPgxeditor();
+    void showPgxeditor(QString);
     void showFunctionEditor(Schema *, Function*);
     void toggleFullscreen();
     void showTreeview();
@@ -189,6 +210,7 @@ private slots:
     void noZoom();
 
 Q_SIGNALS:
+    void languageChanged(QEvent *);
     void clicked();
     void closing();
     void showColumnView();
@@ -204,6 +226,7 @@ private:
     QCompleter *completer;
     QPrinter *printer;
     QString language_setting;
+    QString display_setting;
 
     Database *database;
     QList<TableView*> table_view_list;
