@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011, davyjones <davyjones@github.com>
+  Copyright (c) 2011, davyjones <davyjones@github>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -34,6 +34,7 @@ class TableView : public QMainWindow
 private:
     Database *database;
     QMenuBar *menubar;
+    QString status_message;
     QMenu context_menu;
     QMenu deselect_menu;
     QMenu disarrange_menu;
@@ -69,26 +70,32 @@ private:
     QAction *remove_all_filters_action;
     QAction *remove_all_ordering_action;
     QAction *truncate_action;
+    QAction *delete_rows_action;
     QWidgetAction *custom_filter_action;
     QAction *copy_query_action;
     QLineEdit *filter_text;
-    int order_clause_size;
 
 public:
     static ulong tableViewObjectId;
-    TableView(Database *, QString const, QString const, QStringList const, Qt::WidgetAttribute f);
+    TableView(Database *, QString const, QString const, QStringList const, bool, Qt::WidgetAttribute f);
     ~TableView()
     {
     };
 
     bool eventFilter(QObject *, QEvent*);
     void keyReleaseEvent(QKeyEvent*);
-    void contextMenuEvent(QContextMenuEvent*);
+    //void contextMenuEvent(QContextMenuEvent*);
     void closeEvent(QCloseEvent*);
     void createActions();
     void fetchNextData();
     void fetchPreviousData();
     void fetchConditionDataInitial();
+    void deleteData();
+
+public slots:
+    void languageChanged(QEvent*);
+    void customContextMenuViewport();
+    void customContextMenuHeader();
 
 private slots:
     void fetchDefaultData();
@@ -109,6 +116,8 @@ private slots:
     void customFilterReturnPressed();
     void copyQuery();
     void truncateTable();
+    void deleteRows();
+    void deleteRow(int);
 
     void busySlot();
     void updRowCntSlot(QString);

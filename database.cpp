@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011, davyjones <davyjones@github.com>
+  Copyright (c) 2011, davyjones <davyjones@github>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -64,36 +64,36 @@ void Database::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
     if(getDatabaseStatus())
     {
         if(getDatabaseCollapsed())
-            menu.addAction("Explode");
+            menu.addAction(QApplication::translate("Database", "Explode", 0, QApplication::UnicodeUTF8));
         else
-            menu.addAction("Collapse");
+            menu.addAction(QApplication::translate("Database", "Collapse", 0, QApplication::UnicodeUTF8));
         //menu.addAction("Explode all");
         //menu.addAction("Explode all vertically");
         menu.addSeparator();
     }
     menu.addAction(QIcon(qApp->applicationDirPath().append("/icons/properties.png")), QApplication::translate("Database", "Properties", 0, QApplication::UnicodeUTF8));
     QAction *a = menu.exec(event->screenPos());
-    if(a && QString::compare(a->text(),"Explode")==0) {
+    if(a && QString::compare(a->text(),QApplication::translate("Database", "Explode", 0, QApplication::UnicodeUTF8))==0) {
         emit expandDatabase(this);
         setDatabaseCollapsed(false);
         update();
     }
-    else if(a && QString::compare(a->text(),"Collapse")==0) {
+    else if(a && QString::compare(a->text(),QApplication::translate("Database", "Collapse", 0, QApplication::UnicodeUTF8))==0) {
         emit collapseDatabase(this);
         setDatabaseCollapsed(true);
         update();
     }
-    else if(a && QString::compare(a->text(),"Explode all")==0) {
+    else if(a && QString::compare(a->text(),tr("Explode all"))==0) {
         emit expandAll(this);
         setDatabaseCollapsed(false);
         update();
     }
-    else if(a && QString::compare(a->text(),"Explode all vertically")==0) {
+    else if(a && QString::compare(a->text(),tr("Explode all vertically"))==0) {
         emit expandAllVertically(this);
         setDatabaseCollapsed(false);
         update();
     }
-    else if(a && QString::compare(a->text(),"Properties")==0) {
+    else if(a && QString::compare(a->text(),tr("Properties"))==0) {
         showPropertyDialog();
     }
 }

@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011, davyjones <davyjones@github.com>
+  Copyright (c) 2011, davyjones <davyjones@github>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -20,7 +20,7 @@
 
 ulong TableView::tableViewObjectId = 0;
 
-TableView::TableView(Database *database, QString const table_name, QString const name, QStringList column_list, Qt::WidgetAttribute f)
+TableView::TableView(Database *database, QString const table_name, QString const name, QStringList column_list, bool read_only, Qt::WidgetAttribute f)
 {
     setAttribute(Qt::WA_DeleteOnClose);
     menuBar()->setVisible(false);
@@ -51,10 +51,15 @@ TableView::TableView(Database *database, QString const table_name, QString const
     toolbar->addSeparator();
     toolbar->addAction(copy_query_action);
     toolbar->addSeparator();
-    toolbar->addAction(truncate_action);
+    if(!read_only) {
+        toolbar->addAction(delete_rows_action);
+        toolbar->addAction(truncate_action);
+    }
 
     deselect_menu.setTitle(tr("Remove filter"));
+    deselect_menu.setStatusTip(tr("Remove filter"));
     disarrange_menu.setTitle(tr("Remove order"));
+    disarrange_menu.setStatusTip(tr("Remove order"));
 
     addToolBar(toolbar);
     //Identify this object with thisTableViewId for constructing database connection
@@ -72,10 +77,12 @@ TableView::TableView(Database *database, QString const table_name, QString const
     tview = new QTableView(this);
     tview->viewport()->installEventFilter(this);
     tview->installEventFilter(this);
+
     this->setWindowTitle(name);
     this->setObjectName(name);
     tview->setStyleSheet("QTableView {font-weight: 400;}");
     tview->setAlternatingRowColors(true);
+    tview->verticalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
 
     //QShortcut *shortcut_copy_with_headers = new QShortcut(QKeySequence("Ctrl+Shift+C"), this);
     //connect(shortcut_copy_with_headers, SIGNAL(activated()), this, SLOT(copych()));
@@ -96,6 +103,8 @@ TableView::TableView(Database *database, QString const table_name, QString const
     //Tie a busy signal to a slot that changes the cursor to wait cursor.
     connect(this, SIGNAL(busySignal()), this, SLOT(busySlot()));
 
+    connect(tview->verticalHeader(), SIGNAL(customContextMenuRequested(const QPoint)), this, SLOT(customContextMenuHeader()));
+
     setCentralWidget(tview);
     statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0, QApplication::UnicodeUTF8));
 
@@ -109,6 +118,12 @@ bool TableView::eventFilter(QObject *obj, QEvent *event)
     if (obj == tview->viewport()) {
         if (event->type() == QEvent::MouseButtonRelease) {
             toggleActions();
+            QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);
+            if(mouseEvent->button() == Qt::RightButton)
+                customContextMenuViewport();
+        }
+        else if(event->type() == QEvent::Enter) {
+            statusBar()->showMessage(status_message);
         }
         return false;
     }
@@ -116,10 +131,14 @@ bool TableView::eventFilter(QObject *obj, QEvent *event)
         if (event->type() == QEvent::MouseButtonRelease) {
             toggleActions();
         }
+        else if(event->type() == QEvent::Enter) {
+            statusBar()->showMessage(status_message);
+        }
         return false;
     }
-    else
+    else {
         return QMainWindow::eventFilter(obj, event);
+    }
 }
 
 //Key release event should enable/disable actions.
@@ -127,7 +146,7 @@ void TableView::keyReleaseEvent(QKeyEvent*)
 {
     toggleActions();
 }
-
+/*
 void TableView::contextMenuEvent(QContextMenuEvent *event)
 {
     filter_text->clear();
@@ -245,7 +264,7 @@ void TableView::contextMenuEvent(QContextMenuEvent *event)
         }
     }
 }
-
+*/
 void TableView::fetchDefaultData()
 {
     {
@@ -355,6 +374,7 @@ void TableView::updRowCntSlot(QString dataset)
         statusBar()->showMessage(tr("Error: Incorrect filter"));
     }
     else {
+        //query_model->removeColumn(0);
         tview->setModel(query_model);
         int column_count = query_model->columnCount();
         for(int i = 0; i < column_count; i++)
@@ -370,18 +390,24 @@ void TableView::updRowCntSlot(QString dataset)
                                      " \t " + colums_string + QString::number(column_count));
         else {
             if(can_fetch_more)
-                statusBar()->showMessage("Time elapsed: " + QString::number((double)t.elapsed()/1000) +
+                statusBar()->showMessage(time_elapsed + QString::number((double)t.elapsed()/1000) +
                                      " " + seconds_string + " \t " + rows_string + QString::number(rows_from) +
                                      " - " + QString::number(rows_to) + rows_string_2 +
                                      " \t " + colums_string + QString::number(column_count));
             else
-                statusBar()->showMessage("Time elapsed: " + QString::number((double)t.elapsed()/1000) +
+                statusBar()->showMessage(time_elapsed + QString::number((double)t.elapsed()/1000) +
                                      " " + seconds_string + " \t " + rows_string + QString::number(rows_from) +
                                      " - " + QString::number(rows_to) +
                                      " \t " + colums_string + QString::number(column_count));
         }
+
+        if(!where_clause.isEmpty())
+        {
+            delete_rows_action->setEnabled(true);
+        }
     }
     thread_busy = false;
+    status_message = statusBar()->currentMessage();
     setCursor(Qt::ArrowCursor);
 }
 
@@ -667,8 +693,6 @@ void TableView::removeColumns()
         if(indices.at(i).row() != current_row)
             break;
     }
-
-    //query_model->removeColumns(first_column, i);
 }
 
 void TableView::customFilterReturnPressed()
@@ -685,7 +709,6 @@ void TableView::defaultView()
 
     offset_list.clear();
     order_clause.clear();
-    order_clause_size = 0;
     QtConcurrent::run(this, &TableView::fetchDefaultData);
     disableActions();
 }
@@ -720,7 +743,7 @@ void TableView::filter()
         else if(typ.compare("QDateTime", Qt::CaseInsensitive) == 0)
             where_clause.append("\"" + header.toString() + "\"='" + data.toDateTime().toString("yyyy-MM-dd hh:mm:ss.z") + "'");
         else
-            where_clause.append("\"" + header.toString() + "\"='" + data.toString() + "'");
+            where_clause.append("\"" + header.toString() + "\"='" + data.toString().replace("'","\\'") + "'");
     offset_list.clear();
     offset_list.append(" OFFSET 0");
 
@@ -780,12 +803,15 @@ void TableView::ascend()
     statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0, QApplication::UnicodeUTF8));
 
     QVariant header = tview->model()->headerData(index.column(), Qt::Horizontal);
-    order_clause.append(header.toString() + " ASC");
-    order_clause_size++;
-    offset_list.clear();
-    offset_list.append(" OFFSET 0");
+    if(order_clause.contains(header.toString() + " DESC"))
+        order_clause.removeOne(header.toString() + " DESC");
+    if(!order_clause.contains(header.toString() + " ASC")) {
+        order_clause.append(header.toString() + " ASC");
+        offset_list.clear();
+        offset_list.append(" OFFSET 0");
 
-    QtConcurrent::run(this, &TableView::fetchConditionDataInitial);
+        QtConcurrent::run(this, &TableView::fetchConditionDataInitial);
+    }
 }
 
 void TableView::descend()
@@ -797,12 +823,190 @@ void TableView::descend()
     statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0, QApplication::UnicodeUTF8));
 
     QVariant header = tview->model()->headerData(index.column(), Qt::Horizontal);
-    order_clause.append(header.toString() + " DESC");
-    order_clause_size++;
-    offset_list.clear();
-    offset_list.append(" OFFSET 0");
+    if(order_clause.contains(header.toString() + " ASC"))
+        order_clause.removeOne(header.toString() + " ASC");
+    if(!order_clause.contains(header.toString() + " DESC")) {
+        order_clause.append(header.toString() + " DESC");
+        offset_list.clear();
+        offset_list.append(" OFFSET 0");
 
-    QtConcurrent::run(this, &TableView::fetchConditionDataInitial);
+        QtConcurrent::run(this, &TableView::fetchConditionDataInitial);
+    }
+}
+
+void TableView::languageChanged(QEvent *event)
+{
+    if (event->type() == QEvent::LanguageChange) {
+        deselect_menu.setTitle(tr("Remove filter"));
+        deselect_menu.setStatusTip(tr("Remove filter"));
+        disarrange_menu.setTitle(tr("Remove order"));
+        disarrange_menu.setStatusTip(tr("Remove order"));
+
+        default_action->setText(tr("Default"));
+        default_action->setStatusTip(tr("Default"));
+        refresh_action->setText(tr("Refresh"));
+        refresh_action->setStatusTip(tr("Refresh"));
+        copy_action->setText(tr("Copy"));
+        copy_action->setStatusTip(tr("Copy selected"));
+        copy_with_headers_action->setText(tr("Copy with headers"));
+        copy_with_headers_action->setStatusTip(tr("Copy selected with headers"));
+        remove_columns_action->setText(tr("Remove column(s)"));
+        remove_columns_action->setStatusTip(tr("Removes the column from this display."));
+        filter_action->setText(tr("Filter"));
+        filter_action->setStatusTip(tr("Filter table with selected cell value on column"));
+        exclude_action->setText(tr("Exclude"));
+        exclude_action->setStatusTip(tr("Filter table exclusive of selected cell value on column"));
+        ascend_action->setText(tr("Ascending order"));
+        ascend_action->setStatusTip(tr("Ascending order"));
+        descend_action->setText(tr("Descending order"));
+        descend_action->setStatusTip(tr("Descending order"));
+        remove_all_filters_action->setText(tr("All filters"));
+        remove_all_filters_action->setStatusTip(tr("Remove all filters"));
+        remove_all_ordering_action->setText(tr("All ordering"));
+        remove_all_ordering_action->setStatusTip(tr("Remove all ordering"));
+        truncate_action->setText(tr("Clear table"));
+        truncate_action->setStatusTip(tr("Delete the contents of the table"));
+        custom_filter_action->setText(tr("Custom filter"));
+        custom_filter_action->setStatusTip(tr("Custom filter"));
+        copy_query_action->setText(tr("Copy query"));
+        copy_query_action->setStatusTip(tr("Copy the query to clipboard"));
+
+        filter_text->setPlaceholderText(tr("custom filter"));
+    }
+}
+
+void TableView::customContextMenuViewport()
+{
+    if(thread_busy)
+        return;
+    filter_text->clear();
+    context_menu.clear();
+
+    QItemSelectionModel *s = tview->selectionModel();
+    QModelIndexList indices = s->selectedIndexes();
+
+    QModelIndex index;
+    QVariant data;
+    int order_clause_size = order_clause.size();
+
+    if(indices.size() > 1) {
+        context_menu.addAction(copy_action);
+        context_menu.addAction(copy_with_headers_action);
+        context_menu.addSeparator();
+        context_menu.addAction(remove_columns_action);
+        context_menu.popup(QCursor::pos());
+        return;
+    }
+
+    context_menu.addAction(filter_action);
+    context_menu.addAction(exclude_action);
+    context_menu.addSeparator();
+    context_menu.addAction(custom_filter_action);
+    context_menu.addSeparator();
+
+    deselect_menu.clear();
+    for(int i=0; i<where_clause.size(); i++)
+        deselect_menu.addAction(filter_icon, where_clause.at(i));
+    if(where_clause.size() > 1) {
+        deselect_menu.addSeparator();
+        deselect_menu.addAction(remove_all_filters_action);
+    }
+    context_menu.addMenu(&deselect_menu);
+    context_menu.addSeparator();
+    context_menu.addAction(ascend_action);
+    context_menu.addAction(descend_action);
+
+    disarrange_menu.clear();
+    for(int i=0; i<order_clause_size; i++) {
+        QString order = order_clause.at(i);
+        if(order.endsWith(" ASC")) {
+            order.remove(" ASC");
+            disarrange_menu.addAction(ascend_icon, order);
+        }
+        else if (order.endsWith(" DESC")) {
+            order.remove(" DESC");
+            disarrange_menu.addAction(descend_icon, order);
+        }
+    }
+    if(order_clause_size > 1) {
+        disarrange_menu.addSeparator();
+        disarrange_menu.addAction(remove_all_ordering_action);
+    }
+    context_menu.addMenu(&disarrange_menu);
+    context_menu.addSeparator();
+    context_menu.addAction(copy_action);
+    context_menu.addAction(copy_with_headers_action);
+    context_menu.addSeparator();
+    context_menu.addAction(remove_columns_action);
+
+    if(!indices.isEmpty()) {
+        index = indices.first();
+        data = tview->model()->data(index);
+        if(data.canConvert<QString>()) {
+            filter_action->setEnabled(true);
+            exclude_action->setEnabled(true);
+            ascend_action->setEnabled(true);
+            descend_action->setEnabled(true);
+        }
+    }
+
+    QAction *a = context_menu.exec(QCursor::pos());
+
+    for(int i=0; i<where_clause.size(); i++) {
+        if(a && QString::compare(a->text(),where_clause.at(i))==0) {
+            statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0, QApplication::UnicodeUTF8));
+            where_clause.removeAt(i);
+            if(query_model->rowCount() == 0)
+                can_fetch_more = false;
+            else
+                can_fetch_more = true;
+            offset_list.clear();
+            offset_list.append(" OFFSET 0");
+
+            QtConcurrent::run(this, &TableView::fetchConditionDataInitial);
+            return;
+        }
+    }
+
+    for(int i=0; i<order_clause.size(); i++) {
+        if(!a)
+            return;
+        QString order = a->text();
+        if(a->icon().cacheKey() == ascend_icon.cacheKey())
+            order.append(" ASC");
+        else if(a->icon().cacheKey() == descend_icon.cacheKey())
+            order.append(" DESC");
+        if(QString::compare(order, order_clause.at(i))==0) {
+            statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0, QApplication::UnicodeUTF8));
+
+            order_clause.removeAt(i);
+            if(query_model->rowCount() == 0)
+                can_fetch_more = false;
+            else
+                can_fetch_more = true;
+            offset_list.clear();
+            offset_list.append(" OFFSET 0");
+
+            QtConcurrent::run(this, &TableView::fetchConditionDataInitial);
+            return;
+        }
+    }
+}
+
+void TableView::customContextMenuHeader()
+{
+    return;
+    if(thread_busy)
+        return;
+    context_menu.clear();
+
+    QModelIndexList indices = tview->selectionModel()->selectedRows();
+    if(indices.isEmpty()) {
+        return;
+    }
+
+    context_menu.addAction(delete_rows_action);
+    context_menu.exec(QCursor::pos());
 }
 
 void TableView::removeAllFilters()
@@ -821,7 +1025,6 @@ void TableView::removeAllOrdering()
     statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0, QApplication::UnicodeUTF8));
 
     order_clause.clear();
-    order_clause_size = 0;
     offset_list.clear();
     offset_list.append(" OFFSET 0");
 
@@ -832,9 +1035,10 @@ void TableView::copyQuery()
 {
     QString copy_sql;
     if(where_clause.isEmpty())
-        copy_sql = sql + (order_clause_size > 0 ? " ORDER BY " + order_clause.join(","):"");
+        copy_sql = sql + (order_clause.size() > 0 ? " ORDER BY " + order_clause.join(","):"");
     else
-        copy_sql = sql + " WHERE " + where_clause.join(" AND ") + (order_clause_size > 0 ? " ORDER BY " + order_clause.join(","):"");
+        copy_sql = sql + " WHERE " + where_clause.join(" AND ") + (order_clause.size() > 0 ? " ORDER BY " + order_clause.join(","):"");
+
     qApp->clipboard()->setText(copy_sql);
 }
 
@@ -869,6 +1073,79 @@ void TableView::truncateTable()
     }
     QSqlDatabase::removeDatabase("clear" + objectName());
     fetchDefaultData();
+}
+
+void TableView::deleteRows()
+{
+    statusBar()->showMessage(QApplication::translate("QueryView", "Deleting data...", 0, QApplication::UnicodeUTF8));
+    QFuture<void> future = QtConcurrent::run(this, &TableView::deleteData);
+}
+
+void TableView::deleteData()
+{
+    {
+        QSqlDatabase database_connection = QSqlDatabase::addDatabase("QPSQL", "clear" + objectName());
+        database_connection.setHostName(database->getHost());
+        database_connection.setPort(database->getPort().toInt());
+        database_connection.setDatabaseName(database->getName());
+        database_connection.setUserName(database->getUser());
+        database_connection.setPassword(database->getPassword());
+        if (!database_connection.open()) {
+            QMessageBox::critical(0, tr("Database error"),
+                tr("Unable to establish a database connection.\n"
+                         "No PostgreSQL support.\n"), QMessageBox::Cancel);
+            return;
+        }
+        QString delete_query("DELETE FROM ");
+        delete_query.append(objectName());
+        delete_query.append(" WHERE " + where_clause.join(" AND "));
+        QSqlQuery query(delete_query, database_connection);
+
+        query.exec();
+        //if(query.lastError().isValid())
+        //    QMessageBox::critical(0, tr("Database error"),
+        //    query.lastError().databaseText(), QMessageBox::Close);
+        //statusBar()->showMessage(tr("All table rows deleted"));
+    }
+    QSqlDatabase::removeDatabase("clear" + objectName());
+    fetchConditionDataInitial();
+}
+
+void TableView::deleteRow(int row)
+{
+    {
+        //We want to ensure that we have only one thread acting
+        //at a given point in time.
+        //If the previous thread is not done with, abort spawning
+        //a new thread to avoid the possibility of a crash.
+        if(thread_busy)
+            return;
+
+        //Indicate that we are going to be deleting data and busy.
+        emit busySignal();
+
+        QSqlDatabase database_connection = QSqlDatabase::addDatabase("QPSQL", "delete " + objectName() + thisTableViewId);
+        database_connection.setHostName(database->getHost());
+        database_connection.setPort(database->getPort().toInt());
+        database_connection.setDatabaseName(database->getName());
+        database_connection.setUserName(database->getUser());
+        database_connection.setPassword(database->getPassword());
+        if (!database_connection.open()) {
+            QMessageBox::critical(0, tr("Database error"),
+                tr("Unable to establish a database connection.\n"
+                         "No PostgreSQL support.\n"), QMessageBox::Cancel);
+            return;
+        }
+        QString delete_query("DELETE FROM ");
+        delete_query.append(objectName());
+        //delete_query.append(" WHERE ");
+        qDebug() << delete_query;
+        QSqlQuery query(delete_query, database_connection);
+        query.exec();
+        if(query.lastError().isValid())
+            qDebug() << query.lastError().databaseText();
+    }
+    QSqlDatabase::removeDatabase("delete " + objectName() + thisTableViewId);
 }
 
 void TableView::fullscreen()
@@ -919,6 +1196,7 @@ void TableView::disableActions()
     exclude_action->setEnabled(false);
     ascend_action->setEnabled(false);
     descend_action->setEnabled(false);
+    delete_rows_action->setEnabled(false);
 }
 
 void TableView::createActions()
@@ -954,7 +1232,7 @@ void TableView::createActions()
     filter_action->setEnabled(false);
     connect(filter_action, SIGNAL(triggered()), this, SLOT(filter()));
 
-    exclude_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/exclude.svg")), tr("Exclude"), this);
+    exclude_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/exclude.png")), tr("Exclude"), this);
     exclude_action->setStatusTip(tr("Filter table exclusive of selected cell value on column"));
     exclude_action->setEnabled(false);
     connect(exclude_action, SIGNAL(triggered()), this, SLOT(exclude()));
@@ -990,4 +1268,9 @@ void TableView::createActions()
     truncate_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/truncate.png")), tr("Clear table"), this);
     truncate_action->setStatusTip(tr("Delete the contents of the table"));
     connect(truncate_action, SIGNAL(triggered()), this, SLOT(truncateTable()));
+
+    delete_rows_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/delete_rows.png")), tr("Delete row(s)"), this);
+    delete_rows_action->setEnabled(false);
+    delete_rows_action->setStatusTip(tr("Delete the selected row(s) of the table"));
+    connect(delete_rows_action, SIGNAL(triggered()), this, SLOT(deleteRows()));
 }
