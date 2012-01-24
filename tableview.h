@@ -1,4 +1,4 @@
-/* 
+/*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
   Copyright (c) 2011, davyjones <davyjones@github>
