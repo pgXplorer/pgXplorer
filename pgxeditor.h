@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011, davyjones <davyjones@github.com>
+  Copyright (c) 2011-2012, davyjones <davyjones@github>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -41,7 +41,8 @@ public:
     static ulong editor_widow_id;
     PgxEditor(Database *, QString);
     void closeMain();
-    void setText(QString editor_text, bool save_state);
+    void setTitle(QString);
+    void setText(QString, bool);
     void lineNumberAreaPaintEvent(QPaintEvent *event);
     void breakpointAreaPaintEvent(QPaintEvent *event);
     int lineNumberAreaWidth();
@@ -62,10 +63,14 @@ private slots:
     void executeFunction();
     void selectionChangedSlot();
     void textChangedSlot();
+    void toggleWrap();
     void toggleFindBar();
     void findText();
     void replaceText();
     void pgxeditorClosing();
+
+public slots:
+    void languageChanged(QEvent*);
 
 private:
     QString editor_name;
@@ -77,13 +82,15 @@ private:
     QTextCursor find_cursor;
     Highlighter *highlighter;
     QToolBar *toolbar;
-    PgxEditorMainWindow *mainwin;
+    PgxEditorMainWindow *pgxeditor_mainwin;
+    QAction *newpgxeditor_action;
     QAction *cut_action;
     QAction *copy_action;
     QAction *paste_action;
     QAction *save_action;
     QAction *execute_action;
     QAction *selected_execute_action;
+    QAction *wrap_action;
     QAction *find_action;
     QAction *casesensitivity_action;
     QAction *wholeword_action;
@@ -93,6 +100,8 @@ private:
     QToolButton *backwards_button;
 
 Q_SIGNALS:
+    void newPgxeditor();
+    void newPgxeditor(QString);
     void showQueryView(Database *, QString);
     void pgxeditorClosing(PgxEditor *);
 };

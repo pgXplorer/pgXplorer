@@ -37,6 +37,7 @@
 #include "pgxconsole.h"
 #include "pgxeditor.h"
 #include "licensedialog.h"
+#include "help.h"
 
 bool MainWin::document_unsaved = false;
 

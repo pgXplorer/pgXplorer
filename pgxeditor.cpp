@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011, davyjones <davyjones@github.com>
+  Copyright (c) 2011-2012, davyjones <davyjones@github>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -35,6 +35,7 @@ PgxEditor::PgxEditor(Database *database, QString editor_name)
     toolbar->setIconSize(QSize(36,36));
     toolbar->setObjectName("pgxeditor");
     toolbar->setMovable(false);
+    toolbar->addAction(newpgxeditor_action);
     toolbar->addAction(cut_action);
     toolbar->addAction(copy_action);
     toolbar->addAction(paste_action);
@@ -46,25 +47,26 @@ PgxEditor::PgxEditor(Database *database, QString editor_name)
     }
     toolbar->addSeparator();
     toolbar->addAction(selected_execute_action);
+    toolbar->addAction(wrap_action);
     toolbar->addAction(find_action);
 
-    mainwin = new PgxEditorMainWindow;
-    mainwin->addToolBar(toolbar);
-    mainwin->setCentralWidget(this);
-    mainwin->setAttribute(Qt::WA_DeleteOnClose);
+    pgxeditor_mainwin = new PgxEditorMainWindow;
+    pgxeditor_mainwin->addToolBar(toolbar);
+    pgxeditor_mainwin->setCentralWidget(this);
+    pgxeditor_mainwin->setAttribute(Qt::WA_DeleteOnClose);
 
     find_bar = new QLineEdit;
     find_bar->setPlaceholderText(tr("Find"));
     find_bar->setVisible(false);
-    mainwin->statusBar()->setSizeGripEnabled(false);
-    mainwin->statusBar()->addPermanentWidget(casesensitivity_button, 0);
-    mainwin->statusBar()->addPermanentWidget(wholeword_button, 0);
-    mainwin->statusBar()->addPermanentWidget(backwards_button, 0);
-    mainwin->statusBar()->addPermanentWidget(find_bar);
+    pgxeditor_mainwin->statusBar()->setSizeGripEnabled(false);
+    pgxeditor_mainwin->statusBar()->addPermanentWidget(casesensitivity_button, 0);
+    pgxeditor_mainwin->statusBar()->addPermanentWidget(wholeword_button, 0);
+    pgxeditor_mainwin->statusBar()->addPermanentWidget(backwards_button, 0);
+    pgxeditor_mainwin->statusBar()->addPermanentWidget(find_bar);
     replace_bar = new QLineEdit;
     replace_bar->setPlaceholderText(tr("Replace"));
     replace_bar->setVisible(false);
-    mainwin->statusBar()->addPermanentWidget(replace_bar);
+    pgxeditor_mainwin->statusBar()->addPermanentWidget(replace_bar);
 
     connect(find_bar, SIGNAL(returnPressed()), this, SLOT(findText()));
     connect(replace_bar, SIGNAL(returnPressed()), this, SLOT(replaceText()));
@@ -72,7 +74,7 @@ PgxEditor::PgxEditor(Database *database, QString editor_name)
     connect(this, SIGNAL(updateRequest(QRect,int)), this, SLOT(updateLineNumberArea(QRect,int)));
     connect(this, SIGNAL(selectionChanged()), this, SLOT(selectionChangedSlot()));
     connect(this, SIGNAL(textChanged()), this, SLOT(textChangedSlot()));
-    connect(mainwin, SIGNAL(pgxeditorClosing()), this, SLOT(pgxeditorClosing()));
+    connect(pgxeditor_mainwin, SIGNAL(pgxeditorClosing()), this, SLOT(pgxeditorClosing()));
     updateLineNumberAreaWidth(0);
 }
 
@@ -197,8 +199,12 @@ void PgxEditor::breakpointAreaPaintEvent(QPaintEvent *event)
 
 void PgxEditor::createActions()
 {
+    newpgxeditor_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/editor.png")), tr("New"), this);
+    newpgxeditor_action->setShortcuts(QKeySequence::New);
+    newpgxeditor_action->setStatusTip(tr("New editor"));
+    connect(newpgxeditor_action, SIGNAL(triggered()), this, SIGNAL(newPgxeditor()));
+
     cut_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/cut.png")), tr("Cut"), this);
-    cut_action->setText(tr("Cut"));
     cut_action->setShortcuts(QKeySequence::Cut);
     cut_action->setStatusTip(tr("Cut selected text and copy to clipboard"));
     connect(cut_action, SIGNAL(triggered()), this, SLOT(cut()));
@@ -210,7 +216,7 @@ void PgxEditor::createActions()
 
     paste_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/paste.png")), tr("Paste"), this);
     paste_action->setShortcuts(QKeySequence::Paste);
-    paste_action->setStatusTip(tr("Save function"));
+    paste_action->setStatusTip(tr("Paste text from clipboard"));
     connect(paste_action, SIGNAL(triggered()), this, SLOT(paste()));
 
     if(!editor_name.isEmpty()) {
@@ -221,17 +227,24 @@ void PgxEditor::createActions()
         connect(save_action, SIGNAL(triggered()), this, SLOT(saveFunction()));
 
         execute_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/execute.png")), tr("&Execute"), this);
-        execute_action->setShortcuts(QKeySequence::Save);
+        execute_action->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_R));
         execute_action->setStatusTip(tr("Execute function"));
         connect(execute_action, SIGNAL(triggered()), this, SLOT(executeFunction()));
     }
 
     selected_execute_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/selected_execute.png")), tr("&Run"), this);
-    selected_execute_action->setShortcuts(QKeySequence::Save);
-    selected_execute_action->setStatusTip(tr("Execute function"));
+    selected_execute_action->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_E));
+    selected_execute_action->setStatusTip(tr("Execute selected text"));
     if(!editor_name.isEmpty())
         selected_execute_action->setEnabled(false);
     connect(selected_execute_action, SIGNAL(triggered()), this, SLOT(executeText()));
+
+    wrap_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/wrap.png")), tr("Wrap/Un-wrap lines"),this);
+    wrap_action->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_W));
+    wrap_action->setStatusTip(tr("Toggle line wrapping"));
+    wrap_action->setCheckable(true);
+    wrap_action->setChecked(true);
+    connect(wrap_action, SIGNAL(triggered()), this, SLOT(toggleWrap()));
 
     find_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/find.png")), tr("Find"), this);
     find_action->setShortcuts(QKeySequence::Find);
@@ -262,6 +275,7 @@ void PgxEditor::createActions()
 
 void PgxEditor::saveFunction()
 {
+    bool is_saved = false;
     QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
     {
         QSqlDatabase database_connection = QSqlDatabase::addDatabase("QPSQL", QString("save function ").append(editor_name).append(QString::number(editor_widow_id)));
@@ -276,11 +290,20 @@ void PgxEditor::saveFunction()
                          "No PostgreSQL support.\n"), QMessageBox::Cancel);
             return;
         }
-        QSqlQuery temp_query(toPlainText().replace(QChar::ParagraphSeparator,"\n"), database_connection);
+        QSqlQuery temp_query(database_connection);
+        is_saved = temp_query.exec(toPlainText().replace(QChar::ParagraphSeparator,"\n"));
+        if(temp_query.lastError().isValid()) {
+            QApplication::restoreOverrideCursor();
+            QMessageBox::critical(0, tr("Database error"),
+                temp_query.lastError().text(), QMessageBox::Cancel);
+        }
     }
     QSqlDatabase::removeDatabase(QString("save function ").append(editor_name).append(QString::number(editor_widow_id)));
     QApplication::restoreOverrideCursor();
-    save_action->setEnabled(false);
+    if(is_saved)
+        save_action->setEnabled(false);
+    else
+        save_action->setEnabled(true);
 }
 
 void PgxEditor::executeText()
@@ -295,8 +318,9 @@ void PgxEditor::executeText()
 
 void PgxEditor::executeFunction()
 {
-    QString query;
-    emit showQueryView(database, query);
+    QString query("SELECT ");
+    query.append(editor_name);
+    emit newPgxeditor(query);
 }
 
 void PgxEditor::selectionChangedSlot()
@@ -318,7 +342,7 @@ void PgxEditor::findText()
         find_flags |= QTextDocument::FindWholeWords;
     if(backwards_action->isChecked())
         find_flags |= QTextDocument::FindBackward;
-    mainwin->statusBar()->clearMessage();
+    pgxeditor_mainwin->statusBar()->clearMessage();
     if(find_cursor.atEnd() && !backwards_action->isChecked()) {
         find_cursor.movePosition(QTextCursor::Start);
         setTextCursor(find_cursor);
@@ -330,11 +354,11 @@ void PgxEditor::findText()
 
     if(!find(find_bar->text(), find_flags)) {
         if(backwards_action->isChecked()) {
-            mainwin->statusBar()->showMessage(tr("Reached the top. Continuing from the bottom."));
+            pgxeditor_mainwin->statusBar()->showMessage(tr("Reached the top. Continuing from the bottom."));
             find_cursor.movePosition(QTextCursor::Start);
         }
         else {
-            mainwin->statusBar()->showMessage(tr("Reached the end. Continuing from the top."));
+            pgxeditor_mainwin->statusBar()->showMessage(tr("Reached the end. Continuing from the top."));
             find_cursor.movePosition(QTextCursor::End);
         }
     }
@@ -355,7 +379,7 @@ void PgxEditor::replaceText()
         find_flags |= QTextDocument::FindWholeWords;
     if(backwards_action->isChecked())
         find_flags |= QTextDocument::FindBackward;
-    mainwin->statusBar()->clearMessage();
+    pgxeditor_mainwin->statusBar()->clearMessage();
     if(find_cursor.atEnd() && !backwards_action->isChecked()) {
         find_cursor.movePosition(QTextCursor::Start);
         setTextCursor(find_cursor);
@@ -367,11 +391,11 @@ void PgxEditor::replaceText()
 
     if(!find(find_bar->text(), find_flags)) {
         if(backwards_action->isChecked()) {
-            mainwin->statusBar()->showMessage(tr("Reached the top. Continuing from the bottom."));
+            pgxeditor_mainwin->statusBar()->showMessage(tr("Reached the top. Continuing from the bottom."));
             find_cursor.movePosition(QTextCursor::Start);
         }
         else {
-            mainwin->statusBar()->showMessage(tr("Reached the end. Continuing from the top."));
+            pgxeditor_mainwin->statusBar()->showMessage(tr("Reached the end. Continuing from the top."));
             find_cursor.movePosition(QTextCursor::End);
         }
     }
@@ -387,11 +411,19 @@ void PgxEditor::replaceText()
     }
 }
 
+void PgxEditor::toggleWrap()
+{
+    if(lineWrapMode() == QPlainTextEdit::WidgetWidth)
+        setLineWrapMode(QPlainTextEdit::NoWrap);
+    else
+        setLineWrapMode(QPlainTextEdit::WidgetWidth);
+}
+
 void PgxEditor::toggleFindBar()
 {
     if(find_bar->isVisible()) {
         if(find_bar->isActiveWindow()) {
-            mainwin->statusBar()->clearMessage();
+            pgxeditor_mainwin->statusBar()->clearMessage();
             removeHighlighting();
             casesensitivity_button->setVisible(false);
             wholeword_button->setVisible(false);
@@ -421,6 +453,11 @@ void PgxEditor::textChangedSlot()
         save_action->setEnabled(true);
 }
 
+void PgxEditor::setTitle(QString title)
+{
+    pgxeditor_mainwin->setWindowTitle(title);
+}
+
 void PgxEditor::setText(QString editor_text, bool save_state)
 {
     this->setPlainText(editor_text);
@@ -430,9 +467,9 @@ void PgxEditor::setText(QString editor_text, bool save_state)
 
 void PgxEditor::setResizePos(QSize size, QPoint pos)
 {
-    mainwin->resize(size);
-    mainwin->move(pos);
-    mainwin->show();
+    pgxeditor_mainwin->resize(size);
+    pgxeditor_mainwin->move(pos);
+    pgxeditor_mainwin->show();
 }
 
 void PgxEditor::pgxeditorClosing()
@@ -442,7 +479,46 @@ void PgxEditor::pgxeditorClosing()
 
 void PgxEditor::closeMain()
 {
-    mainwin->close();
+    pgxeditor_mainwin->close();
+}
+
+
+void PgxEditor::languageChanged(QEvent *event)
+{
+    if (event->type() == QEvent::LanguageChange) {
+        newpgxeditor_action->setText(tr("New"));
+        newpgxeditor_action->setStatusTip(tr("New editor"));
+
+        cut_action->setText(tr("Cut"));
+        cut_action->setStatusTip(tr("Cut selected text and copy to clipboard"));
+
+        copy_action->setText(tr("Copy"));
+        copy_action->setStatusTip(tr("Copy selected text to clipboard"));
+
+        paste_action->setText(tr("Paste"));
+        paste_action->setStatusTip(tr("Paste text from clipboard"));
+
+        if(!editor_name.isEmpty()) {
+            save_action->setText(tr("&Save"));
+            save_action->setStatusTip(tr("Save function"));
+
+            execute_action->setText(tr("&Execute"));
+            execute_action->setStatusTip(tr("Execute function"));
+        }
+
+        selected_execute_action->setText(tr("&Run"));
+        selected_execute_action->setStatusTip(tr("Execute selected text"));
+
+        wrap_action->setText(tr("Wrap/Un-wrap lines"));
+        wrap_action->setStatusTip(tr("Toggle line wrapping"));
+
+        find_action->setText(tr("Find"));
+        find_action->setStatusTip(tr("Find/replace text"));
+
+        casesensitivity_action->setToolTip(tr("Case sensitive"));
+        wholeword_action->setToolTip(tr("Whole word"));
+        backwards_action->setToolTip(tr("Backwards"));
+    }
 }
 
 void PgxEditorMainWindow::closeEvent(QCloseEvent *event)
