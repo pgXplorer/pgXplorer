@@ -4,15 +4,10 @@ TARGET		= pgXplorer
 CONFIG		+= qt warn_on
 
 HEADERS		= \
-    tableLink.h \
-    schemaLink.h \
     database.h \
-    schema.h \
     table.h \
-    mainWin.h \
     pgxconsole.h \
     queryview.h \
-    tableview.h \
     querymodel.h \
     connectionproperties.h \
     pgxeditor.h \
@@ -20,17 +15,21 @@ HEADERS		= \
     functionlink.h \
     view.h \
     highlighter.h \
-    licensedialog.h
+    licensedialog.h \
+    tableview.h \
+    tablelink.h \
+    schema.h \
+    newtableview.h \
+    mainwin.h \
+    schemalink.h \
+    tablemodel.h \
+    viewview.h \
+    help.h
 SOURCES		= main.cpp \
-    tableLink.cpp \
-    schemaLink.cpp \
     database.cpp \
-    schema.cpp \
     table.cpp \
-    mainWin.cpp \
     pgxconsole.cpp \
     queryview.cpp \
-    tableview.cpp \
     querymodel.cpp \
     connectionproperties.cpp \
     pgxeditor.cpp \
@@ -38,13 +37,23 @@ SOURCES		= main.cpp \
     functionlink.cpp \
     view.cpp \
     highlighter.cpp \
-    licensedialog.cpp
+    licensedialog.cpp \
+    newtableview.cpp \
+    mainwin.cpp \
+    schemalink.cpp \
+    schema.cpp \
+    tableview.cpp \
+    tablelink.cpp \
+    tablemodel.cpp \
+    viewview.cpp \
+    help.cpp
 QT += sql translator
 
 RESOURCES += pgXplorer.qrc
 
 TRANSLATIONS = pgXplorer_ja.ts \
-               pgXplorer_fr.ts
+               pgXplorer_fr.ts \
+               qt_ja.ts
 
 RC_FILE = pgXplorer.rc
 
@@ -58,5 +67,71 @@ INSTALLS += target sources
 
 OTHER_FILES += \
     pgXplorer.rc
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
