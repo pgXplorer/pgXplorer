@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011, davyjones <davyjones@github>
+  Copyright (c) 2011-2012, davyjones <davyjones@github>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -19,29 +19,52 @@
 #ifndef TABLEVIEW_H
 #define TABLEVIEW_H
 
+#include <QTableView>
 #include <QSqlTableModel>
 #include <QSqlQuery>
+#include <QSqlRecord>
+#include <QSqlIndex>
 #include <QSqlError>
 #include <QtGui>
 #include "database.h"
+#include "tablemodel.h"
 
 #define FETCHSIZ 10000
+
+class TableView;
+class NewRowTableView;
+class MainTableView;
 
 class TableView : public QMainWindow
 {
     Q_OBJECT
 
 private:
+    QString time_elapsed_string;
+    QString rows_string;
+    QString rows_string_2;
+    QString colums_string;
+    QString seconds_string;
+
+    double time_elapsed;
+
     Database *database;
+    QString table_name;
+    QStringList primary_key;
+    QStringList column_list;
+    QStringList column_types;
     QMenuBar *menubar;
+    QDockWidget *dock_widget;
     QString status_message;
     QMenu context_menu;
     QMenu deselect_menu;
     QMenu disarrange_menu;
     QTime t;
     QToolBar *toolbar;
-    QSqlQueryModel *query_model;
+    TableModel *query_model;
     QTableView *tview;
+    QStandardItemModel *new_row_model;
+    NewRowTableView *new_row_view;
     QString sql;
     QStringList where_clause;
     QStringList order_clause;
@@ -55,6 +78,7 @@ private:
     qint32 column_count;
     bool thread_busy;
     ulong thisTableViewId;
+    QIcon key_icon;
     QIcon filter_icon;
     QIcon ascend_icon;
     QIcon descend_icon;
@@ -71,13 +95,20 @@ private:
     QAction *remove_all_ordering_action;
     QAction *truncate_action;
     QAction *delete_rows_action;
+    QAction *previous_set_action;
+    QAction *next_set_action;
     QWidgetAction *custom_filter_action;
     QAction *copy_query_action;
     QLineEdit *filter_text;
+    QBrush red_brush;
+    QBrush green_brush;
+    QToolButton *previous_set_button;
+    QToolButton *next_set_button;
+    QMessageBox *error_message_box;
 
 public:
     static ulong tableViewObjectId;
-    TableView(Database *, QString const, QString const, QStringList const, bool, Qt::WidgetAttribute f);
+    TableView(Database *, QString const, QString const, QStringList const, QStringList const, QStringList const, bool, Qt::WidgetAttribute f);
     ~TableView()
     {
     };
@@ -86,9 +117,9 @@ public:
     void keyReleaseEvent(QKeyEvent*);
     //void contextMenuEvent(QContextMenuEvent*);
     void closeEvent(QCloseEvent*);
+    void createIcons();
+    void createBrushes();
     void createActions();
-    void fetchNextData();
-    void fetchPreviousData();
     void fetchConditionDataInitial();
     void deleteData();
 
@@ -96,15 +127,19 @@ public slots:
     void languageChanged(QEvent*);
     void customContextMenuViewport();
     void customContextMenuHeader();
+    void updateFailedSlot(QString);
 
 private slots:
     void fetchDefaultData();
-    void fetchRefreshData();
+    void fetchRefreshData(QString);
     void fetchDataSlot();
-    void copyc();
-    void copych();
+    void fetchNextData();
+    void fetchPreviousData();
+    void copyToClipboard();
+    void copyToClipboardWithHeaders();
     void defaultView();
     void refreshView();
+    void addRowRefreshView();
     void filter();
     void filter(QString);
     void exclude();
@@ -115,9 +150,11 @@ private slots:
     void removeColumns();
     void customFilterReturnPressed();
     void copyQuery();
+    bool insertRow();
     void truncateTable();
     void deleteRows();
     void deleteRow(int);
+    void updatePrimaryKeyInfo();
 
     void busySlot();
     void updRowCntSlot(QString);
@@ -131,6 +168,25 @@ Q_SIGNALS:
     void busySignal();
     void updRowCntSignal(QString);
     void tableViewClosing(TableView*);
+};
+
+class NewRowTableView : public QTableView
+{
+    Q_OBJECT
+
+private:
+    int column_count;
+
+public:
+    NewRowTableView(QWidget *parent = 0);
+    void setColumnCount(quint32);
+    bool eventFilter(QObject *, QEvent *);
+
+public slots:
+    void resizeCells(int, int, int);
+
+Q_SIGNALS:
+    void insertRow();
 };
 
 #endif // TABLEVIEW_H
