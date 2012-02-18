@@ -20,7 +20,7 @@
 #include "functionlink.h"
 #include "schema.h"
 #include "function.h"
-#include "mainWin.h"
+#include "mainwin.h"
 #include <math.h>
 
 FunctionLink::FunctionLink(Schema *source_node, Function *destination_node)

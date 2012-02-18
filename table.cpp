@@ -16,7 +16,7 @@
   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 
-#include "mainWin.h"
+#include "mainwin.h"
 #include "database.h"
 #include "table.h"
 #include "schema.h"

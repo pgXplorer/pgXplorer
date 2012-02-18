@@ -1,7 +1,7 @@
-/* 
+/*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011, davyjones <davyjones@github>
+  Copyright (c) 2011-2012, davyjones <davyjones@github>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -40,16 +40,18 @@ class Schema;
 class Table;
 class View;
 class TableView;
+class ViewView;
 class PgxConsole;
 class PgxEditor;
 class Function;
 class QueryView;
+class Help;
 
-class Canvas : public QGraphicsView {
+class GraphicsView : public QGraphicsView {
     Q_OBJECT
 
 public:
-    Canvas(QGraphicsScene&, QWidget *parent=0,
+    GraphicsView(QGraphicsScene&, QWidget *parent=0,
                  const char *name=0, Qt::WindowFlags f=0);
     void clear();
     bool isZoom()
@@ -138,9 +140,10 @@ public:
 
 public slots:
     void about();
+    void showHelp();
     void document_changed();
     void tableViewClosed(TableView *);
-    void viewViewClosed(TableView *);
+    void viewViewClosed(ViewView *);
     void queryViewClosed(QueryView *);
     void pgxconsoleClosed(PgxConsole *);
     void pgxeditorClosed(PgxEditor *);
@@ -163,15 +166,15 @@ private slots:
     void open(QString);
     void saveFile();
     void save(QString);
-    void saveFileAs();
-    //int saveState(QString);
-    void quitApp();
-    void newFile();
+    bool saveFileAs();
+    bool quitApp();
+    bool newFile();
     void newPgxplorer();
     void openDatabaseProperties();
     void showPgxconsole();
     void showPgxeditor();
     void showPgxeditor(QString);
+    void showPgxeditor(QString, QString);
     void showFunctionEditor(Schema *, Function*);
     void toggleFullscreen();
     void showTreeview();
@@ -193,6 +196,7 @@ private slots:
     void hideViews(Schema*);
     void hideAllViews();
     void showFunctions(Schema*);
+    void newFunction(Schema*);
     void showAllFunctions();
     void hideFunctions(Schema*);
     void hideAllFunctions();
@@ -217,11 +221,12 @@ Q_SIGNALS:
 
 private:
     QTranslator translator;
+    QTranslator qt_translator;
 
     QFile database_file;
 
     QGraphicsScene scene;
-    Canvas *canvas;
+    GraphicsView *graphics_view;
     QLineEdit *search_box;
     QCompleter *completer;
     QPrinter *printer;
@@ -230,7 +235,7 @@ private:
 
     Database *database;
     QList<TableView*> table_view_list;
-    QList<TableView*> view_view_list;
+    QList<ViewView*> view_view_list;
     QList<QueryView*> query_view_list;
     QList<PgxConsole*> pgxconsole_list;
     QList<PgxEditor*> pgxeditor_list;
@@ -243,6 +248,7 @@ private:
     QMenu *language_menu;
 
     QToolBar *toolbar;
+    Help *help;
 
     QAction *new_file_action;
     QAction *open_file_action;

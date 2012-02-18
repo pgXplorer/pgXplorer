@@ -21,7 +21,7 @@
 
 #include <QtGui>
 #include "database.h"
-#include "mainWin.h"
+#include "mainwin.h"
 
 class LicenseDialog : public QDialog
 {

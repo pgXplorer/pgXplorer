@@ -19,7 +19,6 @@ HEADERS		= \
     tableview.h \
     tablelink.h \
     schema.h \
-    newtableview.h \
     mainwin.h \
     schemalink.h \
     tablemodel.h \
@@ -38,7 +37,6 @@ SOURCES		= main.cpp \
     view.cpp \
     highlighter.cpp \
     licensedialog.cpp \
-    newtableview.cpp \
     mainwin.cpp \
     schemalink.cpp \
     schema.cpp \

@@ -22,7 +22,7 @@
 #include <QMouseEvent>
 #include <QSqlDatabase>
 #include <QtGui>
-#include "mainWin.h"
+#include "mainwin.h"
 #include "schemaLink.h"
 #include "tableLink.h"
 #include "view.h"

@@ -19,7 +19,7 @@
 #include <QApplication>
 #include <QDesktopWidget>
 #include <QTimer>
-#include "mainWin.h"
+#include "mainwin.h"
 #include "licensedialog.h"
 
 int main(int argc, char **argv)

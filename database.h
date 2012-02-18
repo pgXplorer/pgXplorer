@@ -24,7 +24,7 @@
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QtGui>
-#include "mainWin.h"
+#include "mainwin.h"
 #include "schema.h"
 #include "schemaLink.h"
 #include "table.h"
