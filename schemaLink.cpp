@@ -20,7 +20,7 @@
 #include "schemaLink.h"
 #include "database.h"
 #include "schema.h"
-#include "mainWin.h"
+#include "mainwin.h"
 #include <math.h>
 
 SchemaLink::SchemaLink(Database *source_node, Schema *destination_node)

@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011, davyjones <davyjones@github>
+  Copyright (c) 2011-2012, davyjones <davyjones@github>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -30,11 +30,11 @@ ConnectionProperties::ConnectionProperties(Database *database, MainWin *mainwin)
     resize(256, 288);
     setModal(true);
     setParent(mainwin);
-    setWindowFlags(Qt::Window);
+    setWindowFlags(Qt::Popup);
     setWindowModality(Qt::WindowModal);
     pBOK = new QPushButton(this);
     pBOK->setObjectName(QString::fromUtf8("pBOK"));
-    pBOK->setAutoDefault(false);
+    pBOK->setAutoDefault(true);
     pBOK->setGeometry(QRect(30, 250, 75, 23));
     QFont font;
     font.setFamily(QString::fromUtf8("Verdana"));

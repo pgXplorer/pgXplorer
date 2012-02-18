@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011, davyjones <davyjones@github.com>
+  Copyright (c) 2011-2012, davyjones <davyjones@github>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -37,6 +37,12 @@ int main(int argc, char **argv)
     QCoreApplication::setApplicationName("pgXplorer");
 
     QSettings settings("pgXplorer","pgXplorer");
+    settings.remove("license");
+    /*
+    Disabling license nag dialog for now.
+    The source code will always be free. Just to keep track
+    of potential paying customers, enable a simple License
+    key class.
 
     QString user = settings.value("license/user", QString()).toString();
     bool site_wide = settings.value("license/site_wide", false).toBool();
@@ -52,7 +58,7 @@ int main(int argc, char **argv)
         settings.setValue("license/tries", 0);
         license_dialog->close();
     }
-
+    */
     mainwin->show();
     return pgXplorer.exec();
 }

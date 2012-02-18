@@ -20,7 +20,7 @@
 #include "tableLink.h"
 #include "schema.h"
 #include "table.h"
-#include "mainWin.h"
+#include "mainwin.h"
 #include <math.h>
 
 TableLink::TableLink(Schema *source_node, Table *destination_node)
