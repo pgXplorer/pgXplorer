@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011, davyjones <davyjones@github.com>
+  Copyright (c) 2011-2012, davyjones <davyjones@github>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -21,6 +21,7 @@
 
 #include <QMouseEvent>
 #include <QSqlTableModel>
+#include <QSqlIndex>
 #include <QtGui>
 #include "database.h"
 #include "tableLink.h"
@@ -38,7 +39,10 @@ private:
     QSqlQueryModel *model;
     Schema *parent_schema;
     QString table_name;
+    QStringList column_types;
     QStringList column_list;
+    QStringList primary_key;
+    QBrush pink_brush;
     bool status;
     bool collapsed;
     bool searched;
@@ -46,6 +50,8 @@ private:
     int table_index;
     //QList<TableLink *> edgeList;
     QPointF newPos;
+    int ascii_length;
+    int utf8_length;
 
 protected:
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *);
@@ -60,6 +66,7 @@ public:
     }
     Table(Database *database, Schema *parent, QString tblName, int index, QColor qcolor);
     ~Table(){};
+    void createBrush();
     void defaultPosition();
     void verticalPosition();
     bool advance();
@@ -100,10 +107,10 @@ public:
              };
             painter->drawPolygon(top, 4);
             painter->setPen(Qt::darkGray);
-            QPointF textPos(-6*this->table_name.left(6).length(),+5);
+            QPointF textPos(-6*table_name.left(6).length(),+5);
             if(lod > 0.5)
-                painter->drawText(textPos, this->table_name.length()>6?this->table_name.left(6)+
-                              "..":this->table_name);
+                painter->drawText(textPos, table_name.length()>8?table_name.left(8)+
+                              "..":table_name);
         }
         else if(is_view) {
             painter->setBrush(QColor(200,150,0));
@@ -125,13 +132,18 @@ public:
              };
             painter->drawPolygon(top, 4);
             painter->setPen(QColor(100,50,50));
-            QPointF textPos(-6*this->table_name.left(6).length(),+5);
+            QPointF textPos(-6*table_name.left(6).length(),+5);
             if(lod > 0.5)
-                painter->drawText(textPos, this->table_name.length()>6?this->table_name.left(6)+
-                              "..":this->table_name);
+                if(ascii_length != utf8_length)
+                    painter->drawText(textPos, table_name.length()>6?table_name.left(6)+
+                              "..":table_name);
+                else
+                    painter->drawText(textPos, table_name.length()>10?table_name.left(10)+
+                              "..":table_name);
         }
         else {
             painter->setBrush(QColor(200,150,150));
+            //painter->setBrush(pink_brush);
             painter->drawRect(-40,-10,TABLE_WIDTH,TABLE_HEIGHT);
             painter->setBrush(QColor(230,200,200));
             QPointF right[4] = {
@@ -150,16 +162,21 @@ public:
              };
             painter->drawPolygon(top, 4);
             painter->setPen(QColor(100,50,50));
-            QPointF textPos(-6*this->table_name.left(6).length(),+5);
-            if(lod > 0.5)
-                painter->drawText(textPos, this->table_name.length()>6?this->table_name.left(6)+
-                              "..":this->table_name);
+            QPointF textPos(-6*table_name.left(6).length(),+5);
+            if(lod > 0.5) {
+                if(ascii_length != utf8_length)
+                    painter->drawText(textPos, table_name.length()>6?table_name.left(6)+
+                              "..":table_name);
+                else
+                    painter->drawText(textPos, table_name.length()>10?table_name.left(10)+
+                              "..":table_name);
+            }
         }
         painter->setRenderHint(QPainter::Antialiasing, true);
     }
     QString getName()
     {
-        return this->table_name;
+        return table_name;
     }
     void setName(QString name)
     {
@@ -167,15 +184,15 @@ public:
     }
     bool getCollapsed()
     {
-        return this->collapsed;
+        return collapsed;
     }
     bool getSearched()
     {
-        return this->searched;
+        return searched;
     }
     bool isView()
     {
-        return this->is_view;
+        return is_view;
     }
     void setView(bool view)
     {
@@ -191,7 +208,7 @@ public:
     }
     bool getStatus()
     {
-        return this->status;
+        return status;
     }
     void setStatus(bool status)
     {
@@ -203,26 +220,40 @@ public:
     }
     Schema *getParent()
     {
-        return this->parent_schema;
+        return parent_schema;
     }
     QSqlQueryModel *getModel()
     {
-        return this->model;
+        return model;
     }
     void setModel(QSqlQueryModel *model)
     {
         this->model = model;
     }
-    void setColumnList();
-    void setColumnList(QStringList column_list)
+    void setColumnData();
+    void setColumnData(QStringList column_list, QStringList column_types)
     {
         this->column_list = column_list;
+        this->column_types = column_types;
     }
     QStringList getColumnList()
     {
         return column_list;
     }
 
+    QStringList getColumnTypes()
+    {
+        return column_types;
+    }
+    void copyPrimaryKey();
+    void setPrimaryKey(QStringList primary_key)
+    {
+        this->primary_key = primary_key;
+    }
+    QStringList getPrimaryKey()
+    {
+        return primary_key;
+    }
     void showView2(Table*);
 
 public slots:

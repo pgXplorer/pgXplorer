@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011, davyjones <davyjones@github.com>
+  Copyright (c) 2011-2012, davyjones <davyjones@github>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -46,6 +46,8 @@ private:
     int view_index;
     //QList<ViewLink *> edgeList;
     QPointF newPos;
+    int ascii_length;
+    int utf8_length;
 
 protected:
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *);
@@ -97,8 +99,12 @@ public:
             painter->setPen(Qt::darkGray);
             QPointF textPos(-6*this->view_name.left(6).length(),+5);
             if(lod > 0.5)
-                painter->drawText(textPos, this->view_name.length()>6?this->view_name.left(6)+
-                              "..":this->view_name);
+                if(ascii_length != utf8_length)
+                    painter->drawText(textPos, view_name.length()>6?view_name.left(6)+
+                              "..":view_name);
+                else
+                    painter->drawText(textPos, view_name.length()>10?view_name.left(10)+
+                              "..":view_name);
         }
         else {
             painter->setBrush(QColor(200,150,0));
@@ -122,8 +128,12 @@ public:
             painter->setPen(QColor(100,50,50));
             QPointF textPos(-6*this->view_name.left(6).length(),+5);
             if(lod > 0.5)
-                painter->drawText(textPos, this->view_name.length()>6?this->view_name.left(6)+
-                              "..":this->view_name);
+                if(ascii_length != utf8_length)
+                    painter->drawText(textPos, view_name.length()>6?view_name.left(6)+
+                              "..":view_name);
+                else
+                    painter->drawText(textPos, view_name.length()>10?view_name.left(10)+
+                              "..":view_name);
         }
         painter->setRenderHint(QPainter::Antialiasing, true);
     }

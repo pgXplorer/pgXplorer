@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011, davyjones <davyjones@github.com>
+  Copyright (c) 2011-2012, davyjones <davyjones@github>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -28,14 +28,25 @@ Table::Table(Database *database, Schema *schema, QString table_name, int table_i
     this->setParentItem(schema);
     this->table_index = table_index;
     this->setName(table_name);
+    ascii_length = table_name.toAscii().length();
+    utf8_length = table_name.toUtf8().length();
     this->setStatus(false);
     this->setCollapsed(true);
+    createBrush();
     //setFlag(QGraphicsItem::ItemIsMovable);
     setFlag(QGraphicsItem::ItemIsSelectable);
     //setFlag(ItemSendsGeometryChanges);
     setCacheMode(DeviceCoordinateCache);
     setZValue(-10);
     setAcceptHoverEvents(true);
+}
+
+void Table::createBrush()
+{
+    QRadialGradient pink_gradient(50,50,100,50,50);
+    pink_gradient.setColorAt(1, QColor::fromRgbF(0.8, 0.4, 0.4, 0.4));
+    pink_gradient.setColorAt(0, QColor::fromRgbF(0, 0, 0, 0));
+    pink_brush = QBrush(pink_gradient);
 }
 
 void Table::defaultPosition()
@@ -71,7 +82,7 @@ void Table::defaultPosition()
     }
 }
 
-void Table::setColumnList()
+void Table::setColumnData()
 {
     QSqlQuery column_query(database->getDatabaseConnection());
     QString column_query_string = "SELECT column_name, data_type FROM information_schema.columns WHERE table_schema='" + parent_schema->getName() + "' AND table_name='" + table_name + "'";
@@ -86,8 +97,27 @@ void Table::setColumnList()
         error_message->show();
         return;
     }
-    while (column_query.next())
+    //Clear the column list just before populating it.
+    column_list.clear();
+    column_types.clear();
+    while (column_query.next()) {
         column_list.append("\"" + column_query.value(0).toString() + "\"");
+        column_types.append(column_query.value(1).toString());
+    }
+}
+
+void Table::copyPrimaryKey()
+{
+    QString full_table_name = parent_schema->getName();
+    full_table_name.append(".\"");
+    full_table_name.append(table_name);
+    full_table_name.append("\"");
+    QSqlIndex p_key = database->getDatabaseConnection().primaryIndex(full_table_name);
+    int key_element_count = p_key.count();
+    for(int key_element_index = 0; key_element_index < key_element_count; key_element_index++)
+    {
+        primary_key.append("\"" + p_key.fieldName(key_element_index) + "\"");
+    }
 }
 
 void Table::verticalPosition()
@@ -137,7 +167,7 @@ void Table::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
         menu.addSeparator();
         menu.addAction(tr("Clear contents"));
         menu.addSeparator();
-        menu.addAction("Drop table");
+        menu.addAction(tr("Drop table"));
     }
     QAction *a = menu.exec(event->screenPos());
     if(a && QString::compare(a->text(),tr("View contents")) == 0)
@@ -178,7 +208,6 @@ void Table::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *)
         this->setCollapsed(true);
         emit collapse(this);
     }*/
-    setColumnList();
     emit expandTable(database, parent_schema, this);
     update();
 }

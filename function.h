@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011, davyjones <davyjones@github.com>
+  Copyright (c) 2011-2012, davyjones <davyjones@github>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -44,6 +44,8 @@ private:
     int function_index;
     //QList<FunctionLink *> edgeList;
     QPointF newPos;
+    int ascii_length;
+    int utf8_length;
 
 protected:
     //QVariant itemChange(GraphicsItemChange change, const QVariant &value);
@@ -98,7 +100,11 @@ public:
             painter->setPen(Qt::darkGray);
             QPointF textPos(-6*function_name.left(6).length(),+5);
             if(lod > 0.5)
-                painter->drawText(textPos, function_name.length()>6?function_name.left(6)+
+                if(ascii_length != utf8_length)
+                    painter->drawText(textPos, function_name.length()>6?function_name.left(6)+
+                              "..":function_name);
+                else
+                    painter->drawText(textPos, function_name.length()>10?function_name.left(10)+
                               "..":function_name);
         }
         else {
@@ -123,8 +129,12 @@ public:
             painter->setPen(QColor(50,100,100));
             QPointF textPos(-6*this->function_name.left(6).length(),+5);
             if(lod > 0.5)
-                painter->drawText(textPos, this->function_name.length()>6?this->function_name.left(6)+
-                              "..":this->function_name);
+                if(ascii_length != utf8_length)
+                    painter->drawText(textPos, function_name.length()>6?function_name.left(6)+
+                              "..":function_name);
+                else
+                    painter->drawText(textPos, function_name.length()>10?function_name.left(10)+
+                              "..":function_name);
         }
         painter->setRenderHint(QPainter::Antialiasing, false);
     }

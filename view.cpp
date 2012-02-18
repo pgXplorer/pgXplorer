@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011, davyjones <davyjones@github.com>
+  Copyright (c) 2011-2012, davyjones <davyjones@github>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -28,6 +28,8 @@ View::View(Database *database, Schema *schema, QString view_name, int view_index
     this->setParentItem(schema);
     this->view_index = view_index;
     this->setName(view_name);
+    ascii_length = view_name.toAscii().length();
+    utf8_length = view_name.toUtf8().length();
     this->setStatus(false);
     this->setCollapsed(true);
     //setFlag(QGraphicsItem::ItemIsMovable);
@@ -124,6 +126,8 @@ void View::setColumnList()
         error_message->show();
         return;
     }
+    //Clear the column list just before populating it.
+    column_list.clear();
     while (column_query.next())
         column_list.append("\"" + column_query.value(0).toString() + "\"");
 }
@@ -132,11 +136,10 @@ void View::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 {
     QMenu menu;
     //menu.setStyleSheet("QMenu { font-size:12px; width: 100px; color:white; left: 20px; background-color:qlineargradient(x1:0, y1:0, x2:0, y2:1, stop: 0 #cccccc, stop: 1 #333333);}");
-    menu.addAction(QIcon(qApp->applicationDirPath().append("/icons/view2.png")), tr("View contents"));
-    if(!is_view) {
-        menu.addSeparator();
-        menu.addAction("Drop view");
-    }
+    menu.addAction(QIcon(qApp->applicationDirPath().append("/icons/view2.png")), tr("View contents"));    
+    menu.addSeparator();
+    menu.addAction(tr("Drop view"));
+
     QAction *a = menu.exec(event->screenPos());
     if(a && QString::compare(a->text(),tr("View contents")) == 0)
     {

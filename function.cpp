@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011, davyjones <davyjones@github.com>
+  Copyright (c) 2011-2012, davyjones <davyjones@github>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -28,6 +28,8 @@ Function::Function(Database *database, Schema *schema, QString function_name, QS
     this->setParentItem(schema);
     this->function_index = function_index;
     this->setName(function_name);
+    ascii_length = function_name.toAscii().length();
+    utf8_length = function_name.toUtf8().length();
     this->setArgs(function_args);
     this->setArgTypes(function_arg_types);
     this->setStatus(false);
@@ -117,7 +119,7 @@ void Function::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
     //menu.setStyleSheet("QMenu { font-size:12px; width: 100px; color:white; left: 20px; background-color:qlineargradient(x1:0, y1:0, x2:0, y2:1, stop: 0 #cccccc, stop: 1 #333333);}");
     menu.addAction(QIcon(qApp->applicationDirPath().append("/icons/function.png")), tr("Function definition"));
     menu.addSeparator();
-    menu.addAction("Drop function");
+    menu.addAction(tr("Drop function"));
 
     QAction *a = menu.exec(event->screenPos());
     if(a && QString::compare(a->text(),tr("Function definition")) == 0)

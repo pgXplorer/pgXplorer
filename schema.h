@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011, davyjones <davyjones@github.com>
+  Copyright (c) 2011-2012, davyjones <davyjones@github>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -74,9 +74,6 @@ public:
     {
     };
     bool advance();
-    void populateSchemaTables();
-    void populateSchemaViews();
-    void populateSchemaFunctions();
     void addEdge(SchemaLink *schema_link);
     //void addEdge(TableLink *table_link);
     //void addEdge(FunctionLink *table_link);
@@ -245,6 +242,11 @@ public:
     void resetFunctionsVertically2();
     void horizontalPosition();
 
+public slots:
+    void populateSchemaTables();
+    void populateSchemaViews();
+    void populateSchemaFunctions();
+
 Q_SIGNALS:
     void expandSchemaTables(Schema*);
     void collapseSchemaTables(Schema*);
@@ -253,6 +255,9 @@ Q_SIGNALS:
     void collapseOtherSchemas(Schema*);
     void expandSchemaFunctions(Schema*);
     void collapseSchemaFunctions(Schema*);
+    void newTable(Schema*);
+    void newView(Schema*);
+    void newFunction(Schema*);
 };
 
 #endif // SCHEMA_H

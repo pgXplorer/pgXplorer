@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011, davyjones <davyjones@github.com>
+  Copyright (c) 2011-2012, davyjones <davyjones@github>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -94,51 +94,42 @@ void Schema::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *)
 
 void Schema::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 {
-    QMenu menu;
-    if(collapsed) {
-        menu.addAction(tr("Explode"));
-        menu.addAction(tr("Explode vertically"));
-    }
-    else {
-        menu.addAction(tr("Collapse"));
-        menu.addAction(tr("Collapse others"));
-        menu.addSeparator();
-        menu.addAction(tr("Reset"));
-        menu.addAction(tr("Arrange vertically"));
-    }
-    menu.addSeparator();
-    menu.addAction(tr("Explode functions"));
-    /*QAction *a = menu.exec(event->screenPos());
+    QString display_setting = mainwin->getDisplaySetting();
 
-    if(a && QString::compare(a->text(),"Explode") == 0)
-    {
-        emit expandSchemaTables(this);
+    QMenu menu;
+    menu.addAction(tr("Refresh"));
+    if(display_setting.compare("view") == 0){
+        //menu.addAction(tr("New view"));
     }
-    else if(a && QString::compare(a->text(),"Explode vertically") == 0)
-    {
-        emit expandSchemaTables(this);
-        resetTableVertically();
+    else if(display_setting.compare("function") == 0)
+        menu.addAction(tr("New function"));
+    else if (display_setting.compare("table") == 0) {
+        //menu.addAction(tr("New table"));
     }
-    else if(a && QString::compare(a->text(),"Collapse") == 0)
+
+    QAction *a = menu.exec(event->screenPos());
+
+    if(a && QString::compare(a->text(),tr("Refresh")) == 0)
     {
-        emit collapseSchemaTables(this);
+        if(display_setting.compare("view") == 0)
+            resetViewsVertically2();
+        else if(display_setting.compare("function") == 0)
+            resetFunctionsVertically2();
+        else if(display_setting.compare("table") == 0)
+            resetTablesVertically2();
     }
-    else if(a && QString::compare(a->text(),"Collapse others") == 0)
+    else if(a && QString::compare(a->text(),tr("New view")) == 0)
     {
-        emit collapseOtherSchemas(this);
+        emit newView(this);
     }
-    else if(a && QString::compare(a->text(),"Reset") == 0)
+    else if(a && QString::compare(a->text(),tr("New function")) == 0)
     {
-        resetTables();
+        emit newFunction(this);
     }
-    else if(a && QString::compare(a->text(),"Arrange vertically") == 0)
+    else if(a && QString::compare(a->text(),tr("New table")) == 0)
     {
-        resetTableVertically();
+        emit newTable(this);
     }
-    else if(a && QString::compare(a->text(),"Explode functions") == 0)
-    {
-        emit expandSchemaFunctions(this);
-    }*/
 }
 
 bool Schema::advance()
