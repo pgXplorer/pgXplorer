@@ -33,11 +33,10 @@
 #include "tableLink.h"
 #include "functionlink.h"
 #include "connectionproperties.h"
-#include "mainWin.h"
+#include "mainwin.h"
 #include "pgxconsole.h"
 #include "pgxeditor.h"
 #include "licensedialog.h"
-#include "help.h"
 
 bool MainWin::document_unsaved = false;
 
