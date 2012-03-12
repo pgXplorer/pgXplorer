@@ -23,12 +23,21 @@ TableModel::TableModel(Database *database, QStringList primary_key, QString tabl
     this->database = database;
     this->primary_key = primary_key;
     this->table_name = table_name;
+    this->rows_from = 1;
+}
+
+void TableModel::setRowsFrom(int rows_from)
+{
+    this->rows_from = rows_from;
 }
 
 Qt::ItemFlags TableModel::flags(const QModelIndex &index) const
 {
     Qt::ItemFlags flags = QSqlQueryModel::flags(index);
-    flags |= Qt::ItemIsEditable;
+
+    //Make table editable only when primary key exists.
+    if(!primary_key.isEmpty())
+        flags |= Qt::ItemIsEditable;
     return flags;
 }
 
@@ -36,6 +45,10 @@ bool TableModel::setData(const QModelIndex &index, const QVariant &value, int /*
 {
     //Make sure tables without primary key don't propagate changes.
     if(primary_key.isEmpty())
+        return false;
+
+    //Make sure that only changed values are UPDATEd.
+    if(value.toString().compare(data(index).toString()) == 0)
         return false;
 
     //Get the row data into a QSqlRecord object
@@ -46,8 +59,12 @@ bool TableModel::setData(const QModelIndex &index, const QVariant &value, int /*
     edit_index = index;
     edit_value = value;
 
+    //Initialise primary_key_values and number of columns.
+    primary_key_values.clear();
+    int column_count = rec.count();
+
     //Check for primary keys to pass to UPDATE statment
-    for(int column = 0; column < rec.count(); column++) {
+    for(int column = 0; column < column_count; column++) {
         if(primary_key.contains(QString("\"" + rec.fieldName(column)) + "\""))
                 primary_key_values.append(rec.value(column).toString());
     }
@@ -68,28 +85,34 @@ bool TableModel::setData(const QModelIndex &index, const QVariant &value, int /*
 
 QVariant TableModel::data(const QModelIndex &index, int role) const
 {
+    //Store the index into item to call the sibling of index.
     QModelIndex item = indexInQuery(index);
+
     //Align integers to the right
-    if ((index.isValid() && role == Qt::TextAlignmentRole) && index.data().type() == QVariant::Int) {
-        return Qt::AlignVCenter + Qt::AlignRight;
-    }
+    if ((index.isValid() && role == Qt::TextAlignmentRole) && index.data().type() != QMetaType::QString)
+        return (Qt::AlignVCenter + Qt::AlignRight);
 
     //Disable all roles except DisplayRole and EditRole
     if (!index.isValid() || (role != Qt::DisplayRole && role != Qt::EditRole))
         return QVariant();
 
-    //Store the index into item to call the sibling of index.
-    //QModelIndex item = indexInQuery(index);
-
     //Return cached values for UPDATEd data
     if(cache_values.contains(index)) {
-        if(cache_values.value(index).type() == QVariant::Int && role == Qt::TextAlignmentRole)
+        if(role == Qt::TextAlignmentRole && cache_values.value(index).type() != QMetaType::QString)
             return Qt::AlignVCenter + Qt::AlignRight;
         return cache_values.value(index);
     }
 
     //Return sibling of index
     return QSqlQueryModel::data(index.sibling(item.row(), index.column()), role);
+}
+
+QVariant TableModel::headerData(int section, Qt::Orientation orientation, int role) const
+{
+    if(orientation == Qt::Vertical && role == Qt::DisplayRole)
+        return QVariant(rows_from + section);
+    else
+        return QSqlQueryModel::headerData(section, orientation, role);
 }
 
 bool TableModel::update()
@@ -111,20 +134,19 @@ bool TableModel::update()
             return false;
         }
 
-        QString query_string = QString("UPDATE ");
+        QString query_string = QLatin1String("UPDATE ");
         query_string.append(table_name);
-        query_string.append(QString(" SET "));
+        query_string.append(QLatin1String(" SET "));
         query_string.append(edit_column);
-        query_string.append(QString("=? WHERE "));
+        query_string.append(QLatin1String("=? WHERE "));
         query_string.append(primary_key.join("=? AND "));
-        query_string.append(QString("=?"));
+        query_string.append(QLatin1String("=?"));
 
         QSqlQuery query(database_connection);
         query.prepare(query_string);
         query.addBindValue(edit_value.toString());
         foreach(QString primary_key_value, primary_key_values)
             query.addBindValue(primary_key_value);
-
         update_status = query.exec();
         if(update_status == false)
             emit updateFailed(query.lastError().text());

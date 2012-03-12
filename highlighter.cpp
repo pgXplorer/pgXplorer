@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011, davyjones <davyjones@github.com>
+  Copyright (c) 2011-2012, davyjones <davyjones@github>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -42,7 +42,7 @@ Highlighter::Highlighter(QTextDocument *parent)
     //keywordFormat2.setFontItalic(true);
     QStringList keywordPatterns2;
     keywordPatterns2 << "\\bfrom\\b" << "\\bin\\b" << "\\bwith\\b" << "\\bwhere\\b"
-                     << "\\bjoin\\b" << "\\bon\\b" << "\\bgroup by\\b"
+                     << "\\bjoin\\b" << "\\bon\\b" << "\\band\\b" << "\\bgroup by\\b"
                      << "\\bleft\\b" << "\\right\\b" << "\\bfull\\b" << "\\bcross\\b"
                      << "\\binner\\b" << "\\bouter\\b" << "\\bnatural\\b"
                      << "\\border by\\b" << "\\blimit\\b" << "\\bfetch\\b"

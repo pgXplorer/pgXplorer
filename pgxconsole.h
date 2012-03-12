@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011, davyjones <davyjones@github.com>
+  Copyright (c) 2011-2012, davyjones <davyjones@github>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -72,8 +72,11 @@ private slots:
     void findText();
     void pgxconsoleClosing();
 
+public slots:
+    void languageChanged(QEvent*);
+
 private:
-    PgxConsoleMainWindow *mainwin;
+    PgxConsoleMainWindow *pgxconsole_mainwin;
     Database *database;
     QWidget *prompt;
     QLineEdit *find_bar;
@@ -83,6 +86,7 @@ private:
     QStringList history;
     qint32 hit;
     QCompleter *completer;
+    QAction *newpgxconsole_action;
     QAction *cut_action;
     QAction *copy_action;
     QAction *paste_action;
@@ -101,6 +105,7 @@ Q_SIGNALS:
     void historyUp();
     void historyDown();
     void getDbPros();
+    void newPgxconsole();
     void showQueryView(Database *, QString);
     void pgxconsoleClosing(PgxConsole *);
 };

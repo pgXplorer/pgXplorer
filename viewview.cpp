@@ -34,7 +34,7 @@ ViewView::ViewView(Database *database, QString const view_name, QString const na
 
     toolbar = new QToolBar;
     toolbar->setIconSize(QSize(36,36));
-    toolbar->setObjectName("tableview");
+    toolbar->setObjectName("viewview");
     toolbar->setMovable(false);
     toolbar->addAction(default_action);
     toolbar->addAction(refresh_action);
@@ -61,7 +61,7 @@ ViewView::ViewView(Database *database, QString const view_name, QString const na
     thisViewViewId = viewViewObjectId++;
 
     //Thread busy indicator to avoid overlapping of threads.
-    //Initialise to false because obviously we don't have TableView
+    //Initialise to false because obviously we don't have ViewView
     //GUI artifacts to create overlapping threads.
     thread_busy = false;
     query_model = new QSqlQueryModel;
@@ -87,7 +87,7 @@ ViewView::ViewView(Database *database, QString const view_name, QString const na
     QShortcut *shortcut_restore_win = new QShortcut(QKeySequence(Qt::Key_Escape), this);
     connect(shortcut_restore_win, SIGNAL(activated()), this, SLOT(restore()));
 
-    //Tie vertical scrollbar of TableView to fetch more data
+    //Tie vertical scrollbar of QTableView to fetch more data
     connect(vview->verticalScrollBar(), SIGNAL(valueChanged(int)),
             this, SLOT(fetchDataSlot()));
 
@@ -290,9 +290,9 @@ void ViewView::fetchDefaultData()
 
         //Indicate that we are going to be retrieving data and busy.
         emit busySignal();
-        QSqlDatabase::removeDatabase("tableview" + sql + QString::number(thisViewViewId));
+        QSqlDatabase::removeDatabase("viewview " + sql + QString::number(thisViewViewId));
         QSqlDatabase database_connection;
-        database_connection = QSqlDatabase::addDatabase("QPSQL", "tableview" + sql + QString::number(thisViewViewId));
+        database_connection = QSqlDatabase::addDatabase("QPSQL", "viewview " + sql + QString::number(thisViewViewId));
         database_connection.setHostName(database->getHost());
         database_connection.setPort(database->getPort().toInt());
         database_connection.setDatabaseName(database->getName());
@@ -346,9 +346,9 @@ void ViewView::fetchRefreshData(QString mode)
         //Indicate that we are going to be retrieving data and busy.
         emit busySignal();
 
-        QSqlDatabase::removeDatabase("tableview" + sql + QString::number(thisViewViewId));
+        QSqlDatabase::removeDatabase("viewview " + sql + QString::number(thisViewViewId));
         QSqlDatabase database_connection;
-        database_connection = QSqlDatabase::addDatabase("QPSQL", "tableview" + sql + QString::number(thisViewViewId));
+        database_connection = QSqlDatabase::addDatabase("QPSQL", "viewview " + sql + QString::number(thisViewViewId));
         database_connection.setHostName(database->getHost());
         database_connection.setPort(database->getPort().toInt());
         database_connection.setDatabaseName(database->getName());
@@ -361,7 +361,6 @@ void ViewView::fetchRefreshData(QString mode)
         }
 
         query_model->setQuery(query_model->query().lastQuery(), database_connection);
-
         emit updRowCntSignal(mode);
     }
 }
@@ -431,9 +430,9 @@ void ViewView::fetchNextData()
         //Indicate that we are going to be retrieving data and busy.
         emit busySignal();
 
-        QSqlDatabase::removeDatabase("tableview" + sql + QString::number(thisViewViewId));
+        QSqlDatabase::removeDatabase("viewview " + sql + QString::number(thisViewViewId));
         QSqlDatabase database_connection;
-        database_connection = QSqlDatabase::addDatabase("QPSQL", "tableview" + sql + QString::number(thisViewViewId));
+        database_connection = QSqlDatabase::addDatabase("QPSQL", "viewview " + sql + QString::number(thisViewViewId));
         database_connection.setHostName(database->getHost());
         database_connection.setPort(database->getPort().toInt());
         database_connection.setDatabaseName(database->getName());
@@ -481,9 +480,9 @@ void ViewView::fetchPreviousData()
         //Indicate that we are going to be retrieving data and busy.
         emit busySignal();
 
-        QSqlDatabase::removeDatabase("tableview" + sql + QString::number(thisViewViewId));
+        QSqlDatabase::removeDatabase("viewview " + sql + QString::number(thisViewViewId));
         QSqlDatabase database_connection;
-        database_connection = QSqlDatabase::addDatabase("QPSQL", "tableview" + sql + QString::number(thisViewViewId));
+        database_connection = QSqlDatabase::addDatabase("QPSQL", "viewview " + sql + QString::number(thisViewViewId));
         database_connection.setHostName(database->getHost());
         database_connection.setPort(database->getPort().toInt());
         database_connection.setDatabaseName(database->getName());
@@ -519,9 +518,9 @@ void ViewView::fetchConditionDataInitial()
         //Indicate that we are going to be retrieving data and busy.
         emit busySignal();
 
-        QSqlDatabase::removeDatabase("tableview" + sql + QString::number(thisViewViewId));
+        QSqlDatabase::removeDatabase("viewview " + sql + QString::number(thisViewViewId));
         QSqlDatabase database_connection;
-        database_connection = QSqlDatabase::addDatabase("QPSQL", "tableview" + sql + QString::number(thisViewViewId));
+        database_connection = QSqlDatabase::addDatabase("QPSQL", "viewview " + sql + QString::number(thisViewViewId));
         database_connection.setHostName(database->getHost());
         database_connection.setPort(database->getPort().toInt());
         database_connection.setDatabaseName(database->getName());
@@ -584,7 +583,7 @@ void ViewView::closeEvent(QCloseEvent *event)
     event->accept();
     //Clean-up only when there is no active thread.
     //However, this will cause a memory leak when the
-    //TableView is closed when the thread is busy.
+    //ViewView is closed when the thread is busy.
     //Proper solution is to create a Thread class
     //and cancel that before we clean-up. We cannot do
     //this now because we are using QFuture (per Qt docs).
@@ -592,20 +591,20 @@ void ViewView::closeEvent(QCloseEvent *event)
 
     QSettings settings("pgXplorer", "pgXplorer");
     if(isMaximized()) {
-        settings.setValue("tableview_maximized", true);
+        settings.setValue("viewview_maximized", true);
         showNormal();
     }
     else
-        settings.setValue("tableview_maximized", false);
-    settings.setValue("tableview_pos", pos());
-    settings.setValue("tableview_size", size());
+        settings.setValue("viewview_maximized", false);
+    settings.setValue("viewview_pos", pos());
+    settings.setValue("viewview_size", size());
 
     if(!thread_busy)
     {
         delete toolbar;
         delete vview;
         delete query_model;
-        QSqlDatabase::removeDatabase("tableview" + sql + QString::number(thisViewViewId));
+        QSqlDatabase::removeDatabase("viewview " + sql + QString::number(thisViewViewId));
         QMainWindow::closeEvent(event);
     }
     else {
@@ -728,7 +727,7 @@ void ViewView::refreshView()
 {
     statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0, QApplication::UnicodeUTF8));
 
-    QtConcurrent::run(this, &ViewView::fetchRefreshData, QString("next"));
+    QtConcurrent::run(this, &ViewView::fetchRefreshData, QLatin1String("next"));
     disableActions();
 }
 
@@ -736,7 +735,7 @@ void ViewView::addRowRefreshView()
 {
     statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0, QApplication::UnicodeUTF8));
 
-    QtConcurrent::run(this, &ViewView::fetchRefreshData, QString("previous"));
+    QtConcurrent::run(this, &ViewView::fetchRefreshData, QLatin1String("previous"));
     disableActions();
 }
 

@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011, davyjones <davyjones@github.com>
+  Copyright (c) 2011-2012, davyjones <davyjones@github>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -29,15 +29,21 @@ class QueryModel : public QSqlQueryModel
 
 private:
     QString database_connection_id;
+    QString query_name;
 
 public slots:
-    void destroyQueryModel();
+    //void destroyQueryModel();
 
 public:
-    void fetchData(QueryModel *, QString, QStringList);
+    void fetchData(QString, QStringList);
+    void setQueryName(QString query_name)
+    {
+        this->query_name = query_name;
+    }
+    QVariant data(const QModelIndex &index, int role) const;
 
 Q_SIGNALS:
-    void fetchDataSignal(QueryModel *, int, qint32, qint32);
+    void fetchDataSignal(int, qint32, qint32);
     void busySignal();
 };
 

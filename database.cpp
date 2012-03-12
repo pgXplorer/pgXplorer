@@ -1,7 +1,7 @@
-/* 
+/*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011, davyjones <davyjones@github>
+  Copyright (c) 2011-2012, davyjones <davyjones@github>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -155,6 +155,7 @@ bool Database::populateDatabase()
             QObject::connect(schema, SIGNAL(collapseSchemaViews(Schema*)), mainwin, SLOT(hideViews(Schema*)));
             QObject::connect(schema, SIGNAL(expandSchemaFunctions(Schema*)), mainwin, SLOT(showFunctions(Schema*)));
             QObject::connect(schema, SIGNAL(collapseSchemaFunctions(Schema*)), mainwin, SLOT(hideFunctions(Schema*)));
+            QObject::connect(schema, SIGNAL(newFunction(Schema*)), mainwin, SLOT(newFunction(Schema*)));
             connect(this, SIGNAL(collapseSchemaTables(Schema*)), mainwin, SLOT(hideTables(Schema*)));
             connect(this, SIGNAL(collapseSchemaFunctions(Schema*)), mainwin, SLOT(hideFunctions(Schema*)));
             if(!mainwin->isColumnView()) {

@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011, davyjones <davyjones@github>
+  Copyright (c) 2011-2012, davyjones <davyjones@github>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -39,6 +39,7 @@ PgxConsole::PgxConsole(Database *database)
     toolbar->setIconSize(QSize(36,36));
     toolbar->setObjectName("pgxeditor");
     toolbar->setMovable(false);
+    toolbar->addAction(newpgxconsole_action);
     toolbar->addAction(cut_action);
     toolbar->addAction(copy_action);
     toolbar->addAction(paste_action);
@@ -46,19 +47,19 @@ PgxConsole::PgxConsole(Database *database)
     toolbar->addAction(clear_action);
     toolbar->addAction(find_action);
 
-    mainwin = new PgxConsoleMainWindow;
-    mainwin->addToolBar(toolbar);
-    mainwin->setCentralWidget(this);
-    mainwin->setAttribute(Qt::WA_DeleteOnClose);
+    pgxconsole_mainwin = new PgxConsoleMainWindow;
+    pgxconsole_mainwin->addToolBar(toolbar);
+    pgxconsole_mainwin->setCentralWidget(this);
+    pgxconsole_mainwin->setAttribute(Qt::WA_DeleteOnClose);
 
     find_bar = new QLineEdit;
     find_bar->setPlaceholderText(tr("Find"));
     find_bar->setVisible(false);
-    mainwin->statusBar()->setSizeGripEnabled(false);
-    mainwin->statusBar()->addPermanentWidget(casesensitivity_button, 0);
-    mainwin->statusBar()->addPermanentWidget(wholeword_button, 0);
-    mainwin->statusBar()->addPermanentWidget(backwards_button, 0);
-    mainwin->statusBar()->addPermanentWidget(find_bar);
+    pgxconsole_mainwin->statusBar()->setSizeGripEnabled(false);
+    pgxconsole_mainwin->statusBar()->addPermanentWidget(casesensitivity_button, 0);
+    pgxconsole_mainwin->statusBar()->addPermanentWidget(wholeword_button, 0);
+    pgxconsole_mainwin->statusBar()->addPermanentWidget(backwards_button, 0);
+    pgxconsole_mainwin->statusBar()->addPermanentWidget(find_bar);
 
     connect(find_bar, SIGNAL(returnPressed()), this, SLOT(findText()));
 
@@ -79,7 +80,7 @@ PgxConsole::PgxConsole(Database *database)
 
     //Console updates.
     connect(this, SIGNAL(updateRequest(QRect,int)), this, SLOT(updatePrompt(QRect,int)));
-    connect(mainwin, SIGNAL(pgxconsoleClosing()), this, SLOT(pgxconsoleClosing()));
+    connect(pgxconsole_mainwin, SIGNAL(pgxconsoleClosing()), this, SLOT(pgxconsoleClosing()));
 }
 
 void PgxConsole::updatePrompt(const QRect &rect, int dy)
@@ -131,21 +132,21 @@ void PgxConsole::promptPaintEvent(QPaintEvent *event)
      int bottom = top + (int) blockBoundingRect(block).height();
      while (block.isValid() && top <= event->rect().bottom()) {
         if (block.isVisible() && bottom >= event->rect().top()) {
-            QString pr = QString(">");
+            QString pr = QLatin1String(">");
             QString number;
             if(block.previous().isVisible() && block.previous().isValid()) {
                 number = QString::number(blockNumber + 1);
                 if(block.previous().text().endsWith("\\"))
-                    pr = QString(" ");
+                    pr = QLatin1String(" ");
                 else
-                    pr = QString(">");
+                    pr = QLatin1String(">");
             }
 
             if(block.text().endsWith("\\")) {
                 if(block.previous().text().endsWith("\\"))
-                    pr = QString(" ");
+                    pr = QLatin1String(" ");
                 else
-                    pr = QString(">");
+                    pr = QLatin1String(">");
             }
             painter.setPen(Qt::lightGray);
             painter.drawText(0, top, prompt->width(), fontMetrics().height(),
@@ -208,7 +209,7 @@ void PgxConsole::showView(QString cmd)
             block = block.previous();
         cmd = block.text().trimmed();
         for (block = block.previous(); block.text().endsWith("\\"); block = block.previous())
-            cmd.insert(0, block.text().trimmed().replace(QString("\\"), QString(" ")));
+            cmd.insert(0, block.text().trimmed().replace(QLatin1String("\\"), QLatin1String(" ")));
         // Do nothing on whitespace input.
         if(cmd.trimmed().isEmpty()) {
             appendPlainText("");
@@ -323,7 +324,7 @@ void PgxConsole::findText()
         find_flags |= QTextDocument::FindWholeWords;
     if(backwards_action->isChecked())
         find_flags |= QTextDocument::FindBackward;
-    mainwin->statusBar()->clearMessage();
+    pgxconsole_mainwin->statusBar()->clearMessage();
     if(find_cursor.atEnd() && !backwards_action->isChecked()) {
         find_cursor.movePosition(QTextCursor::Start);
         setTextCursor(find_cursor);
@@ -335,11 +336,11 @@ void PgxConsole::findText()
 
     if(!find(find_bar->text(), find_flags)) {
         if(backwards_action->isChecked()) {
-            mainwin->statusBar()->showMessage(tr("Reached the top. Continuing from the bottom."));
+            pgxconsole_mainwin->statusBar()->showMessage(tr("Reached the top. Continuing from the bottom."));
             find_cursor.movePosition(QTextCursor::Start);
         }
         else {
-            mainwin->statusBar()->showMessage(tr("Reached the end. Continuing from the top."));
+            pgxconsole_mainwin->statusBar()->showMessage(tr("Reached the end. Continuing from the top."));
             find_cursor.movePosition(QTextCursor::End);
         }
     }
@@ -355,7 +356,7 @@ void PgxConsole::toggleFindBar()
 {
     if(find_bar->isVisible()) {
         if(find_bar->isActiveWindow()) {
-            mainwin->statusBar()->clearMessage();
+            pgxconsole_mainwin->statusBar()->clearMessage();
             removeSearchHighlighting();
             casesensitivity_button->setVisible(false);
             wholeword_button->setVisible(false);
@@ -429,6 +430,11 @@ void PgxConsole::__createWidgets()
 
 void PgxConsole::createActions()
 {
+    newpgxconsole_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/console.png")), tr("New"), this);
+    newpgxconsole_action->setShortcuts(QKeySequence::New);
+    newpgxconsole_action->setStatusTip(tr("New console"));
+    connect(newpgxconsole_action, SIGNAL(triggered()), this, SIGNAL(newPgxconsole()));
+
     cut_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/cut.png")), tr("Cut"), this);
     cut_action->setShortcuts(QKeySequence::Cut);
     cut_action->setStatusTip(tr("Cut selected text and copy to clipboard"));
@@ -478,9 +484,9 @@ void PgxConsole::createActions()
 
 void PgxConsole::setResizePos(QSize size, QPoint pos)
 {
-    mainwin->resize(size);
-    mainwin->move(pos);
-    mainwin->show();
+    pgxconsole_mainwin->resize(size);
+    pgxconsole_mainwin->move(pos);
+    pgxconsole_mainwin->show();
 }
 
 void PgxConsole::pgxconsoleClosing()
@@ -490,7 +496,29 @@ void PgxConsole::pgxconsoleClosing()
 
 void PgxConsole::closeMain()
 {
-    mainwin->close();
+    pgxconsole_mainwin->close();
+}
+
+void PgxConsole::languageChanged(QEvent *event)
+{
+    if (event->type() == QEvent::LanguageChange) {
+        newpgxconsole_action->setText(tr("New"));
+        cut_action->setText(tr("Cut"));
+        copy_action->setText(tr("Copy"));
+        paste_action->setText(tr("Paste"));
+        clear_action->setText(tr("&Clear"));
+        find_action->setText(tr("Find"));
+
+        newpgxconsole_action->setStatusTip(tr("New console"));
+        cut_action->setStatusTip(tr("Cut selected text and copy to clipboard"));
+        copy_action->setStatusTip(tr("Copy selected text to clipboard"));
+        paste_action->setStatusTip(tr("Paste"));
+        clear_action->setStatusTip(tr("Clear the console"));
+        find_action->setStatusTip(tr("Find/replace text"));
+        casesensitivity_action->setToolTip(tr("Case sensitive"));
+        wholeword_action->setToolTip(tr("Whole word"));
+        backwards_action->setToolTip(tr("Backwards"));
+    }
 }
 
 void PgxConsoleMainWindow::closeEvent(QCloseEvent *event)

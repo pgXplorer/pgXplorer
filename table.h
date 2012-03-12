@@ -24,7 +24,7 @@
 #include <QSqlIndex>
 #include <QtGui>
 #include "database.h"
-#include "tableLink.h"
+#include "tablelink.h"
 
 #define TABLE_WIDTH 80
 #define TABLE_HEIGHT 20
@@ -39,8 +39,9 @@ private:
     QSqlQueryModel *model;
     Schema *parent_schema;
     QString table_name;
-    QStringList column_types;
     QStringList column_list;
+    QStringList column_types;
+    QStringList column_lengths;
     QStringList primary_key;
     QBrush pink_brush;
     bool status;
@@ -133,13 +134,14 @@ public:
             painter->drawPolygon(top, 4);
             painter->setPen(QColor(100,50,50));
             QPointF textPos(-6*table_name.left(6).length(),+5);
-            if(lod > 0.5)
+            if(lod > 0.5) {
                 if(ascii_length != utf8_length)
                     painter->drawText(textPos, table_name.length()>6?table_name.left(6)+
                               "..":table_name);
                 else
                     painter->drawText(textPos, table_name.length()>10?table_name.left(10)+
                               "..":table_name);
+            }
         }
         else {
             painter->setBrush(QColor(200,150,150));
@@ -231,10 +233,11 @@ public:
         this->model = model;
     }
     void setColumnData();
-    void setColumnData(QStringList column_list, QStringList column_types)
+    void setColumnData(QStringList column_list, QStringList column_types, QStringList column_lengths)
     {
         this->column_list = column_list;
         this->column_types = column_types;
+        this->column_lengths = column_lengths;
     }
     QStringList getColumnList()
     {
@@ -244,6 +247,10 @@ public:
     QStringList getColumnTypes()
     {
         return column_types;
+    }
+    QStringList getColumnLengths()
+    {
+        return column_lengths;
     }
     void copyPrimaryKey();
     void setPrimaryKey(QStringList primary_key)

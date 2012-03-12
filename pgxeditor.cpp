@@ -28,7 +28,11 @@ PgxEditor::PgxEditor(Database *database, QString editor_name)
     createActions();
     breakpointArea = new BreakPointArea(this);
     lineNumberArea = new LineNumberArea(this);
-    setStyleSheet("QPlainTextEdit{background-color: white; font: bold 14px 'Courier New';}");
+    font_size = 14;
+    style_sheet = QString("QPlainTextEdit{background-color: white; \
+                          font: bold %1px 'Courier New';}").arg(QString::number(font_size));
+    setStyleSheet(style_sheet);
+    lineNumberArea->setStyleSheet(style_sheet);
     highlighter = new Highlighter(document());
 
     toolbar = new QToolBar;
@@ -39,12 +43,10 @@ PgxEditor::PgxEditor(Database *database, QString editor_name)
     toolbar->addAction(cut_action);
     toolbar->addAction(copy_action);
     toolbar->addAction(paste_action);
-    if(!editor_name.isEmpty()) {
-        toolbar->addSeparator();
-        toolbar->addAction(save_action);
-        toolbar->addSeparator();
-        toolbar->addAction(execute_action);
-    }
+    toolbar->addSeparator();
+    toolbar->addAction(save_action);
+    toolbar->addSeparator();
+    toolbar->addAction(execute_action);
     toolbar->addSeparator();
     toolbar->addAction(selected_execute_action);
     toolbar->addAction(wrap_action);
@@ -74,23 +76,45 @@ PgxEditor::PgxEditor(Database *database, QString editor_name)
     connect(this, SIGNAL(updateRequest(QRect,int)), this, SLOT(updateLineNumberArea(QRect,int)));
     connect(this, SIGNAL(selectionChanged()), this, SLOT(selectionChangedSlot()));
     connect(this, SIGNAL(textChanged()), this, SLOT(textChangedSlot()));
+    connect(this, SIGNAL(cursorPositionChanged()), SLOT(makeFirstBlocksReadonly()));
     connect(pgxeditor_mainwin, SIGNAL(pgxeditorClosing()), this, SLOT(pgxeditorClosing()));
     updateLineNumberAreaWidth(0);
+
+    QShortcut *shortcut_default_view = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_0), this);
+    connect(shortcut_default_view, SIGNAL(activated()), this, SLOT(noZoom()));
+}
+
+void PgxEditor::hightlightFirstBlock()
+{
+    if(!editor_name.isEmpty()) {
+        QTextCursor text_cursor = textCursor();
+        text_cursor.movePosition(QTextCursor::Start);
+
+        QList<QTextEdit::ExtraSelection> extraSelections;
+
+        QTextEdit::ExtraSelection selection;
+        QColor line_colour = QColor(220,220,230);
+        selection.format.setBackground(line_colour);
+        selection.format.setProperty(QTextFormat::FullWidthSelection, true);
+        selection.cursor = text_cursor;
+        selection.cursor.clearSelection();
+        extraSelections.append(selection);
+
+        setExtraSelections(extraSelections);
+    }
 }
 
 int PgxEditor::lineNumberAreaWidth()
 {
     int digits = 1;
     int max = qMax(1, blockCount());
-    while (max >= 10) {
-        max /= 10;
+    while (max >= 10, max /= 10)
         ++digits;
-    }
-    int space = fontMetrics().width(QLatin1Char('9')) * digits;
+    int space = (font_size-2) * digits;
     return space;
 }
 
-void PgxEditor::updateLineNumberAreaWidth(int /* newBlockCount */)
+void PgxEditor::updateLineNumberAreaWidth(int)
 {
     setViewportMargins(fontMetrics().width(QLatin1Char('9'))+lineNumberAreaWidth(), 0, 0, 0);
 }
@@ -117,6 +141,19 @@ void PgxEditor::highlightCurrentLine()
     selection.cursor.clearSelection();
     extraSelections.append(selection);*/
 
+    if(!editor_name.isEmpty()) {
+        QTextCursor text_cursor = textCursor();
+        text_cursor.movePosition(QTextCursor::Start);
+
+        QTextEdit::ExtraSelection selection;
+        QColor line_colour = QColor(220,220,230);
+        selection.format.setBackground(line_colour);
+        selection.format.setProperty(QTextFormat::FullWidthSelection, true);
+        selection.cursor = text_cursor;
+        selection.cursor.clearSelection();
+        extraSelections.append(selection);
+    }
+
     QTextEdit::ExtraSelection border;
     QPen outline(Qt::darkGreen, 2, Qt::SolidLine);
     //outline.setJoinStyle(Qt::RoundJoin);
@@ -136,8 +173,10 @@ void PgxEditor::highlightCurrentLine()
 
 void PgxEditor::removeHighlighting()
 {
-    QList<QTextEdit::ExtraSelection> extraSelections;
+    QList<QTextEdit::ExtraSelection> extraSelections; 
     setExtraSelections(extraSelections);
+
+    hightlightFirstBlock();
 }
 
 void PgxEditor::resizeEvent(QResizeEvent *e)
@@ -153,6 +192,7 @@ void PgxEditor::lineNumberAreaPaintEvent(QPaintEvent *event)
 {
     QPainter painter(lineNumberArea);
     painter.fillRect(event->rect(), QColor(230,230,230,128));
+    painter.setFont(QFont("Courier new", font_size-2));
 
     QTextBlock block = firstVisibleBlock();
     int blockNumber = block.blockNumber();
@@ -163,8 +203,8 @@ void PgxEditor::lineNumberAreaPaintEvent(QPaintEvent *event)
         if (block.isVisible() && bottom >= event->rect().top()) {
             QString number = QString::number(blockNumber + 1);
             painter.setPen(Qt::darkGray);
-            painter.drawText(-1, top+2, lineNumberArea->width(), fontMetrics().height(),
-                             Qt::AlignRight, number);
+            painter.drawText(-1, top, lineNumberArea->width(), fontMetrics().height(),
+                             Qt::AlignRight | Qt::AlignVCenter, number);
         }
         block = block.next();
         top = bottom;
@@ -219,22 +259,28 @@ void PgxEditor::createActions()
     paste_action->setStatusTip(tr("Paste text from clipboard"));
     connect(paste_action, SIGNAL(triggered()), this, SLOT(paste()));
 
-    if(!editor_name.isEmpty()) {
-        save_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/save.png")), tr("&Save"), this);
-        save_action->setShortcuts(QKeySequence::Save);
-        save_action->setStatusTip(tr("Save function"));
-        save_action->setEnabled(false);
-        connect(save_action, SIGNAL(triggered()), this, SLOT(saveFunction()));
+    save_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/save.png")), tr("&Save"), this);
+    save_action->setShortcuts(QKeySequence::Save);
+    save_action->setStatusTip(tr("Save function"));
+    connect(save_action, SIGNAL(triggered()), this, SLOT(saveFunction()));
 
-        execute_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/execute.png")), tr("&Execute"), this);
-        execute_action->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_R));
-        execute_action->setStatusTip(tr("Execute function"));
-        connect(execute_action, SIGNAL(triggered()), this, SLOT(executeFunction()));
+    execute_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/execute.png")), tr("&Execute"), this);
+    execute_action->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_R));
+    execute_action->setStatusTip(tr("Execute function"));
+    connect(execute_action, SIGNAL(triggered()), this, SLOT(executeFunction()));
+
+    if(editor_name.isEmpty()) {
+        execute_action->setVisible(false);
+        save_action->setVisible(false);
+    }
+    else {
+        execute_action->setEnabled(false);
+        save_action->setEnabled(false);
     }
 
     selected_execute_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/selected_execute.png")), tr("&Run"), this);
     selected_execute_action->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_E));
-    selected_execute_action->setStatusTip(tr("Execute selected text"));
+    selected_execute_action->setStatusTip(tr("Execute (selected) text"));
     if(!editor_name.isEmpty())
         selected_execute_action->setEnabled(false);
     connect(selected_execute_action, SIGNAL(triggered()), this, SLOT(executeText()));
@@ -449,9 +495,43 @@ void PgxEditor::toggleFindBar()
 
 void PgxEditor::textChangedSlot()
 {
-    if(!editor_name.isEmpty())
+    /*QString contents = toPlainText();
+    if(!contents.isEmpty()) {
+        contents = contents.simplified();
+        if(contents.startsWith("CREATE OR REPLACE FUNCTION ", Qt::CaseInsensitive)) {
+            editor_name = contents.section(' ', 4, 4, QString::SectionSkipEmpty);
+            //QString function_name =
+            setTitle(editor_name);
+        }
+        else {
+            editor_name = QLatin1String("");
+            setTitle(editor_name);
+        }
+    }*/
+    if(editor_name.isEmpty()) {
+        execute_action->setVisible(false);
+        save_action->setVisible(false);
+    }
+    else {
+        execute_action->setVisible(true);
+        save_action->setVisible(true);
+        execute_action->setEnabled(true);
         save_action->setEnabled(true);
+    }
 }
+
+void PgxEditor::makeFirstBlocksReadonly()
+{
+    if(!editor_name.isEmpty()) {
+        QTextCursor selection_start_cursor = textCursor();
+        selection_start_cursor.setPosition(textCursor().selectionStart());
+        if(selection_start_cursor.block() == document()->firstBlock())
+            setReadOnly(true);
+        else
+            setReadOnly(false);
+    }
+}
+
 
 void PgxEditor::setTitle(QString title)
 {
@@ -475,6 +555,14 @@ void PgxEditor::setResizePos(QSize size, QPoint pos)
 void PgxEditor::pgxeditorClosing()
 {
     emit pgxeditorClosing(this);
+}
+
+void PgxEditor::noZoom()
+{
+    font_size = 14;
+    style_sheet = QString("QPlainTextEdit{background-color: white; \
+                          font: bold %1px 'Courier New';}").arg(QString::number(font_size));
+    setStyleSheet(style_sheet);
 }
 
 void PgxEditor::closeMain()
@@ -507,18 +595,36 @@ void PgxEditor::languageChanged(QEvent *event)
         }
 
         selected_execute_action->setText(tr("&Run"));
-        selected_execute_action->setStatusTip(tr("Execute selected text"));
+        selected_execute_action->setStatusTip(tr("Execute (selected) text"));
 
         wrap_action->setText(tr("Wrap/Un-wrap lines"));
         wrap_action->setStatusTip(tr("Toggle line wrapping"));
 
         find_action->setText(tr("Find"));
         find_action->setStatusTip(tr("Find/replace text"));
+        find_bar->setPlaceholderText(tr("Find"));
+        replace_bar->setPlaceholderText(tr("Replace"));
 
         casesensitivity_action->setToolTip(tr("Case sensitive"));
         wholeword_action->setToolTip(tr("Whole word"));
         backwards_action->setToolTip(tr("Backwards"));
     }
+}
+
+void PgxEditor::wheelEvent(QWheelEvent *wheelEvent)
+{
+    if(wheelEvent->modifiers() == Qt::ControlModifier) {
+        if (wheelEvent->delta()>0)
+            font_size < 28 ? font_size++:font_size;
+        else {
+            font_size > 8 ? font_size--:font_size;
+        }
+        style_sheet = QString("QPlainTextEdit{background-color: white; \
+                              font: bold %1px 'Courier New';}").arg(QString::number(font_size));
+        setStyleSheet(style_sheet);
+    }
+    else
+        QPlainTextEdit::wheelEvent(wheelEvent);
 }
 
 void PgxEditorMainWindow::closeEvent(QCloseEvent *event)

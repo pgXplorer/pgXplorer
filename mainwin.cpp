@@ -29,8 +29,8 @@
 #include "tableview.h"
 #include "viewview.h"
 #include "queryview.h"
-#include "schemaLink.h"
-#include "tableLink.h"
+#include "schemalink.h"
+#include "tablelink.h"
 #include "functionlink.h"
 #include "connectionproperties.h"
 #include "mainwin.h"
@@ -151,6 +151,12 @@ MainWin::MainWin(QWidget *parent, const QString arg1, Qt::WindowFlags f)
     connect(shortcut_search, SIGNAL(activated()), this, SLOT(search()));
     QShortcut *shortcut_restore_win = new QShortcut(QKeySequence(Qt::Key_Escape), this);
     connect(shortcut_restore_win, SIGNAL(activated()), this, SLOT(restore()));
+    QShortcut *shortcut_default_view = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_0), this);
+    connect(shortcut_default_view, SIGNAL(activated()), this, SLOT(noZoom()));
+    QShortcut *shortcut_zoom_in = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_Plus), this);
+    connect(shortcut_zoom_in, SIGNAL(activated()), this, SLOT(zoomIn()));
+    QShortcut *shortcut_zoom_out = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_Minus), this);
+    connect(shortcut_zoom_out, SIGNAL(activated()), this, SLOT(zoomOut()));
 
     connect(graphics_view, SIGNAL(search()), this, SLOT(search()));
 
@@ -471,26 +477,26 @@ void MainWin::save(QString file_name)
     {
         database_file_stream << false;
         /*
-        database_file_stream << QString("schema list");
+        database_file_stream << QLatin1String("schema list");
         foreach(Schema *schema, db->getSchemaList())
         {
             database_file_stream << schema->getName();
             if(!schema->getSchemaCollapsed())
             {
                 database_file_stream << true;
-                database_file_stream << QString("table list");
+                database_file_stream << QLatin1String("table list");
                 foreach(Table *table, schema->getTableList())
                 {
                     database_file_stream << table;
                 }
-                database_file_stream << QString("end table list");
+                database_file_stream << QLatin1String("end table list");
             }
             else
             {
                 database_file_stream << false;
             }
         }
-        database_file_stream << QString("end schema list");
+        database_file_stream << QLatin1String("end schema list");
         */
     }
     save_file_action->setEnabled(false);
@@ -524,19 +530,33 @@ void MainWin::dropEvent(QDropEvent *event)
 
 void MainWin::wheelEvent(QWheelEvent *wheelEvent)
 {
-    // Capture wheel events to zoom-in or
-    // zoom-out the canvas.
     wheelEvent->accept();
-    // zoom out
-    if (wheelEvent->delta()>0)
-        zoomOut(mapFromGlobal(wheelEvent->globalPos()));
-    // zoom in
-    else
-        zoomIn(mapFromGlobal(wheelEvent->globalPos()));
 
-    if(search_box->isVisible())
-    {
-        adjustSearchBoxPosition();
+    //Capture Control key pressed with mouse wheel
+    //events to zoom-in or zoom-out the canvas.
+    if(wheelEvent->modifiers() == Qt::ControlModifier) {
+        //zoom out
+        if (wheelEvent->delta()>0)
+            zoomOut(mapFromGlobal(wheelEvent->globalPos()));
+        //zoom in
+        else
+            zoomIn(mapFromGlobal(wheelEvent->globalPos()));
+
+        //Adjust search box position if scrollbars disappear.
+        if(search_box->isVisible())
+        {
+            adjustSearchBoxPosition();
+        }
+    }
+    //Shift key pressed mouse wheel should scroll the canvas left-right.
+    else if(wheelEvent->modifiers() == Qt::ShiftModifier) {
+        int value = graphics_view->horizontalScrollBar()->value();
+        graphics_view->horizontalScrollBar()->setValue(value - (wheelEvent->delta() >> 1));
+    }
+    //Normal mouse wheel should scroll the canvas up-down.
+    else if(wheelEvent->modifiers() == Qt::NoModifier) {
+        int value = graphics_view->verticalScrollBar()->value();
+        graphics_view->verticalScrollBar()->setValue(value - (wheelEvent->delta() >> 1));
     }
 }
 
@@ -564,7 +584,7 @@ void MainWin::contextMenuEvent(QContextMenuEvent *event)
 
 void MainWin::closeEvent(QCloseEvent *event)
 {
-    //QSqlDatabase::removeDatabase(QString("base").append(QString::number(database->getId())));
+    //QSqlDatabase::removeDatabase(QLatin1String("base").append(QString::number(database->getId())));
     writeSettings();
     if(quitApp() == false)
         event->ignore();
@@ -620,7 +640,7 @@ void MainWin::clearPgxeditorList()
 
 void MainWin::newView()
 {
-    MainWin *mainwin = new MainWin(0, QString(""), Qt::Widget);
+    MainWin *mainwin = new MainWin(0, QLatin1String(""), Qt::Widget);
     mainwin->show();
 }
 
@@ -637,7 +657,11 @@ void MainWin::about()
 
 void MainWin::showHelp()
 {
-    help->showDocumentation("documentation/index.html");
+    QString help_url = QLatin1String("file:///");
+    help_url.append(qApp->applicationDirPath());
+    help_url.append("/documentation/index.html");
+    QDesktopServices::openUrl(QUrl(help_url));
+    return;
 }
 
 void MainWin::fitView()
@@ -681,15 +705,27 @@ void MainWin::noZoom()
     graphics_view->centerOn(database);
 }
 
+void MainWin::zoomIn()
+{
+    //graphics_view->centerOn((centre.toPoint()));
+    graphics_view->scale( 1.1, 1.1 );
+}
+
+void MainWin::zoomOut()
+{
+    //graphics_view->centerOn((centre.toPoint()));
+    graphics_view->scale( 0.9, 0.9 );
+}
+
 void MainWin::zoomIn(const QPointF centre)
 {
-    //canvas->centerOn((centre.toPoint()));
+    //graphics_view->centerOn((centre.toPoint()));
     graphics_view->scale( 1.1, 1.1 );
 }
 
 void MainWin::zoomOut(const QPointF centre)
 {
-    //canvas->centerOn((centre.toPoint()));
+    //graphics_view->centerOn((centre.toPoint()));
     graphics_view->scale( 0.9, 0.9 );
 }
 
@@ -761,7 +797,7 @@ bool MainWin::newDatabase(QString host, qint32 port, QString dbname, QString use
     scene.addItem(database);
     if(database->setConnectionProperties(host, port, dbname, username, password) == false)
         return false;
-    database->setToolTip(QString("Host: ") + host + "\nPort: " + QString::number(port) + "\nUser: " + username);
+    database->setToolTip(QLatin1String("Host: ") + host + "\nPort: " + QString::number(port) + "\nUser: " + username);
     if(tableview_action->isChecked())
         showAllTables();
     else if(viewview_action->isChecked())
@@ -1103,7 +1139,7 @@ void MainWin::hideFunctions(Schema *schema)
 
 void MainWin::newFunction(Schema *schema)
 {
-    showPgxeditor(QString(" "), QString());
+    showPgxeditor(QLatin1String(" "), QString());
 }
 
 void MainWin::hideAllFunctions()
@@ -1292,7 +1328,7 @@ void MainWin::showTableView(Database *database, Schema *schema, Table *table)
     table_name.append(".\"");
     table_name.append(table->getName());
     table_name.append("\"");
-    TableView *table_view = new TableView(database, table_name, table_name, table->getColumnList(), table->getPrimaryKey(), table->getColumnTypes(), false, Qt::WA_DeleteOnClose);
+    TableView *table_view = new TableView(database, table_name, table_name, table->getColumnList(), table->getPrimaryKey(), table->getColumnTypes(), table->getColumnLengths(), false, Qt::WA_DeleteOnClose);
     table_view_list.append(table_view);
     QObject::connect(table_view, SIGNAL(tableViewClosing(TableView*)), this, SLOT(tableViewClosed(TableView*)));
     QObject::connect(this, SIGNAL(languageChanged(QEvent*)), table_view, SLOT(languageChanged(QEvent*)));
@@ -1304,7 +1340,7 @@ void MainWin::showTableView(Database *database, Schema *schema, Table *table)
     table_view->show();
     bool is_maximized = settings.value("tableview_maximized", false).toBool();
     if(is_maximized)
-       showMaximized();
+       table_view->showMaximized();
 }
 
 void MainWin::showViewView(Database *database, Schema *schema, View *view)
@@ -1319,25 +1355,28 @@ void MainWin::showViewView(Database *database, Schema *schema, View *view)
     QObject::connect(this, SIGNAL(languageChanged(QEvent*)), view_view, SLOT(languageChanged(QEvent*)));
 
     QSettings settings("pgXplorer", "pgXplorer");
-    QPoint pos = settings.value("tableview_pos", QPoint(100, 100)).toPoint();
-    QSize size = settings.value("tableview_size", QSize(1024, 768)).toSize();
+    QPoint pos = settings.value("viewview_pos", QPoint(100, 100)).toPoint();
+    QSize size = settings.value("viewview_size", QSize(1024, 768)).toSize();
     view_view->resize(size);
     view_view->move(pos);
     view_view->show();
+    bool is_maximized = settings.value("viewview_maximized", false).toBool();
+    if(is_maximized)
+       view_view->showMaximized();
 }
 
 void MainWin::clearTableView(Database *database, Schema *schema, Table *table)
 {
-    int ret = QMessageBox::warning(this, MainWin::tr("pgXplorer"),
-                                    MainWin::tr("This action will destroy all data in this table and cannot be undone.\n"
-                                       "Do you want to continue?"),
-                                    QMessageBox::Ok | QMessageBox::Cancel);
-    if(ret == QMessageBox::Cancel)
-        return;
     QString table_name = schema->getName();
     table_name.append(".\"");
     table_name.append(table->getName());
     table_name.append("\"");
+    QString message(MainWin::tr("Clear contents of table <html><b>%1</b></html>?\nThis action will destroy all data in this table and cannot be undone.\n"
+                       "Do you want to continue?").arg(table_name));
+    int ret = QMessageBox::warning(this, MainWin::tr("pgXplorer"), message,
+                                    QMessageBox::Ok | QMessageBox::Cancel);
+    if(ret == QMessageBox::Cancel)
+        return;
 
     {
         QSqlDatabase database_connection = QSqlDatabase::addDatabase("QPSQL", QString("clear ").append(table_name));
@@ -1363,16 +1402,16 @@ void MainWin::clearTableView(Database *database, Schema *schema, Table *table)
 
 void MainWin::dropTable(Database *database, Schema *schema, Table *table)
 {
-    int ret = QMessageBox::warning(this, MainWin::tr("pgXplorer"),
-                                    MainWin::tr("This action will destroy this table and all its data and cannot be undone.\n"
-                                       "Do you want to continue?"),
-                                    QMessageBox::Ok | QMessageBox::Cancel);
-    if(ret == QMessageBox::Cancel)
-        return;
     QString table_name = schema->getName();
     table_name.append(".\"");
     table_name.append(table->getName());
     table_name.append("\"");
+    QString message(MainWin::tr("Delete table <html><b>%1</b></html>?\nThis action will destroy this table and all its data and cannot be undone.\n"
+                                "Do you want to continue?").arg(table_name));
+    int ret = QMessageBox::warning(this, MainWin::tr("pgXplorer"), message,
+                                    QMessageBox::Ok | QMessageBox::Cancel);
+    if(ret == QMessageBox::Cancel)
+        return;
 
     {
         QSqlDatabase database_connection = QSqlDatabase::addDatabase("QPSQL", "drop " + table_name);
@@ -1393,22 +1432,22 @@ void MainWin::dropTable(Database *database, Schema *schema, Table *table)
         //    QMessageBox::critical(0, MainWin::tr("Database error"),
         //    query.lastError().databaseText(), QMessageBox::Close);
     }
-    QSqlDatabase::removeDatabase("drop " + table_name);
+    QSqlDatabase::removeDatabase("DROP " + table_name);
     schema->resetTablesVertically2();
 }
 
 void MainWin::dropView(Database *database, Schema *schema, View *view)
 {
-    int ret = QMessageBox::warning(this, MainWin::tr("pgXplorer"),
-                                    MainWin::tr("This action will destroy this view and all its data and cannot be undone.\n"
-                                       "Do you want to continue?"),
-                                    QMessageBox::Ok | QMessageBox::Cancel);
-    if(ret == QMessageBox::Cancel)
-        return;
     QString view_name = schema->getName();
     view_name.append(".\"");
     view_name.append(view->getName());
     view_name.append("\"");
+    QString message(MainWin::tr("Delete view <html><b>%1</b></html>?\nThis action will destroy this view and all its data and cannot be undone.\n"
+                                "Do you want to continue?").arg(view_name));
+    int ret = QMessageBox::warning(this, MainWin::tr("pgXplorer"), message,
+                                    QMessageBox::Ok | QMessageBox::Cancel);
+    if(ret == QMessageBox::Cancel)
+        return;
 
     {
         QSqlDatabase database_connection = QSqlDatabase::addDatabase("QPSQL", "drop " + view_name);
@@ -1435,16 +1474,16 @@ void MainWin::dropView(Database *database, Schema *schema, View *view)
 
 void MainWin::dropFunction(Database *database, Schema *schema, Function *function)
 {
-    int ret = QMessageBox::warning(this, MainWin::tr("pgXplorer"),
-                                    MainWin::tr("This action will destroy this function and cannot be undone.\n"
-                                       "Do you want to continue?"),
-                                    QMessageBox::Ok | QMessageBox::Cancel);
-    if(ret == QMessageBox::Cancel)
-        return;
     QString function_name = schema->getName();
     function_name.append(".\"");
     function_name.append(function->getName());
     function_name.append("\"");
+    QString message(MainWin::tr("Delete function <html><b>%1</b></html>?\nThis action will destroy this function and cannot be undone.\n"
+                                "Do you want to continue?").arg(function_name));
+    int ret = QMessageBox::warning(this, MainWin::tr("pgXplorer"), message,
+                                    QMessageBox::Ok | QMessageBox::Cancel);
+    if(ret == QMessageBox::Cancel)
+        return;
 
     {
         QSqlDatabase database_connection = QSqlDatabase::addDatabase("QPSQL", "drop " + function_name);
@@ -1525,6 +1564,55 @@ void MainWin::showFunctionEditor(Schema *schema, Function *function)
     QSqlDatabase::removeDatabase("function definition " + function_name);
     pgxeditor->setTitle(schema->getName().append(".").append(function_name));
     pgxeditor->setText(function_definition, false);
+    pgxeditor->moveCursor(QTextCursor::Start);
+    pgxeditor->ensureCursorVisible();
+    pgxeditor->ensurePolished();
+    pgxeditor->hightlightFirstBlock();
+
+    QPoint pos = settings.value("pgxeditor_pos", QPoint(100, 100)).toPoint();
+    QSize size = settings.value("pgxeditor_size", QSize(640, 480)).toSize();
+
+    pgxeditor->setResizePos(size, pos);
+}
+
+void MainWin::showViewEditor(Schema *schema, View *view)
+{
+    QString view_name = view->getName();
+    PgxEditor *pgxeditor = new PgxEditor(database, view_name);
+    pgxeditor_list.append(pgxeditor);
+
+    QSettings settings("pgXplorer","pgXplorer");
+    QObject::connect(pgxeditor, SIGNAL(showQueryView(Database *, QString)), this, SLOT(showQueryView(Database*, QString)));
+    QObject::connect(pgxeditor, SIGNAL(pgxeditorClosing(PgxEditor*)), this, SLOT(pgxeditorClosed(PgxEditor*)));
+    QObject::connect(pgxeditor, SIGNAL(newPgxeditor()), this, SLOT(showPgxeditor()));
+    QObject::connect(pgxeditor, SIGNAL(newPgxeditor(QString)), this, SLOT(showPgxeditor(QString)));
+    QObject::connect(this, SIGNAL(languageChanged(QEvent*)), pgxeditor, SLOT(languageChanged(QEvent*)));
+
+    QString view_definition;
+    {
+        QSqlDatabase database_connection = QSqlDatabase::addDatabase("QPSQL", "view definition " + view_name);
+        database_connection.setHostName(database->getHost());
+        database_connection.setPort(database->getPort().toInt());
+        database_connection.setDatabaseName(database->getName());
+        database_connection.setUserName(database->getUser());
+        database_connection.setPassword(database->getPassword());
+        if (!database_connection.open()) {
+            QMessageBox::critical(0, MainWin::tr("Database error"),
+                MainWin::tr("Unable to establish a database connection.\n"
+                         "No PostgreSQL support.\n"), QMessageBox::Cancel);
+            return;
+        }
+        QSqlQueryModel temp_query_model;
+        temp_query_model.setQuery(QString("SELECT definition \
+                                          FROM pg_views v WHERE viewname = '")
+                                          + view_name
+                                          + QString("' AND schemaname = '" + schema->getName()
+                                          + "' " ), database_connection);
+        view_definition = temp_query_model.data(temp_query_model.index(0,0)).toString();
+    }
+    QSqlDatabase::removeDatabase("view definition " + view_name);
+    pgxeditor->setTitle(schema->getName().append(".").append(view_name));
+    pgxeditor->setText(view_definition, false);
     pgxeditor->moveCursor(QTextCursor::Start);
     pgxeditor->ensureCursorVisible();
     pgxeditor->ensurePolished();

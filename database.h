@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011, davyjones <davyjones@github.com>
+  Copyright (c) 2011-2012, davyjones <davyjones@github>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -26,7 +26,7 @@
 #include <QtGui>
 #include "mainwin.h"
 #include "schema.h"
-#include "schemaLink.h"
+#include "schemalink.h"
 #include "table.h"
 #include "function.h"
 
@@ -47,7 +47,7 @@ private:
     MainWin *mainwin;
     int number_of_schemas;
     QSqlDatabase database_connection;
-    QList<QString> schList;
+    QStringList schema_name_list;
     QList<Schema*> schema_list;
     QString name;
     QString host;
@@ -183,11 +183,11 @@ public:
     }
     QList<QString> getSchemaStringList()
     {
-        return this->schList;
+        return this->schema_name_list;
     }
-    void setSchemaList(QList<QString> schList)
+    void setSchemaList(QStringList schema_name_list)
     {
-        this->schList = schList;
+        this->schema_name_list = schema_name_list;
     }
     QList<Schema*> getSchemaList()
     {

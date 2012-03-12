@@ -95,15 +95,11 @@ void View::verticalPosition()
     if(radius < 100) radius = 100;
     qreal dtheta = 2*M_PI*i/view_count;
     if(xs < 0)
-    {
         this->setPos((-radius*cos(atan(ys/xs))+radius*(dtheta)*sin(atan(ys/xs))),
                      (-radius*sin(atan(ys/xs))-radius*(dtheta)*cos(atan(ys/xs))));
-    }
     else if(xs > 0)
-    {
         this->setPos(radius*cos(atan(ys/xs))-radius*(dtheta)*sin(atan(ys/xs)),
                      radius*sin(atan(ys/xs))+radius*(dtheta)*cos(atan(ys/xs)));
-    }
 }
 
 void View::verticalPosition2()
@@ -116,8 +112,7 @@ void View::setColumnList()
     QSqlQuery column_query(database->getDatabaseConnection());
     QString column_query_string = "SELECT column_name, data_type FROM information_schema.columns WHERE table_schema='" + parent_schema->getName() + "' AND table_name='" + view_name + "'";
     column_query.exec(column_query_string);
-    if(column_query.lastError().isValid())
-    {
+    if(column_query.lastError().isValid()) {
         QMessageBox *error_message = new QMessageBox(QMessageBox::Critical,
                                     tr("Database error"),
                                     tr("Unable to retrieve schema views.\n"
@@ -136,17 +131,19 @@ void View::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 {
     QMenu menu;
     //menu.setStyleSheet("QMenu { font-size:12px; width: 100px; color:white; left: 20px; background-color:qlineargradient(x1:0, y1:0, x2:0, y2:1, stop: 0 #cccccc, stop: 1 #333333);}");
-    menu.addAction(QIcon(qApp->applicationDirPath().append("/icons/view2.png")), tr("View contents"));    
+    menu.addAction(QIcon(qApp->applicationDirPath().append("/icons/view2.png")), tr("View contents"));
+    menu.addAction(tr("View definition"));
     menu.addSeparator();
     menu.addAction(tr("Drop view"));
 
     QAction *a = menu.exec(event->screenPos());
-    if(a && QString::compare(a->text(),tr("View contents")) == 0)
-    {
+    if(a && QString::compare(a->text(),tr("View contents")) == 0) {
         emit expandView(database, parent_schema, this);
     }
-    else if(a && QString::compare(a->text(),tr("Drop view")) == 0)
-    {
+    else if(a && QString::compare(a->text(),tr("View definition")) == 0) {
+        emit expandViewDefinition(parent_schema, this);
+    }
+    else if(a && QString::compare(a->text(),tr("Drop view")) == 0) {
         emit dropView(database, parent_schema, this);
     }
 }

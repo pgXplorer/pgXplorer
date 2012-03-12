@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011, davyjones <davyjones@github.com>
+  Copyright (c) 2011-2012, davyjones <davyjones@github>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -18,31 +18,41 @@
 
 #include "querymodel.h"
 
-void QueryModel::fetchData(QueryModel *query_model, QString command, QStringList vars)
+void QueryModel::fetchData(QString command, QStringList vars)
 {
     emit busySignal();
     database_connection_id = command + vars.at(5);
     QTime ts;
     ts.start();
-    QSqlDatabase::removeDatabase("queryview" + database_connection_id);
-    QSqlDatabase database_connection;
-    database_connection = QSqlDatabase::addDatabase("QPSQL", "queryview" + database_connection_id);
-    database_connection.setHostName(vars.at(0));
-    database_connection.setPort(vars.at(1).toInt());
-    database_connection.setDatabaseName(vars.at(2));
-    database_connection.setUserName(vars.at(3));
-    database_connection.setPassword(vars.at(4));
-    if (!database_connection.open()) {
-        qDebug() << tr("Couldn't connect to database.\n"
-                     "Check connection parameters.\n");
-        return;
+    {
+        QSqlDatabase::removeDatabase("queryview " + database_connection_id);
+        QSqlDatabase database_connection;
+        database_connection = QSqlDatabase::addDatabase("QPSQL", "queryview " + database_connection_id);
+        database_connection.setHostName(vars.at(0));
+        database_connection.setPort(vars.at(1).toInt());
+        database_connection.setDatabaseName(vars.at(2));
+        database_connection.setUserName(vars.at(3));
+        database_connection.setPassword(vars.at(4));
+        if (!database_connection.open()) {
+            qDebug() << tr("Couldn't connect to database.\n"
+                           "Check connection parameters.\n");
+            return;
+        }
+        setQuery(command, database_connection);
     }
-    query_model->setQuery(command, database_connection);
-    fetchDataSignal(query_model, ts.elapsed(), query_model->rowCount(), query_model->columnCount());
+    QSqlDatabase::removeDatabase("queryview " + database_connection_id);
+    fetchDataSignal(ts.elapsed(), rowCount(), columnCount());
 }
 
-void QueryModel::destroyQueryModel()
+QVariant QueryModel::data(const QModelIndex &index, int role) const
 {
-    QSqlDatabase::removeDatabase("queryview" + database_connection_id);
-    delete this;
+    //Store the index into item to call the sibling of index.
+    QModelIndex item = indexInQuery(index);
+
+    //Align integers to the right
+    if ((index.isValid() && role == Qt::TextAlignmentRole) && (index.data().type() != QMetaType::QString))
+        return (Qt::AlignVCenter + Qt::AlignRight);
+
+    //Return sibling of index
+    return QSqlQueryModel::data(index.sibling(item.row(), index.column()), role);
 }

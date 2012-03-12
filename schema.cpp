@@ -235,6 +235,7 @@ void Schema::populateSchemaViews()
         QObject::connect(mainwin->getSearchBox(), SIGNAL(textChanged(QString)), view, SLOT(getSearchTerm(QString)));
         QObject::connect(mainwin, SIGNAL(showColumnView()), view, SLOT(verticalPosition2()));
         QObject::connect(view, SIGNAL(expandView(Database *, Schema *, View*)), mainwin, SLOT(showViewView(Database *, Schema *, View*)));
+        QObject::connect(view, SIGNAL(expandViewDefinition(Schema *, View*)), mainwin, SLOT(showViewEditor(Schema*, View*)));
         QObject::connect(view, SIGNAL(dropView(Database *, Schema *, View*)), mainwin, SLOT(dropView(Database *, Schema *, View*)));
 
         view_list.append(view);

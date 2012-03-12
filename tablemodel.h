@@ -39,24 +39,26 @@ public slots:
 public:
     TableModel(Database *database, QStringList primary_key, QString table_name);
 
-     Qt::ItemFlags flags(const QModelIndex &index) const;
-     bool setData(const QModelIndex &index, const QVariant &value, int role);
-     QVariant data ( const QModelIndex & item, int role = Qt::DisplayRole ) const;
-     bool update();
-     //void clearCache();
+    Qt::ItemFlags flags(const QModelIndex &index) const;
+    bool setData(const QModelIndex &index, const QVariant &value, int role);
+    QVariant data(const QModelIndex & item, int role = Qt::DisplayRole) const;
+    QVariant headerData(int section, Qt::Orientation orientation, int role) const;
+    bool update();
+    void setRowsFrom(int);
 
 private:
-     Database *database;
-     QString table_name;
-     QStringList primary_key;
-     QStringList primary_key_values;
-     QString edit_column;
-     QModelIndex edit_index;
-     QVariant edit_value;
-     QMap<QModelIndex, QVariant> cache_values;
+    Database *database;
+    QString table_name;
+    int rows_from;
+    QStringList primary_key;
+    QStringList primary_key_values;
+    QString edit_column;
+    QModelIndex edit_index;
+    QVariant edit_value;
+    QMap<QModelIndex, QVariant> cache_values;
 
 Q_SIGNALS:
-     void updateFailed(QString);
+    void updateFailed(QString);
 };
 
 #endif // TABLEMODEL_H

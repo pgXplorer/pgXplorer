@@ -97,7 +97,7 @@ public:
     QStringList table_completer_list;
     QStringList view_completer_list;
     QStringList function_completer_list;
-    MainWin(QWidget *parent=0, const QString arg1=QString(""), Qt::WindowFlags f=0);
+    MainWin(QWidget *parent=0, const QString arg1=QLatin1String(""), Qt::WindowFlags f=0);
     ~MainWin();
     QGraphicsScene& getScn()
     {
@@ -176,6 +176,7 @@ private slots:
     void showPgxeditor(QString);
     void showPgxeditor(QString, QString);
     void showFunctionEditor(Schema *, Function*);
+    void showViewEditor(Schema *, View*);
     void toggleFullscreen();
     void showTreeview();
     void search();
@@ -209,6 +210,8 @@ private slots:
     void dropFunction(Database *, Schema *, Function*);
     void showQueryView(Database *, QString);
     void fitView();
+    void zoomIn();
+    void zoomOut();
     void zoomIn(const QPointF);
     void zoomOut(const QPointF);
     void noZoom();

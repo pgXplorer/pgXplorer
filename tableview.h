@@ -53,6 +53,7 @@ private:
     QStringList primary_key;
     QStringList column_list;
     QStringList column_types;
+    QStringList column_lengths;
     QMenuBar *menubar;
     QDockWidget *dock_widget;
     QString status_message;
@@ -61,7 +62,7 @@ private:
     QMenu disarrange_menu;
     QTime t;
     QToolBar *toolbar;
-    TableModel *query_model;
+    TableModel *table_model;
     QTableView *tview;
     QStandardItemModel *new_row_model;
     NewRowTableView *new_row_view;
@@ -108,7 +109,7 @@ private:
 
 public:
     static ulong tableViewObjectId;
-    TableView(Database *, QString const, QString const, QStringList const, QStringList const, QStringList const, bool, Qt::WidgetAttribute f);
+    TableView(Database *, QString const, QString const, QStringList const, QStringList const, QStringList const, QStringList const, bool, Qt::WidgetAttribute f);
     ~TableView()
     {
     };

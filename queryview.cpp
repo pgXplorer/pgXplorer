@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011, davyjones <davyjones@github.com>
+  Copyright (c) 2011-2012, davyjones <davyjones@github>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -19,6 +19,7 @@
 #include "queryview.h"
 
 ulong QueryView::queryViewObjectId = 0;
+
 QueryView::QueryView(Database *database, QString command)
 {
     this->database = database;
@@ -44,7 +45,7 @@ QueryView::QueryView(Database *database, QString command)
     //setWindowTitle(name);
     qview->setStyleSheet("QTableView {font-weight: 400;}");
     qview->setAlternatingRowColors(true);
-    //setGeometry(100,100,640,480);
+    qview->verticalHeader()->setDefaultAlignment(Qt::AlignRight | Qt::AlignVCenter);
 
     //Create Ctrl+Shift+C key combo to copy selected table contents with headers.
     QShortcut *shortcut_ctrl_c = new QShortcut(QKeySequence::Copy, this);
@@ -117,7 +118,7 @@ void QueryView::closeEvent(QCloseEvent *event)
         delete query_model;
         delete shortcut_fullscreen;
         delete shortcut_restore;
-        QSqlDatabase::removeDatabase("queryview" + QString::number(thisQueryViewId));
+        QSqlDatabase::removeDatabase("queryview " + QString::number(thisQueryViewId));
         close();
     }
 }
@@ -197,6 +198,7 @@ void QueryView::busySlot()
 {
     thread_busy = true;
     setCursor(Qt::WaitCursor);
+    qview->horizontalHeader()->setStretchLastSection(false);
 }
 
 void QueryView::fullscreen()
@@ -214,9 +216,9 @@ void QueryView::fetchData(QString command)
     emit busySignal();
     QTime ts;
     ts.start();
-    QSqlDatabase::removeDatabase("queryview" + QString::number(thisQueryViewId));
+    QSqlDatabase::removeDatabase("queryview " + QString::number(thisQueryViewId));
     QSqlDatabase database_connection;
-    database_connection = QSqlDatabase::addDatabase("QPSQL", "queryview" + QString::number(thisQueryViewId));
+    database_connection = QSqlDatabase::addDatabase("QPSQL", "queryview " + QString::number(thisQueryViewId));
     database_connection.setHostName(database->getHost());
     database_connection.setPort(database->getPort().toInt());
     database_connection.setDatabaseName(database->getName());
@@ -224,7 +226,7 @@ void QueryView::fetchData(QString command)
     database_connection.setPassword(database->getPassword());
     if (!database_connection.open()) {
         emit updRowCntSignal(tr("Couldn't connect to database.\n"
-                                      "Check connection parameters.\n"));
+                                "Check connection parameters.\n"));
     }
     else {
         query_model->setQuery(command, database_connection);
@@ -253,6 +255,8 @@ void QueryView::updRowCntSlot(QString error)
         qview->setFont(serifFont);
         qview->setModel(errors_model);
         qview->resizeColumnToContents(0);
+        qview->horizontalHeader()->setStretchLastSection(true);
+
         QStringList header;
         header << tr("Error messages");
         errors_model->setHorizontalHeaderLabels(header);

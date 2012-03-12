@@ -46,11 +46,13 @@ public:
     void lineNumberAreaPaintEvent(QPaintEvent *event);
     void breakpointAreaPaintEvent(QPaintEvent *event);
     int lineNumberAreaWidth();
+    void hightlightFirstBlock();
     void createActions();
     void setResizePos(QSize, QPoint);
     void save();
 
 protected:
+    void wheelEvent(QWheelEvent *);
     void resizeEvent(QResizeEvent *event);
 
 private slots:
@@ -63,16 +65,20 @@ private slots:
     void executeFunction();
     void selectionChangedSlot();
     void textChangedSlot();
+    void makeFirstBlocksReadonly();
     void toggleWrap();
     void toggleFindBar();
     void findText();
     void replaceText();
     void pgxeditorClosing();
+    void noZoom();
 
 public slots:
     void languageChanged(QEvent*);
 
 private:
+    QString style_sheet;
+    quint8 font_size;
     QString editor_name;
     Database *database;
     QWidget *lineNumberArea;

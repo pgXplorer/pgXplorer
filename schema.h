@@ -23,8 +23,8 @@
 #include <QSqlDatabase>
 #include <QtGui>
 #include "mainwin.h"
-#include "schemaLink.h"
-#include "tableLink.h"
+#include "schemalink.h"
+#include "tablelink.h"
 #include "view.h"
 #include "functionlink.h"
 

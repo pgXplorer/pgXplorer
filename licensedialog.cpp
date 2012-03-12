@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011, davyjones <davyjones@github>
+  Copyright (c) 2011-2012, davyjones <davyjones@github>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -67,16 +67,19 @@ LicenseDialog::LicenseDialog(MainWin *mainwin)
     ok_button->setAutoDefault(false);
     ok_button->setGeometry(QRect(30, 250, 75, 23));
     ok_button->setFont(font);
-    //trial_button = new QPushButton(this);
-    //trial_button->setObjectName(QString::fromUtf8("pBCancel"));
-    //trial_button->setGeometry(QRect(140, 250, 75, 23));
-    //trial_button->setFont(font);
-    //trial_button->setAutoDefault(false);
     cancel_button = new QPushButton(this);
     cancel_button->setObjectName(QString::fromUtf8("pBCancel"));
     cancel_button->setGeometry(QRect(140, 250, 75, 23));
     cancel_button->setFont(font);
     cancel_button->setAutoDefault(false);
+    trial_button = new QPushButton(this);
+    trial_button->setGeometry(QRect(100, 150, 150, 100));
+    trial_button->setFont(font);
+    trial_button->setAutoDefault(false);
+    trial_button->setIcon(QIcon(qApp->applicationDirPath().append("/icons/buy.png")));
+    trial_button->setGraphicsEffect(new QGraphicsDropShadowEffect);
+    trial_button->setIconSize(QSize(48,48));
+    trial_button->hide();
 
     user = new QLineEdit(this);
     user->setGeometry(QRect(20, 80, 133, 20));
@@ -108,10 +111,10 @@ LicenseDialog::LicenseDialog(MainWin *mainwin)
     title_label->setObjectName(QString::fromUtf8("lTitle"));
     title_label->setGeometry(QRect(20, 10, 211, 21));
     title_label->setAlignment(Qt::AlignHCenter);
-    QFont font1;
-    font1.setFamily(QString::fromUtf8("Verdana"));
-    font1.setPointSize(14);
-    title_label->setFont(font1);
+    QFont title_font;
+    title_font.setFamily(QString::fromUtf8("Verdana"));
+    title_font.setPointSize(14);
+    title_label->setFont(title_font);
 
     QWidget::setTabOrder(user, key);
     QWidget::setTabOrder(key, site_wide);
@@ -120,46 +123,51 @@ LicenseDialog::LicenseDialog(MainWin *mainwin)
 
     QObject::connect(cancel_button, SIGNAL(clicked()), this, SLOT(cancel()));
     QObject::connect(ok_button, SIGNAL(clicked()), this, SLOT(okslot()));
+    QObject::connect(trial_button, SIGNAL(clicked()), this, SLOT(launchBuyLink()));
 
-    setWindowTitle(QApplication::translate("Connection", "Connection", 0, QApplication::UnicodeUTF8));
-    ok_button->setText(QApplication::translate("Connection", "OK", 0, QApplication::UnicodeUTF8));
-    cancel_button->setText(QApplication::translate("Connection", "Cancel", 0, QApplication::UnicodeUTF8));
+    setWindowTitle(QApplication::translate("License", "License", 0, QApplication::UnicodeUTF8));
+    ok_button->setText(QApplication::translate("License", "OK", 0, QApplication::UnicodeUTF8));
+    cancel_button->setText(QApplication::translate("License", "Cancel", 0, QApplication::UnicodeUTF8));
+    trial_button->setFont(title_font);
+    trial_button->setText(QApplication::translate("License", "Buy\nkey", 0, QApplication::UnicodeUTF8));
 
-    title_label->setText(QApplication::translate("Connection", "pgXplorer License Key", 0, QApplication::UnicodeUTF8));
-    user_label->setText(QApplication::translate("Connection", "Registration name:", 0, QApplication::UnicodeUTF8));
-    site_wide_label->setText(QApplication::translate("Connection", "    This is a site-wide license key.", 0, QApplication::UnicodeUTF8));
-    key_label->setText(QApplication::translate("Connection", "Registration key:", 0, QApplication::UnicodeUTF8));
+    title_label->setText(QApplication::translate("License", "pgXplorer License Key", 0, QApplication::UnicodeUTF8));
+    user_label->setText(QApplication::translate("License", "Registration name:", 0, QApplication::UnicodeUTF8));
+    site_wide_label->setText(QApplication::translate("License", "    This is a site-wide license key.", 0, QApplication::UnicodeUTF8));
+    key_label->setText(QApplication::translate("License", "Registration key:", 0, QApplication::UnicodeUTF8));
 
-    QTextEdit *display_text = new QTextEdit(this);
+    QLabel *display_text = new QLabel(this);
+    display_text->setTextFormat(Qt::RichText);
+    //display_text->setFrameStyle(QFrame::Panel | QFrame::Raised);
+    QString tata(tr("first line\nsecond line"));
+    display_text->setText(tata);
+    display_text->setAlignment(Qt::AlignTop| Qt::AlignLeft);
     display_text->setAutoFillBackground(true);
     display_text->setStyleSheet("QTextEdit {background: }");
     QPalette palette;
     palette.setColor(QPalette::Base, QColor(Qt::lightGray).lighter(125));
-    display_text->setPalette(palette);
-    display_text->setReadOnly(true);
     display_text->setGeometry(260,20,220,250);
-    display_text->insertHtml("<b>pgXplorer</b> is an open source <a href=http://postgresql.org>PostgreSQL</a> administrative client.</br>");
-    display_text->append("\nYou can purchase an individual or site-wide license key at pgxplorer.com. Buying a license key includes support \
-as well as priority ticket requests.");
-    display_text->append("\nYou can also freely download the source and build pgXplorer yourself. \
-The source code is available at: github.com/davyjones/pgxplorer");
-    display_text->append("Note that you will have to compile the postgresql database drivers \
-and obtain other necessary platform specific libraries if you are compiling from source.");
-    display_text->append("\nUnfortunately, unless you have a valid license key, we are unable \
-to provide support when you build pgXplorer yourself.\n\
-Refer to the README document at the source code location for more details on build instructions.");
-    display_text->moveCursor(QTextCursor::Start);
+    QString dt(tr("<b>pgXplorer</b> is an open source PostgreSQL administrative client.\nYou can purchase an individual or site-wide license key at pgxplorer.com. Buying a license key includes support as well as priority ticket requests.\nYou can also freely download the source and build pgXplorer yourself.The source code is available at: github.com/davyjones/pgxplorer \nRefer to the README document at the source code location for more details on build instructions."));
 
-     QSettings settings("pgXplorer","pgXplorer");
-     QString user = settings.value("license/user", QString()).toString();
-     bool site_wide = settings.value("license/site_wide", false).toBool();
-     QByteArray key = settings.value("license/key", QString()).toByteArray();
+    display_text->setText(dt);
 
-     if(validLicense(user, site_wide, key)) {
-         this->user->setText(user);
-         this->site_wide->setChecked(site_wide);
-         this->key->setText(key);
-     }
+    QSettings settings("pgXplorer","pgXplorer");
+    QString user = settings.value("license/user", QString()).toString();
+    bool site_wide = settings.value("license/site_wide", false).toBool();
+    QByteArray key = settings.value("license/key", QString()).toByteArray();
+
+    if(validLicense(user, site_wide, key)) {
+        this->user->setText(user);
+        this->site_wide->setChecked(site_wide);
+        this->key->setText(key);
+        if(!this->site_wide) {
+            trial_button->setText(QApplication::translate("License", "Buy site-wide key", 0, QApplication::UnicodeUTF8));
+            trial_button->show();
+        }
+    }
+    else {
+        trial_button->show();
+    }
 }
 
 void LicenseDialog::okslot()
@@ -181,6 +189,12 @@ void LicenseDialog::okslot()
         settings.setValue("license/key", key->text());
         close();
     }
+}
+
+void LicenseDialog::launchBuyLink()
+{
+    QDesktopServices::openUrl(QUrl("https://www.pgxplorer.com/buy"));
+    return;
 }
 
 void LicenseDialog::cancel()

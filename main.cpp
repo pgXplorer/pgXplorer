@@ -59,6 +59,23 @@ int main(int argc, char **argv)
         license_dialog->close();
     }
     */
+
+    //qApp->setStyleSheet("QDialog {background-color: beige; font: bold 14px;} QPushButton {background-color: lightgray; \
+    //                      border-style: outset; \
+    //                      border-width: 2px; \
+    //                      border-radius: 10px; \
+    //                      border-color: beige; \
+    //                      font: bold 14px; \
+    //                      min-width: 6em; \
+    //                      padding: 6px;} \
+    //                      QPushButton:pressed {background-color: rgb(255, 250, 200); \
+    //                      border-style: inset;}");
+    qApp->setStyleSheet("QTableView {selection-background-color: \
+                        qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0.25, \
+                        stop: 0 #5F5F7F, stop: 1 #7F7F9F); \
+                        selection-color: #F0F0F0; \
+                        color: #0F0F0F; \
+                        }");
     mainwin->show();
     return pgXplorer.exec();
 }

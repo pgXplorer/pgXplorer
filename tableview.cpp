@@ -61,18 +61,20 @@ void NewRowTableView::resizeCells(int logicalIndex, int oldSize, int newSize)
     horizontalHeader()->resizeSection(logicalIndex, newSize);
 }
 
-TableView::TableView(Database *database, QString const table_name, QString const name, QStringList column_list, QStringList primary_key, QStringList column_types, bool read_only, Qt::WidgetAttribute f)
+TableView::TableView(Database *database, QString const table_name, QString const name, QStringList column_list, QStringList primary_key, QStringList column_types, QStringList column_lengths, bool read_only, Qt::WidgetAttribute f)
 {
     setAttribute(Qt::WA_DeleteOnClose);
     menuBar()->setVisible(false);
 
     error_message_box = new QMessageBox(this);
+    //error_message_box->setWindowFlags(Qt::FramelessWindowHint);
 
     this->database = database;
     this->table_name = table_name;
     this->primary_key = primary_key;
     this->column_list = column_list;
     this->column_types = column_types;
+    this->column_lengths = column_lengths;
 
     filter_text = new QLineEdit;
     filter_text->setPlaceholderText(tr("custom filter"));
@@ -119,7 +121,7 @@ TableView::TableView(Database *database, QString const table_name, QString const
     //Initialise to false because obviously we don't have TableView
     //GUI artifacts to create overlapping threads yet.
     thread_busy = false;
-    query_model = new TableModel(database, this->primary_key, this->table_name);
+    table_model = new TableModel(database, this->primary_key, this->table_name);
 
     //Quick fetch feature that is supposed to fetch only a fixed
     //number of rows of a large table to populate the view.
@@ -136,11 +138,15 @@ TableView::TableView(Database *database, QString const table_name, QString const
         if(column == column_count-1) {
             if(column_types.value(column).startsWith("time"))
                 sql.append(column_list.value(column) + "::text");
+            else if(column_types.value(column).compare("double precision") == 0)
+                sql.append(column_list.value(column) + "::text");
             else
                 sql.append(column_list.value(column));
         }
         else {
             if(column_types.value(column).startsWith("time"))
+                sql.append(column_list.value(column) + "::text, ");
+            else if(column_types.value(column).compare("double precision") == 0)
                 sql.append(column_list.value(column) + "::text, ");
             else
                 sql.append(column_list.value(column) + ", ");
@@ -156,6 +162,7 @@ TableView::TableView(Database *database, QString const table_name, QString const
     tview->setStyleSheet("QTableView {font-weight: 400;}");
     tview->setAlternatingRowColors(true);
     tview->verticalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
+    tview->verticalHeader()->setDefaultAlignment(Qt::AlignRight | Qt::AlignVCenter);
 
     //QShortcut *shortcut_copy_with_headers = new QShortcut(QKeySequence("Ctrl+Shift+C"), this);
     //connect(shortcut_copy_with_headers, SIGNAL(activated()), this, SLOT(copych()));
@@ -172,8 +179,8 @@ TableView::TableView(Database *database, QString const table_name, QString const
 
     //Tie thread finish to an update slot that refreshes meta-information.
     connect(this, SIGNAL(updRowCntSignal(QString)), this, SLOT(updRowCntSlot(QString)));
-    connect(this, SIGNAL(updRowCntSignal(QString)), query_model, SLOT(clearCache()));
-    connect(query_model, SIGNAL(updateFailed(QString)), this, SLOT(updateFailedSlot(QString)));
+    connect(this, SIGNAL(updRowCntSignal(QString)), table_model, SLOT(clearCache()));
+    connect(table_model, SIGNAL(updateFailed(QString)), this, SLOT(updateFailedSlot(QString)));
 
     //Tie a busy signal to a slot that changes the cursor to wait cursor.
     connect(this, SIGNAL(busySignal()), this, SLOT(busySlot()));
@@ -192,6 +199,7 @@ TableView::TableView(Database *database, QString const table_name, QString const
     dock_widget = new QDockWidget(tr("Insert new data"), this);
     dock_widget->setFeatures(QDockWidget::NoDockWidgetFeatures);
     dock_widget->setAllowedAreas(Qt::BottomDockWidgetArea);
+    dock_widget->contextMenuPolicy();
     addDockWidget(Qt::BottomDockWidgetArea, dock_widget);
 
     new_row_view = new NewRowTableView;
@@ -433,15 +441,15 @@ void TableView::fetchDefaultData()
             else
                 can_fetch_more = true;
             offset_list.append(" OFFSET 0");
-            query_model->setQuery(sql + limit + offset_list.last(), database_connection);
+            table_model->setQuery(sql + limit + offset_list.last(), database_connection);
         }
         else {
-            query_model->setQuery(sql, database_connection);
+            table_model->setQuery(sql, database_connection);
         }
 
         rows_from = 1;
-        rows_to = query_model->rowCount();
-        column_count = query_model->columnCount();
+        rows_to = table_model->rowCount();
+        column_count = table_model->columnCount();
         emit updRowCntSignal("next");
     }
 }
@@ -473,8 +481,10 @@ void TableView::fetchRefreshData(QString mode)
             return;
         }
 
-        query_model->setQuery(query_model->query().lastQuery(), database_connection);
-
+        table_model->setQuery(table_model->query().lastQuery(), database_connection);
+        rows_from = FETCHSIZ * (offset_list.size()-1) + 1;
+        rows_to = rows_from + table_model->rowCount() - 1;
+        column_count = table_model->columnCount();
         emit updRowCntSignal(mode);
     }
 }
@@ -495,14 +505,15 @@ void TableView::updRowCntSlot(QString dataset)
     colums_string = QApplication::translate("QueryView", "Columns:", 0, QApplication::UnicodeUTF8);
     seconds_string = QApplication::translate("QueryView", "s", 0, QApplication::UnicodeUTF8);
 
-    if(query_model->lastError().isValid()) {
+    if(table_model->lastError().isValid()) {
         if(where_clause.count() > 0)
             where_clause.removeLast();
         statusBar()->showMessage(tr("Error: Incorrect filter"));
     }
     else {
-        tview->setModel(query_model);
-        int column_count = query_model->columnCount();
+        table_model->setRowsFrom(rows_from);
+        tview->setModel(table_model);
+        int column_count = table_model->columnCount();
         for(int column = 0; column < column_count; column++) {
             tview->showColumn(column);
             new_row_view->showColumn(column);
@@ -512,6 +523,7 @@ void TableView::updRowCntSlot(QString dataset)
         else if(dataset.compare("next") == 0)
             tview->scrollToTop();
         time_elapsed = (double)t.elapsed()/1000;
+
         if(rows_to == 0) {
             statusBar()->showMessage(time_elapsed_string + QString::number(time_elapsed) +
                                      " " + seconds_string + " \t " +  rows_string + "0" +
@@ -527,13 +539,6 @@ void TableView::updRowCntSlot(QString dataset)
                                      " " + seconds_string + " \t " + rows_string + QString::number(rows_from) +
                                      " - " + QString::number(rows_to) + rows_string_2 +
                                      " \t " + colums_string + QString::number(column_count));
-                int number_of_digits = 0;
-                int number_of_rows = FETCHSIZ;
-                while(number_of_rows != 0) {
-                    number_of_rows /= 10;
-                    number_of_digits++;
-                }
-                new_row_model->setHeaderData(0, Qt::Vertical, QString(2*number_of_digits, ' '));
                 next_set_button->setEnabled(true);
             }
             else {
@@ -541,16 +546,20 @@ void TableView::updRowCntSlot(QString dataset)
                                      " " + seconds_string + " \t " + rows_string + QString::number(rows_from) +
                                      " - " + QString::number(rows_to) +
                                      " \t " + colums_string + QString::number(column_count));
-                int number_of_digits = 0;
-                int number_of_rows = rows_to - rows_from + 1;
-                while(number_of_rows != 0) {
-                    number_of_rows /= 10;
-                    number_of_digits++;
-                }
-                new_row_model->setHeaderData(0, Qt::Vertical, QString(2*number_of_digits, ' '));
                 next_set_button->setEnabled(false);
             }
+
+            //Align insert tableview to main tableview by
+            //setting the correct header width (ugly hack).
+            int number_of_digits = 0;
+            int number_of_rows = rows_to;
+            while(number_of_rows != 0) {
+                number_of_rows /= 10;
+                number_of_digits++;
+            }
+            new_row_model->setHeaderData(0, Qt::Vertical, QString(2*number_of_digits, ' '));
         }
+
         if(rows_from > 1)
             previous_set_button->setEnabled(true);
         else
@@ -585,18 +594,33 @@ void TableView::updateFailedSlot(QString error_text)
 //Paint the background of primary key columns of insert row as green if it is not empty
 void TableView::updatePrimaryKeyInfo()
 {
-    foreach(QString key_element, primary_key)
-    {
-        int actual_index = query_model->record().indexOf(key_element.remove("\""));
+    foreach(QString key_element, primary_key) {
+        int actual_index = table_model->record().indexOf(key_element.remove("\""));
         if(actual_index > -1) {
-            query_model->setHeaderData(actual_index, Qt::Horizontal, key_icon, Qt::DecorationRole);
+            table_model->setHeaderData(actual_index, Qt::Horizontal, key_icon, Qt::DecorationRole);
             QModelIndex idx = new_row_model->index(0,actual_index,QModelIndex());
-            if(new_row_model->data(idx).toString().isEmpty())
+            if(new_row_model->data(idx).toString().isEmpty() ||
+                    new_row_model->data(idx).toString().length() > column_lengths.at(actual_index).toInt())
                 new_row_model->setData(idx, red_brush, Qt::BackgroundRole);
             else
                 new_row_model->setData(idx, green_brush, Qt::BackgroundRole);
         }
     }
+    /*
+    for(int column = 0; column < column_count; column++) {
+        if(column_lengths.at(column).compare("0") == 0)
+            continue;
+        QModelIndex idx = new_row_model->index(0,column,QModelIndex());
+        if(new_row_model->data(idx).toString().isEmpty()) {
+            continue;
+        }
+        if(new_row_model->data(idx).toString().length() > column_lengths.at(column).toInt()) {
+            new_row_model->setData(idx, red_brush, Qt::BackgroundRole);
+            new_row_model->setData(idx, tr("Length more than %1").arg(column_lengths.at(column)), Qt::ToolTipRole);
+        }
+        else
+            new_row_model->setData(idx, QBrush(Qt::white, Qt::SolidPattern), Qt::BackgroundRole);
+    }*/
 }
 
 void TableView::fetchNextData()
@@ -638,12 +662,12 @@ void TableView::fetchNextData()
         rows_from = offset_list.size()*FETCHSIZ + 1;
         offset_list.append(" OFFSET " + QString::number(rows_from - 1));
         if(where_clause.isEmpty())
-            query_model->setQuery(sql + (order_clause.size() > 0 ? " ORDER BY " + order_clause.join(","):"") + limit + offset_list.last(), database_connection);
+            table_model->setQuery(sql + (order_clause.size() > 0 ? " ORDER BY " + order_clause.join(","):"") + limit + offset_list.last(), database_connection);
         else
-            query_model->setQuery(sql + " WHERE " + where_clause.join(" AND ") + (order_clause.size() > 0 ? " ORDER BY " + order_clause.join(","):"") + limit + offset_list.last(), database_connection);
+            table_model->setQuery(sql + " WHERE " + where_clause.join(" AND ") + (order_clause.size() > 0 ? " ORDER BY " + order_clause.join(","):"") + limit + offset_list.last(), database_connection);
 
-        rows_to = rows_from + query_model->rowCount() - 1;
-        column_count = query_model->columnCount();
+        rows_to = rows_from + table_model->rowCount() - 1;
+        column_count = table_model->columnCount();
 
         emit updRowCntSignal("next");
     }
@@ -675,12 +699,12 @@ void TableView::fetchPreviousData()
         offset_list.removeLast();
         rows_from = (offset_list.size()-1)*FETCHSIZ + 1;
         if(where_clause.isEmpty())
-            query_model->setQuery(sql + (order_clause.size() > 0 ? " ORDER BY " + order_clause.join(","):"") + limit + offset_list.last(), database_connection);
+            table_model->setQuery(sql + (order_clause.size() > 0 ? " ORDER BY " + order_clause.join(","):"") + limit + offset_list.last(), database_connection);
         else
-            query_model->setQuery(sql + " WHERE " + where_clause.join(" AND ") + (order_clause.size() > 0 ? " ORDER BY " + order_clause.join(","):"") + limit + offset_list.last(), database_connection);
+            table_model->setQuery(sql + " WHERE " + where_clause.join(" AND ") + (order_clause.size() > 0 ? " ORDER BY " + order_clause.join(","):"") + limit + offset_list.last(), database_connection);
 
-        rows_to = rows_from + query_model->rowCount() - 1;
-        column_count = query_model->columnCount();
+        rows_to = rows_from + table_model->rowCount() - 1;
+        column_count = table_model->columnCount();
         can_fetch_more = true;
 
         emit updRowCntSignal("previous");
@@ -725,11 +749,11 @@ void TableView::fetchConditionDataInitial()
             can_fetch_more = true;
         rows_from = (offset_list.size()-1)*FETCHSIZ + 1;
         if(where_clause.isEmpty())
-            query_model->setQuery(sql + (order_clause.size() > 0 ? " ORDER BY " + order_clause.join(","):"") + limit + offset_list.last(), database_connection);
+            table_model->setQuery(sql + (order_clause.size() > 0 ? " ORDER BY " + order_clause.join(","):"") + limit + offset_list.last(), database_connection);
         else
-            query_model->setQuery(sql + " WHERE " + where_clause.join(" AND ") + (order_clause.size() > 0 ? " ORDER BY " + order_clause.join(","):"") + limit + offset_list.last(), database_connection);
-        rows_to = rows_from + query_model->rowCount() - 1;
-        column_count = query_model->columnCount();
+            table_model->setQuery(sql + " WHERE " + where_clause.join(" AND ") + (order_clause.size() > 0 ? " ORDER BY " + order_clause.join(","):"") + limit + offset_list.last(), database_connection);
+        rows_to = rows_from + table_model->rowCount() - 1;
+        column_count = table_model->columnCount();
         emit updRowCntSignal("next");
     }
 }
@@ -739,7 +763,7 @@ void TableView::fetchDataSlot()
     //Check if vertical scrollbar is at the bottom-most position to trigger
     //fetching of more data from database. Data retrieval launched as a
     //future object (separate thread).
-    if(query_model->rowCount() >= FETCHSIZ &&
+    if(table_model->rowCount() >= FETCHSIZ &&
         tview->verticalScrollBar()->value() == tview->verticalScrollBar()->maximum()) {
         if(can_fetch_more) {
             statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0, QApplication::UnicodeUTF8));
@@ -781,7 +805,7 @@ void TableView::closeEvent(QCloseEvent *event)
     {
         delete toolbar;
         delete tview;
-        delete query_model;
+        delete table_model;
         delete new_row_view;
         delete new_row_model;
         delete dock_widget;
@@ -941,8 +965,8 @@ void TableView::filter()
     else
         if(typ.compare("int", Qt::CaseInsensitive) == 0)
             where_clause.append("\"" + header_string + "\"=" + data.toString());
-        else if(typ.compare("QDateTime", Qt::CaseInsensitive) == 0)
-            where_clause.append("\"" + header_string + "\"='" + data.toDateTime().toString("yyyy-MM-dd hh:mm:ss.z") + "'");
+        //else if(typ.compare("QDateTime", Qt::CaseInsensitive) == 0)
+        //    where_clause.append("\"" + header_string + "\"='" + data.toDateTime().toString("yyyy-MM-dd hh:mm:ss.z") + "'");
         else
             where_clause.append("\"" + header_string + "\"='" + data.toString().replace("'","\\'") + "'");
     offset_list.clear();
@@ -987,8 +1011,8 @@ void TableView::exclude()
     else
         if(typ.compare("int", Qt::CaseInsensitive) == 0)
             where_clause.append("\"" + header_string + "\"<>" + data.toString());
-        else if(typ.compare("QDateTime", Qt::CaseInsensitive) == 0)
-            where_clause.append("\"" + header_string + "\"<>'" + data.toDateTime().toString("yyyy-MM-dd hh:mm:ss.z") + "'");
+        //else if(typ.compare("QDateTime", Qt::CaseInsensitive) == 0)
+        //    where_clause.append("\"" + header_string + "\"<>'" + data.toDateTime().toString("yyyy-MM-dd hh:mm:ss.z") + "'");
         else
             where_clause.append("\"" + header_string + "\"<>'" + data.toString() + "'");
     offset_list.clear();
@@ -1181,7 +1205,7 @@ void TableView::customContextMenuViewport()
         if(a && QString::compare(a->text(),where_clause.at(i))==0) {
             statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0, QApplication::UnicodeUTF8));
             where_clause.removeAt(i);
-            if(query_model->rowCount() == 0)
+            if(table_model->rowCount() == 0)
                 can_fetch_more = false;
             else
                 can_fetch_more = true;
@@ -1205,7 +1229,7 @@ void TableView::customContextMenuViewport()
             statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0, QApplication::UnicodeUTF8));
 
             order_clause.removeAt(i);
-            if(query_model->rowCount() == 0)
+            if(table_model->rowCount() == 0)
                 can_fetch_more = false;
             else
                 can_fetch_more = true;
@@ -1259,10 +1283,11 @@ void TableView::removeAllOrdering()
 void TableView::copyQuery()
 {
     QString copy_sql;
+
     if(where_clause.isEmpty())
-        copy_sql = sql + (order_clause.size() > 0 ? " ORDER BY " + order_clause.join(","):"");
+        copy_sql = sql.remove("::text") + (order_clause.size() > 0 ? " ORDER BY " + order_clause.join(","):"");
     else
-        copy_sql = sql + " WHERE " + where_clause.join(" AND ") + (order_clause.size() > 0 ? " ORDER BY " + order_clause.join(","):"");
+        copy_sql = sql.remove("::text") + " WHERE " + where_clause.join(" AND ") + (order_clause.size() > 0 ? " ORDER BY " + order_clause.join(","):"");
 
     qApp->clipboard()->setText(copy_sql);
 }
@@ -1270,7 +1295,7 @@ void TableView::copyQuery()
 bool TableView::insertRow()
 {
     {
-        QSqlDatabase database_connection = QSqlDatabase::addDatabase("QPSQL", "insert " + objectName());
+        QSqlDatabase database_connection = QSqlDatabase::addDatabase("QPSQL", QLatin1String("insert ") + objectName());
         database_connection.setHostName(database->getHost());
         database_connection.setPort(database->getPort().toInt());
         database_connection.setDatabaseName(database->getName());
@@ -1286,7 +1311,7 @@ bool TableView::insertRow()
         QStringList fields;
         QStringList bind_fields;
         QStringList values;
-        QSqlRecord rec = query_model->record();
+        QSqlRecord rec = table_model->record();
 
         for (int column = 0; column < column_count; ++column) {
             QVariant cell_value = new_row_model->item(0, column)->data(Qt::EditRole);
@@ -1299,13 +1324,13 @@ bool TableView::insertRow()
         QString field_string = fields.join(",");
         QString bind_field_string = bind_fields.join(",");
 
-        QString query_string = QString("INSERT INTO ");
+        QString query_string = QLatin1String("INSERT INTO ");
         query_string.append(table_name);
-        query_string.append(QString("("));
+        query_string.append(QLatin1String("("));
         query_string.append(field_string);
-        query_string.append(QString(") VALUES ("));
+        query_string.append(QLatin1String(") VALUES ("));
         query_string.append(bind_field_string);
-        query_string.append(QString(")"));
+        query_string.append(QLatin1String(")"));
 
         QSqlQuery query(database_connection);
         query.prepare(query_string);
@@ -1325,19 +1350,23 @@ bool TableView::insertRow()
                 addRowRefreshView();
         }
     }
-    QSqlDatabase::removeDatabase("insert " + objectName());
+    QSqlDatabase::removeDatabase(QLatin1String("insert ") + objectName());
     return true;
 }
 
 void TableView::truncateTable()
 {
-    int ret = QMessageBox::warning(this, tr("pgXplorer"),
-                                    tr("This action will destroy all data in this table and cannot be undone.\n"
-                                       "Do you want to continue?"),
-                                    QMessageBox::Ok | QMessageBox::Cancel);
-    if(ret == QMessageBox::Cancel)
-        return;
+    QMessageBox *warning = new QMessageBox;
+    //warning->setWindowFlags(Qt::FramelessWindowHint);
+    warning->setText(tr("This action will destroy all data in this table and cannot be undone.\n"
+                        "<html><i>Do you want to continue?</i></html>"));
+    warning->setWindowTitle(QLatin1String("pgXplorer"));
+    warning->addButton(QMessageBox::Ok);
+    warning->addButton(QMessageBox::Cancel);
+    warning->setIcon(QMessageBox::Warning);
 
+    if(warning->exec() == QMessageBox::Cancel)
+        return;
     {
         QSqlDatabase database_connection = QSqlDatabase::addDatabase("QPSQL", "clear " + objectName());
         database_connection.setHostName(database->getHost());
@@ -1353,9 +1382,10 @@ void TableView::truncateTable()
         }
         QSqlQuery query(QString("TRUNCATE TABLE ").append(objectName()), database_connection);
         query.exec();
-        //if(query.lastError().isValid())
-        //    QMessageBox::critical(0, tr("Database error"),
-        //    query.lastError().databaseText(), QMessageBox::Close);
+        if(query.lastError().isValid()) {
+            //QMessageBox::critical(0, tr("Database error"),
+            //query.lastError().databaseText(), QMessageBox::Close);
+        }
         statusBar()->showMessage(tr("All table rows deleted"));
     }
     QSqlDatabase::removeDatabase("clear " + objectName());
@@ -1496,15 +1526,17 @@ void TableView::createIcons()
 
 void TableView::createBrushes()
 {
-    QRadialGradient red_gradient(50,50,100,100,100);
-    red_gradient.setColorAt(1, QColor::fromRgbF(1, 0, 0, 0.6));
-    red_gradient.setColorAt(0, QColor::fromRgbF(0, 0, 0, 0));
-    red_brush = QBrush(red_gradient);
+    QLinearGradient red_lineargradient(0, 0, 0.75, 0.25);
+    red_lineargradient.setCoordinateMode(QGradient::StretchToDeviceMode);
+    red_lineargradient.setColorAt(0, QColor::fromRgb(0xDE,0x00,0x00,160));
+    red_lineargradient.setColorAt(1, QColor::fromRgb(0xEF,255,255,160));
+    red_brush = QBrush(red_lineargradient);
 
-    QRadialGradient green_gradient(50,50,100,100,100);
-    green_gradient.setColorAt(1, QColor::fromRgbF(0, 1, 0, 0.6));
-    green_gradient.setColorAt(0, QColor::fromRgbF(0, 0, 0, 0));
-    green_brush = QBrush(green_gradient);
+    QLinearGradient green_lineargradient(0, 0, 0.75, 0.25);
+    green_lineargradient.setCoordinateMode(QGradient::StretchToDeviceMode);
+    green_lineargradient.setColorAt(0, QColor::fromRgb(0x00,0xDE,0x00,160));
+    green_lineargradient.setColorAt(1, QColor::fromRgb(255,0xEF,255,160));
+    green_brush = QBrush(green_lineargradient);
 }
 
 void TableView::createActions()

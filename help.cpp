@@ -47,13 +47,13 @@ bool Help::startHelp()
 
         QStringList args;
         args << QLatin1String("-collectionFile")
-            << app_dir + QString("/pgXplorer.qhc")
+            << app_dir + QLatin1String("/pgXplorer.qhc")
             << QLatin1String("-enableRemoteControl");
 
         process->start(app, args);
 
         if (!process->waitForStarted()) {
-            QMessageBox::critical(0, QString("pgXplorer"),
+            QMessageBox::critical(0, QLatin1String("pgXplorer"),
                 QObject::tr("Unable to launch help file (%1)").arg(app));
             return false;
         }
