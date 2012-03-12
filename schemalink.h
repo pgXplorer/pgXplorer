@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011, davyjones <davyjones@github.com>
+  Copyright (c) 2011-2012, davyjones <davyjones@github>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -16,31 +16,31 @@
   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 
-#ifndef TABLELINK_H
-#define TABLELINK_H
+#ifndef SCHEMALINK_H
+#define SCHEMALINK_H
 
 #include <QGraphicsItem>
 
+class Database;
 class Schema;
-class Table;
 
-class TableLink : public QGraphicsItem
+class SchemaLink : public QGraphicsItem
 {
 public:
-    TableLink(Schema *, Table*);
+    SchemaLink(Database *, Schema*);
     void adjust();
-    enum { Type = UserType + 3 };
+    enum { Type = UserType + 2 };
     int type() const { return Type; }
-
+    
 protected:
     QRectF boundingRect() const;
-    void paint(QPainter *, const QStyleOptionGraphicsItem *, QWidget*);
-
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+    
 private:
+    Database *database;
     Schema *schema;
-    Table *table;
+    QPointF database_point;
     QPointF schema_point;
-    QPointF table_point;
 };
 
-#endif // TABLELINK_H
+#endif // SCHEMALINK_H

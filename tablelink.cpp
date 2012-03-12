@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011, davyjones <davyjones@github.com>
+  Copyright (c) 2011-2012, davyjones <davyjones@github>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -17,44 +17,44 @@
 */
 
 #include <QPainter>
-#include "schemaLink.h"
-#include "database.h"
+#include "tablelink.h"
 #include "schema.h"
+#include "table.h"
 #include "mainwin.h"
 #include <math.h>
 
-SchemaLink::SchemaLink(Database *source_node, Schema *destination_node)
+TableLink::TableLink(Schema *source_node, Table *destination_node)
 {
-    database = source_node;
-    schema = destination_node;
-    database->addEdge(this);
-    schema->addEdge(this);
+    schema = source_node;
+    table = destination_node;
+    //schema->addEdge(this);
+    //table->addEdge(this);
     setParentItem(source_node);
     setFlag(QGraphicsItem::ItemStacksBehindParent);
     setZValue(-100);
     adjust();
 }
 
-void SchemaLink::adjust()
+void TableLink::adjust()
 {
-    QLineF line(0, 0, schema->x(), schema->y());
+    QLineF line(0, 0, table->x(), table->y());
     prepareGeometryChange();
-    database_point = line.p1();
-    schema_point = line.p2();
+    schema_point = line.p1();
+    table_point = line.p2();
 }
 
-QRectF SchemaLink::boundingRect() const
+QRectF TableLink::boundingRect() const
 {
-    return QRectF(database_point, QSizeF(schema_point.x() - database_point.x(),
-                                      schema_point.y() - database_point.y()))
+    return QRectF(schema_point, QSizeF(table_point.x() - schema_point.x(),
+                                      table_point.y() - schema_point.y()))
         .normalized().adjusted(-.5, -.5, .5, .5);
 }
 
-void SchemaLink::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
+void TableLink::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 {
-    QLineF line(database_point, schema_point);
+    QLineF line(schema_point, table_point);
     if (qFuzzyCompare(line.length(), qreal(0.)))
         return;
-    painter->setPen(QPen(QColor(200,200,200), 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    painter->setPen(QPen(QColor(200,200,250), 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
     painter->drawLine(line);
 }
