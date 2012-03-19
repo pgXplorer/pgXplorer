@@ -52,10 +52,6 @@ Highlighter::Highlighter(QTextDocument *parent)
         rule.format = keywordFormat2;
         highlightingRules.append(rule);
     }
-    singleLineCommentFormat.setForeground(Qt::darkGray);
-    rule.pattern = QRegExp("--[^\n]*");
-    rule.format = singleLineCommentFormat;
-    highlightingRules.append(rule);
     singleQuoteFormat.setForeground(Qt::darkMagenta);
     rule.pattern = QRegExp("\'([^\']*)\'");
     rule.format = singleQuoteFormat;
@@ -68,6 +64,10 @@ Highlighter::Highlighter(QTextDocument *parent)
     functionFormat.setForeground(Qt::blue);
     rule.pattern = QRegExp("\\b[A-Za-z0-9_]+(?=\\()");
     rule.format = functionFormat;
+    highlightingRules.append(rule);
+    singleLineCommentFormat.setForeground(Qt::darkGray);
+    rule.pattern = QRegExp("--[^\n]*");
+    rule.format = singleLineCommentFormat;
     highlightingRules.append(rule);
 }
 
