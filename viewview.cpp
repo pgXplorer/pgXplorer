@@ -20,12 +20,19 @@
 
 ulong ViewView::viewViewObjectId = 0;
 
-ViewView::ViewView(Database *database, QString const view_name, QString const name, QStringList column_list, bool read_only, Qt::WidgetAttribute f)
+ViewView::ViewView(Database *database, QString const view_name, QString const name, QStringList column_list, QStringList column_types, bool read_only, Qt::WidgetAttribute f)
 {
     setAttribute(Qt::WA_DeleteOnClose);
     menuBar()->setVisible(false);
+
+    error_message_box = new QMessageBox(this);
+
     this->database = database;
     this->view_name = view_name;
+    this->column_list = column_list;
+    this->column_types = column_types;
+    this->column_lengths = column_lengths;
+
     filter_text = new QLineEdit;
     filter_text->setPlaceholderText(tr("custom filter"));
 
@@ -64,22 +71,46 @@ ViewView::ViewView(Database *database, QString const view_name, QString const na
     //Initialise to false because obviously we don't have ViewView
     //GUI artifacts to create overlapping threads.
     thread_busy = false;
-    query_model = new QSqlQueryModel;
+    query_model = new QueryModel;
 
     quick_fetch = true;
     sql = "SELECT " + column_list.join(", ") + " FROM " + view_name;
-    vview = new QTableView(this);
-    vview->viewport()->installEventFilter(this);
-    vview->installEventFilter(this);
+    //Construct the SQL query needed to populate the view.
+    //Cycle through the column list and cast PostgreSQL
+    //time related data types to text. Otherwise, updates
+    //don't work too well.
+    sql = QString("SELECT ");
+    column_count = column_list.count();
+    for(int column = 0; column < column_count; column++) {
+        if(column == column_count-1) {
+            if(column_types.value(column).startsWith("time"))
+                sql.append(column_list.value(column) + "::text");
+            else if(column_types.value(column).compare("double precision") == 0)
+                sql.append(column_list.value(column) + "::text");
+            else
+                sql.append(column_list.value(column));
+        }
+        else {
+            if(column_types.value(column).startsWith("time"))
+                sql.append(column_list.value(column) + "::text, ");
+            else if(column_types.value(column).compare("double precision") == 0)
+                sql.append(column_list.value(column) + "::text, ");
+            else
+                sql.append(column_list.value(column) + ", ");
+        }
+    }
+    sql.append(" FROM ");
+    sql.append(view_name);
 
-    this->setWindowTitle(name);
-    this->setObjectName(name);
-    vview->setStyleSheet("QTableView {font-weight: 400;}");
-    vview->setAlternatingRowColors(true);
-    vview->verticalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
+    setWindowTitle(name);
+    setObjectName(name);
 
-    //QShortcut *shortcut_copy_with_headers = new QShortcut(QKeySequence("Ctrl+Shift+C"), this);
-    //connect(shortcut_copy_with_headers, SIGNAL(activated()), this, SLOT(copych()));
+    view_view = new QTableView(this);
+    view_view->viewport()->installEventFilter(this);
+    view_view->installEventFilter(this);
+    view_view->verticalHeader()->setDefaultAlignment(Qt::AlignRight | Qt::AlignVCenter);    
+    view_view->setAlternatingRowColors(true);
+    view_view->verticalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
 
     //Create key-sequences for fullscreen and restore.
     QShortcut *shortcut_fs_win = new QShortcut(QKeySequence(Qt::Key_F11), this);
@@ -88,7 +119,7 @@ ViewView::ViewView(Database *database, QString const view_name, QString const na
     connect(shortcut_restore_win, SIGNAL(activated()), this, SLOT(restore()));
 
     //Tie vertical scrollbar of QTableView to fetch more data
-    connect(vview->verticalScrollBar(), SIGNAL(valueChanged(int)),
+    connect(view_view->verticalScrollBar(), SIGNAL(valueChanged(int)),
             this, SLOT(fetchDataSlot()));
 
     //Tie thread finish to an update slot that refreshes meta-information.
@@ -97,11 +128,14 @@ ViewView::ViewView(Database *database, QString const view_name, QString const na
     //Tie a busy signal to a slot that changes the cursor to wait cursor.
     connect(this, SIGNAL(busySignal()), this, SLOT(busySlot()));
 
-    connect(vview->verticalHeader(), SIGNAL(customContextMenuRequested(const QPoint)), this, SLOT(customContextMenuHeader()));
+    connect(view_view->verticalHeader(), SIGNAL(customContextMenuRequested(const QPoint)), this, SLOT(customContextMenuHeader()));
 
-    setCentralWidget(vview);
+    setCentralWidget(view_view);
 
+    //Initialise the status bar.
     statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0, QApplication::UnicodeUTF8));
+    statusBar()->addPermanentWidget(previous_set_button, 0);
+    statusBar()->addPermanentWidget(next_set_button, 0);
 
     //Launch data retrieval as a future object (a different thread).
     defaultView();
@@ -110,7 +144,10 @@ ViewView::ViewView(Database *database, QString const view_name, QString const na
 //Mouse release event should enable/disable actions.
 bool ViewView::eventFilter(QObject *obj, QEvent *event)
 {
-    if (obj == vview->viewport()) {
+    if(view_view->model() == NULL)
+        return QMainWindow::eventFilter(obj, event);
+
+    if (obj == view_view->viewport()) {
         if (event->type() == QEvent::MouseButtonRelease) {
             toggleActions();
             QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);
@@ -131,7 +168,7 @@ bool ViewView::eventFilter(QObject *obj, QEvent *event)
         }
         return false;
     }
-    else if(obj == vview) {
+    else if(obj == view_view) {
         if (event->type() == QEvent::MouseButtonRelease) {
             toggleActions();
         }
@@ -381,25 +418,32 @@ void ViewView::updRowCntSlot(QString dataset)
     seconds_string = QApplication::translate("QueryView", "s", 0, QApplication::UnicodeUTF8);
 
     if(query_model->lastError().isValid()) {
-        if(where_clause.count() > 0)
-            where_clause.removeLast();
-        statusBar()->showMessage(tr("Error: Incorrect filter"));
+        updateFailedSlot(query_model->lastError().text());
+        statusBar()->showMessage(QLatin1String(""));
+        if(query_model->lastError().number() != -1) {
+            if(where_clause.count() > 0)
+                where_clause.removeLast();
+            statusBar()->showMessage(tr("Error: Incorrect filter"));
+        }
     }
     else {
-        vview->setModel(query_model);
+        query_model->setRowsFrom(rows_from);
+        view_view->setModel(query_model);
         int column_count = query_model->columnCount();
         for(int column = 0; column < column_count; column++) {
-            vview->showColumn(column);
+            view_view->showColumn(column);
         }
         if(dataset.compare("previous") == 0)
-            vview->scrollToBottom();
+            view_view->scrollToBottom();
         else if(dataset.compare("next") == 0)
-            vview->scrollToTop();
+            view_view->scrollToTop();
         time_elapsed = (double)t.elapsed()/1000;
         if(rows_to == 0) {
             statusBar()->showMessage(time_elapsed_string + QString::number(time_elapsed) +
                                      " " + seconds_string + " \t " +  rows_string + "0" +
                                      " \t " + colums_string + QString::number(column_count));
+            previous_set_button->setEnabled(false);
+            next_set_button->setEnabled(false);
         }
         else {
             if(can_fetch_more) {
@@ -407,18 +451,39 @@ void ViewView::updRowCntSlot(QString dataset)
                                      " " + seconds_string + " \t " + rows_string + QString::number(rows_from) +
                                      " - " + QString::number(rows_to) + rows_string_2 +
                                      " \t " + colums_string + QString::number(column_count));
+                next_set_button->setEnabled(true);
             }
             else {
                 statusBar()->showMessage(time_elapsed_string + QString::number(time_elapsed) +
                                      " " + seconds_string + " \t " + rows_string + QString::number(rows_from) +
                                      " - " + QString::number(rows_to) +
                                      " \t " + colums_string + QString::number(column_count));
+                next_set_button->setEnabled(false);
             }
         }
+
+        if(rows_from > 1)
+            previous_set_button->setEnabled(true);
+        else
+            previous_set_button->setEnabled(false);
+
     }
     thread_busy = false;
     status_message = statusBar()->currentMessage();
     setCursor(Qt::ArrowCursor);
+}
+
+void ViewView::updateFailedSlot(QString error_text)
+{
+    error_message_box->setText(error_text);
+    error_message_box->setStandardButtons(QMessageBox::Close);
+    error_message_box->show();
+}
+
+void ViewView::bringOnTop()
+{
+    activateWindow();
+    raise();
 }
 
 void ViewView::fetchNextData()
@@ -562,7 +627,7 @@ void ViewView::fetchDataSlot()
     //fetching of more data from database. Data retrieval launched as a
     //future object (separate thread).
     if(query_model->rowCount() >= FETCHSIZ &&
-        vview->verticalScrollBar()->value() == vview->verticalScrollBar()->maximum()) {
+        view_view->verticalScrollBar()->value() == view_view->verticalScrollBar()->maximum()) {
         if(can_fetch_more) {
             statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0, QApplication::UnicodeUTF8));
             QtConcurrent::run(this, &ViewView::fetchNextData);
@@ -572,7 +637,7 @@ void ViewView::fetchDataSlot()
     //fetching of previous dataset from database. Data retrieval launched as a
     //future object (separate thread).
     else if(rows_from > 1 &&
-            vview->verticalScrollBar()->value() == vview->verticalScrollBar()->minimum()) {
+            view_view->verticalScrollBar()->value() == view_view->verticalScrollBar()->minimum()) {
         statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0, QApplication::UnicodeUTF8));
         QtConcurrent::run(this, &ViewView::fetchPreviousData);
     }
@@ -602,7 +667,7 @@ void ViewView::closeEvent(QCloseEvent *event)
     if(!thread_busy)
     {
         delete toolbar;
-        delete vview;
+        delete view_view;
         delete query_model;
         QSqlDatabase::removeDatabase("viewview " + sql + QString::number(thisViewViewId));
         QMainWindow::closeEvent(event);
@@ -614,7 +679,7 @@ void ViewView::closeEvent(QCloseEvent *event)
 
 void ViewView::copyToClipboard()
 {
-    QModelIndexList indices = vview->selectionModel()->selectedIndexes();
+    QModelIndexList indices = view_view->selectionModel()->selectedIndexes();
     if(indices.isEmpty()) {
         statusBar()->showMessage(tr("Nothing copied"));
         return;
@@ -628,7 +693,7 @@ void ViewView::copyToClipboard()
     QModelIndex current;
     QString selectedText;
     foreach(current, indices) {
-        QVariant data = vview->model()->data(prev);
+        QVariant data = view_view->model()->data(prev);
         selectedText.append(data.toString());
         if(current.row() != prev.row())
             selectedText.append(QLatin1Char('\n'));
@@ -636,14 +701,14 @@ void ViewView::copyToClipboard()
             selectedText.append(QLatin1Char('\t'));
         prev = current;
     }
-    selectedText.append(vview->model()->data(last).toString());
+    selectedText.append(view_view->model()->data(last).toString());
     selectedText.append(QLatin1Char('\n'));
     qApp->clipboard()->setText(selectedText);
 }
 
 void ViewView::copyToClipboardWithHeaders()
 {
-    QModelIndexList indices = vview->selectionModel()->selectedIndexes();
+    QModelIndexList indices = view_view->selectionModel()->selectedIndexes();
     if(indices.isEmpty()) {
         statusBar()->showMessage("Nothing copied");
         return;
@@ -654,7 +719,7 @@ void ViewView::copyToClipboardWithHeaders()
     int prevRow = indices.at(0).row();
     foreach(current, indices) {
         if(current.row() == prevRow) {
-            QVariant data = vview->model()->headerData(current.column(), Qt::Horizontal);
+            QVariant data = view_view->model()->headerData(current.column(), Qt::Horizontal);
             headerText.append(data.toString());
             headerText.append(QLatin1Char('\t'));
         }
@@ -671,7 +736,7 @@ void ViewView::copyToClipboardWithHeaders()
     QModelIndex last = indices.last();
     indices.removeFirst();
     foreach(current, indices) {
-        QVariant data = vview->model()->data(prev);
+        QVariant data = view_view->model()->data(prev);
         selectedText.append(data.toString());
         if(current.row() != prev.row())
             selectedText.append(QLatin1Char('\n'));
@@ -679,14 +744,14 @@ void ViewView::copyToClipboardWithHeaders()
             selectedText.append(QLatin1Char('\t'));
         prev = current;
     }
-    selectedText.append(vview->model()->data(last).toString());
+    selectedText.append(view_view->model()->data(last).toString());
     selectedText.append(QLatin1Char('\n'));
     qApp->clipboard()->setText(headerText + selectedText);
 }
 
 void ViewView::removeColumns()
 {
-    QModelIndexList indices = vview->selectionModel()->selectedIndexes();
+    QModelIndexList indices = view_view->selectionModel()->selectedIndexes();
     if(indices.isEmpty()) {
         statusBar()->showMessage("No column(s) removed");
         return;
@@ -696,7 +761,7 @@ void ViewView::removeColumns()
     int i = 0;
     while(indices.at(i).isValid()) {
         int column = indices.at(i).column();
-        vview->hideColumn(column);
+        view_view->hideColumn(column);
         i++;
         if(i >= indices.size())
             break;
@@ -741,15 +806,15 @@ void ViewView::addRowRefreshView()
 
 void ViewView::filter()
 {
-    QModelIndexList indices = vview->selectionModel()->selectedIndexes();
+    QModelIndexList indices = view_view->selectionModel()->selectedIndexes();
     if(indices.size() != 1)
         return;
     QModelIndex index = indices.first();
     statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0, QApplication::UnicodeUTF8));
 
-    QVariant header = vview->model()->headerData(index.column(), Qt::Horizontal);
+    QVariant header = view_view->model()->headerData(index.column(), Qt::Horizontal);
     QString header_string = header.toString();
-    QVariant data = vview->model()->data(index);
+    QVariant data = view_view->model()->data(index);
     QString typ(data.typeName());
     if(data.isNull()) {
         if(!where_clause.contains("\"" + header_string + "\" IS NULL",
@@ -757,10 +822,10 @@ void ViewView::filter()
             where_clause.append("\"" + header_string + "\" IS NULL");
     }
     else
-        if(typ.compare("int", Qt::CaseInsensitive) == 0)
+        if(data.type() == QMetaType::Int || data.type() == QMetaType::Long)
             where_clause.append("\"" + header_string + "\"=" + data.toString());
-        else if(typ.compare("QDateTime", Qt::CaseInsensitive) == 0)
-            where_clause.append("\"" + header_string + "\"='" + data.toDateTime().toString("yyyy-MM-dd hh:mm:ss.z") + "'");
+        //else if(typ.compare("QDateTime", Qt::CaseInsensitive) == 0)
+        //    where_clause.append("\"" + header_string + "\"='" + data.toDateTime().toString("yyyy-MM-dd hh:mm:ss.z") + "'");
         else
             where_clause.append("\"" + header_string + "\"='" + data.toString().replace("'","\\'") + "'");
     offset_list.clear();
@@ -771,13 +836,13 @@ void ViewView::filter()
 
 void ViewView::filter(QString filter)
 {
-    QModelIndexList indices = vview->selectionModel()->selectedIndexes();
+    QModelIndexList indices = view_view->selectionModel()->selectedIndexes();
     if(indices.size() != 1)
         return;
     QModelIndex index = indices.first();
     statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0, QApplication::UnicodeUTF8));
 
-    QVariant header = vview->model()->headerData(index.column(), Qt::Horizontal);
+    QVariant header = view_view->model()->headerData(index.column(), Qt::Horizontal);
     QString header_string = header.toString();
     where_clause.append("\"" + header_string + "\" " + filter);
     offset_list.clear();
@@ -789,24 +854,24 @@ void ViewView::filter(QString filter)
 
 void ViewView::exclude()
 {
-    QModelIndexList indices = vview->selectionModel()->selectedIndexes();
+    QModelIndexList indices = view_view->selectionModel()->selectedIndexes();
     if(indices.size() != 1)
         return;
     QModelIndex index = indices.first();
     statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0, QApplication::UnicodeUTF8));
 
-    QVariant header = vview->model()->headerData(index.column(), Qt::Horizontal);
+    QVariant header = view_view->model()->headerData(index.column(), Qt::Horizontal);
     QString header_string = header.toString();
-    QVariant data = vview->model()->data(index);
+    QVariant data = view_view->model()->data(index);
     QString typ(data.typeName());
     if(data.isNull()) {
         where_clause.append("\"" + header_string + "\" IS NOT NULL");
     }
     else
-        if(typ.compare("int", Qt::CaseInsensitive) == 0)
+        if(data.type() == QMetaType::Int || data.type() == QMetaType::Long)
             where_clause.append("\"" + header_string + "\"<>" + data.toString());
-        else if(typ.compare("QDateTime", Qt::CaseInsensitive) == 0)
-            where_clause.append("\"" + header_string + "\"<>'" + data.toDateTime().toString("yyyy-MM-dd hh:mm:ss.z") + "'");
+        //else if(typ.compare("QDateTime", Qt::CaseInsensitive) == 0)
+        //    where_clause.append("\"" + header_string + "\"<>'" + data.toDateTime().toString("yyyy-MM-dd hh:mm:ss.z") + "'");
         else
             where_clause.append("\"" + header_string + "\"<>'" + data.toString() + "'");
     offset_list.clear();
@@ -817,13 +882,13 @@ void ViewView::exclude()
 
 void ViewView::ascend()
 {
-    QModelIndexList indices = vview->selectionModel()->selectedIndexes();
+    QModelIndexList indices = view_view->selectionModel()->selectedIndexes();
     if(indices.size() != 1)
         return;
     QModelIndex index = indices.first();
     statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0, QApplication::UnicodeUTF8));
 
-    QVariant header = vview->model()->headerData(index.column(), Qt::Horizontal);
+    QVariant header = view_view->model()->headerData(index.column(), Qt::Horizontal);
     QString header_string = header.toString();
     if(order_clause.contains(header_string + " DESC"))
         order_clause.removeOne(header_string + " DESC");
@@ -838,13 +903,13 @@ void ViewView::ascend()
 
 void ViewView::descend()
 {
-    QModelIndexList indices = vview->selectionModel()->selectedIndexes();
+    QModelIndexList indices = view_view->selectionModel()->selectedIndexes();
     if(indices.size() != 1)
         return;
     QModelIndex index = indices.first();
     statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0, QApplication::UnicodeUTF8));
 
-    QVariant header = vview->model()->headerData(index.column(), Qt::Horizontal);
+    QVariant header = view_view->model()->headerData(index.column(), Qt::Horizontal);
     QString header_string = header.toString();
     if(order_clause.contains(header_string + " ASC"))
         order_clause.removeOne(header_string + " ASC");
@@ -922,7 +987,7 @@ void ViewView::customContextMenuViewport()
     filter_text->clear();
     context_menu.clear();
 
-    QItemSelectionModel *s = vview->selectionModel();
+    QItemSelectionModel *s = view_view->selectionModel();
     QModelIndexList indices = s->selectedIndexes();
 
     QModelIndex index;
@@ -981,7 +1046,7 @@ void ViewView::customContextMenuViewport()
 
     if(!indices.isEmpty()) {
         index = indices.first();
-        data = vview->model()->data(index);
+        data = view_view->model()->data(index);
         if(data.canConvert<QString>()) {
             filter_action->setEnabled(true);
             exclude_action->setEnabled(true);
@@ -1040,7 +1105,7 @@ void ViewView::customContextMenuHeader()
         return;
     context_menu.clear();
 
-    QModelIndexList indices = vview->selectionModel()->selectedRows();
+    QModelIndexList indices = view_view->selectionModel()->selectedRows();
     if(indices.isEmpty()) {
         return;
     }
@@ -1095,14 +1160,14 @@ void ViewView::toggleActions()
 {
     //Only enable filter, exclude and ordering actions
     //when a single cell is selected.
-    if(vview->selectionModel()->selectedIndexes().isEmpty()) {
+    if(view_view->selectionModel()->selectedIndexes().isEmpty()) {
         copy_action->setEnabled(false);
         copy_with_headers_action->setEnabled(false);
     }
     else {
         copy_action->setEnabled(true);
         copy_with_headers_action->setEnabled(true);
-        if(vview->selectionModel()->selectedIndexes().size() == 1)
+        if(view_view->selectionModel()->selectedIndexes().size() == 1)
             enableActions();
         else
             disableActions();
@@ -1133,37 +1198,37 @@ void ViewView::disableActions()
 
 void ViewView::createIcons()
 {
-    key_icon = QIcon(qApp->applicationDirPath().append("/icons/key.png"));
-    filter_icon = QIcon(qApp->applicationDirPath().append("/icons/filter.png"));
-    ascend_icon = QIcon(qApp->applicationDirPath().append("/icons/ascending.png"));
-    descend_icon = QIcon(qApp->applicationDirPath().append("/icons/descending.png"));
+    key_icon = QIcon(":/icons/key.png");
+    filter_icon = QIcon(":/icons/filter.png");
+    ascend_icon = QIcon(":/icons/ascending.png");
+    descend_icon = QIcon(":/icons/descending.png");
 }
 
 void ViewView::createActions()
 {
-    default_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/table.png")), tr("Default"), this);
+    default_action = new QAction(QIcon(":/icons/table.png"), tr("Default"), this);
     default_action->setShortcut(QKeySequence("Ctrl+D"));
     default_action->setStatusTip(tr("Default"));
     connect(default_action, SIGNAL(triggered()), this, SLOT(defaultView()));
 
-    refresh_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/refresh.png")), tr("Refresh"), this);
+    refresh_action = new QAction(QIcon(":/icons/refresh.png"), tr("Refresh"), this);
     refresh_action->setShortcut(QKeySequence::Refresh);
     refresh_action->setStatusTip(tr("Refresh"));
     connect(refresh_action, SIGNAL(triggered()), this, SLOT(refreshView()));
 
-    copy_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/copy.svgz")), tr("Copy"), this);
+    copy_action = new QAction(QIcon(":/icons/copy.svgz"), tr("Copy"), this);
     copy_action->setShortcuts(QKeySequence::Copy);
     copy_action->setStatusTip(tr("Copy selected"));
     //copy_action->setEnabled(false);
     connect(copy_action, SIGNAL(triggered()), this, SLOT(copyToClipboard()));
 
-    copy_with_headers_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/copy_with_headers.svg")), tr("Copy with headers"), this);
+    copy_with_headers_action = new QAction(QIcon(":/icons/copy_with_headers.svg"), tr("Copy with headers"), this);
     copy_with_headers_action->setShortcut(QKeySequence("Ctrl+Shift+C"));
     copy_with_headers_action->setStatusTip(tr("Copy selected with headers"));
     //copy_with_headers_action->setEnabled(false);
     connect(copy_with_headers_action, SIGNAL(triggered()), this, SLOT(copyToClipboardWithHeaders()));
 
-    remove_columns_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/removecolumn.png")), tr("Remove column(s)"), this);
+    remove_columns_action = new QAction(QIcon(":/icons/removecolumn.png"), tr("Remove column(s)"), this);
     remove_columns_action->setStatusTip(tr("Removes the column from this display."));
     connect(remove_columns_action, SIGNAL(triggered()), this, SLOT(removeColumns()));
 
@@ -1172,7 +1237,7 @@ void ViewView::createActions()
     filter_action->setEnabled(false);
     connect(filter_action, SIGNAL(triggered()), this, SLOT(filter()));
 
-    exclude_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/exclude.png")), tr("Exclude"), this);
+    exclude_action = new QAction(QIcon(":/icons/exclude.png"), tr("Exclude"), this);
     exclude_action->setStatusTip(tr("Filter table exclusive of selected cell value on column"));
     exclude_action->setEnabled(false);
     connect(exclude_action, SIGNAL(triggered()), this, SLOT(exclude()));
@@ -1201,7 +1266,21 @@ void ViewView::createActions()
     custom_filter_action->setDefaultWidget(filter_text);
     connect(filter_text, SIGNAL(returnPressed()), this, SLOT(customFilterReturnPressed()));
 
-    copy_query_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/copy_sql.png")), tr("Copy query"), this);
+    copy_query_action = new QAction(QIcon(":/icons/copy_sql.png"), tr("Copy query"), this);
     copy_query_action->setStatusTip(tr("Copy the query to clipboard"));
     connect(copy_query_action, SIGNAL(triggered()), this, SLOT(copyQuery()));
+
+    previous_set_action = new QAction(QIcon(":/icons/previous.png"), "", this);
+    previous_set_action->setToolTip(tr("Fetch previous set"));
+    connect(previous_set_action, SIGNAL(triggered()), this, SLOT(fetchPreviousData()));
+    previous_set_button = new QToolButton;
+    previous_set_button->setDefaultAction(previous_set_action);
+    previous_set_button->setEnabled(false);
+
+    next_set_action = new QAction(QIcon(":/icons/next.png"), "", this);
+    next_set_action->setToolTip(tr("Fetch next set"));
+    connect(next_set_action, SIGNAL(triggered()), this, SLOT(fetchNextData()));
+    next_set_button = new QToolButton;
+    next_set_button->setDefaultAction(next_set_action);
+    next_set_button->setEnabled(false);
 }

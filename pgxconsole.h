@@ -54,6 +54,10 @@ public:
     void createActions();
     void setResizePos(QSize, QPoint);
     void closeMain();
+    PgxConsoleMainWindow* mainWin()
+    {
+        return pgxconsole_mainwin;
+    }
 
 protected:
     void resizeEvent(QResizeEvent *);
@@ -70,6 +74,8 @@ private slots:
     void pasteAsSingleFromClipboard();
     void toggleFindBar();
     void findText();
+    void findPrevious();
+    void findNext();
     void pgxconsoleClosing();
 
 public slots:
@@ -92,15 +98,19 @@ private:
     QAction *paste_action;
     QAction *clear_action;
     QAction *find_action;
+    QAction *find_next_action;
+    QAction *find_previous_action;
     QAction *casesensitivity_action;
     QAction *wholeword_action;
     QAction *backwards_action;
     QToolButton *casesensitivity_button;
     QToolButton *wholeword_button;
     QToolButton *backwards_button;
+    QToolButton *find_previous_button;
+    QToolButton *find_next_button;
     void __createWidgets();
 
-Q_SIGNALS:
+signals:
     void commandSignal(QString);
     void historyUp();
     void historyDown();
@@ -115,7 +125,7 @@ class Prompt : public QWidget
 public:
     Prompt(PgxConsole *console) : QWidget(console) {
         pgxConsole = console;
-        this->setStyleSheet("QWidget{background-color: white; font: bold 14px;}");
+        setStyleSheet("QWidget{background-color: white; font: bold 14px;}");
     }
     QSize sizeHint() const {
         return QSize(10, 0);
@@ -134,10 +144,13 @@ class PgxConsoleMainWindow : public QMainWindow
 {
     Q_OBJECT
 
+public slots:
+    void bringOnTop();
+
 protected:
     void closeEvent(QCloseEvent *);
 
-Q_SIGNALS:
+signals:
     void pgxconsoleClosing();
 };
 

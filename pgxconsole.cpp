@@ -31,6 +31,7 @@ PgxConsole::PgxConsole(Database *database)
     setStyleSheet("QPlainTextEdit{background-color: white; font: bold 14px 'Courier New';}");
 
     createActions();
+    hit = 0;
 
     highlighter = new Highlighter(document());
     prompt = new Prompt(this);
@@ -54,12 +55,15 @@ PgxConsole::PgxConsole(Database *database)
 
     find_bar = new QLineEdit;
     find_bar->setPlaceholderText(tr("Find"));
+    find_bar->setMaximumSize(100,find_bar->height());
     find_bar->setVisible(false);
     pgxconsole_mainwin->statusBar()->setSizeGripEnabled(false);
     pgxconsole_mainwin->statusBar()->addPermanentWidget(casesensitivity_button, 0);
     pgxconsole_mainwin->statusBar()->addPermanentWidget(wholeword_button, 0);
-    pgxconsole_mainwin->statusBar()->addPermanentWidget(backwards_button, 0);
+    //pgxconsole_mainwin->statusBar()->addPermanentWidget(backwards_button, 0);
     pgxconsole_mainwin->statusBar()->addPermanentWidget(find_bar);
+    pgxconsole_mainwin->statusBar()->addPermanentWidget(find_previous_button, 0);
+    pgxconsole_mainwin->statusBar()->addPermanentWidget(find_next_button, 0);
 
     connect(find_bar, SIGNAL(returnPressed()), this, SLOT(findText()));
 
@@ -220,12 +224,12 @@ void PgxConsole::showView(QString cmd)
     // reassign the history iterator.
     history << cmd;
     hit = history.size();
+
     // 'clear' command to clear the console keeping the
     // history intact.
-    if(cmd.compare("clear", Qt::CaseInsensitive) == 0) {
+    if(cmd.compare("clear", Qt::CaseInsensitive) == 0)
         clear();
-    }
-    // 'clear' command to clear the history alone. Console
+    // 'clearh' command to clear the history alone. Console
     // is not cleared.
     else if(cmd.compare("clearh", Qt::CaseInsensitive) == 0) {
         history.clear();
@@ -235,23 +239,23 @@ void PgxConsole::showView(QString cmd)
     // 'clearall' command to clear console and history
     else if(cmd.compare("clearall", Qt::CaseInsensitive) == 0) {
         history.clear();
-        hit =0;
+        hit = 0;
         clear();
     }
     // 'quit' command to clear console and history
     else if(cmd.compare("quit", Qt::CaseInsensitive) == 0) {
         history.clear();
-        hit =0;
+        hit = 0;
         clear();
-        this->close();
+        pgxconsole_mainwin->close();
         return;
     }
     // 'exit' command to clear console and history
     else if(cmd.compare("exit", Qt::CaseInsensitive) == 0) {
         history.clear();
-        hit =0;
+        hit = 0;
         clear();
-        this->close();
+        pgxconsole_mainwin->close();
     }
     else {
         // Reduce all groups of whitespace characters
@@ -262,7 +266,7 @@ void PgxConsole::showView(QString cmd)
         QTime t;
         t.start();
         emit showQueryView(database, cmd);
-        this->appendPlainText("");
+        appendPlainText("");
     }
 }
 
@@ -352,6 +356,56 @@ void PgxConsole::findText()
     }
 }
 
+void PgxConsole::findPrevious()
+{
+    QTextDocument::FindFlags find_flags;
+    find_flags |= QTextDocument::FindBackward;
+    if(casesensitivity_action->isChecked())
+        find_flags |= QTextDocument::FindCaseSensitively;
+    if(wholeword_action->isChecked())
+        find_flags |= QTextDocument::FindWholeWords;
+
+    pgxconsole_mainwin->statusBar()->clearMessage();
+    if(find_cursor.atStart()) {
+        find_cursor.movePosition(QTextCursor::End);
+        setTextCursor(find_cursor);
+    }
+
+    if(find(find_bar->text(), find_flags)) {
+        find_cursor = textCursor();
+        find_cursor.movePosition(QTextCursor::StartOfWord);
+        highlightSearchedWord();
+    }
+    else {
+        pgxconsole_mainwin->statusBar()->showMessage(tr("Reached the top. Continuing from the bottom."));
+        find_cursor.movePosition(QTextCursor::Start);
+    }
+}
+
+void PgxConsole::findNext()
+{
+    QTextDocument::FindFlags find_flags;
+    if(casesensitivity_action->isChecked())
+        find_flags |= QTextDocument::FindCaseSensitively;
+    if(wholeword_action->isChecked())
+        find_flags |= QTextDocument::FindWholeWords;
+
+    pgxconsole_mainwin->statusBar()->clearMessage();
+    if(find_cursor.atEnd()) {
+        find_cursor.movePosition(QTextCursor::Start);
+        setTextCursor(find_cursor);
+    }
+
+    if(find(find_bar->text(), find_flags)) {
+        find_cursor = textCursor();
+        highlightSearchedWord();
+    }
+    else {
+        pgxconsole_mainwin->statusBar()->showMessage(tr("Reached the end. Continuing from the top."));
+        find_cursor.movePosition(QTextCursor::End);
+    }
+}
+
 void PgxConsole::toggleFindBar()
 {
     if(find_bar->isVisible()) {
@@ -360,8 +414,10 @@ void PgxConsole::toggleFindBar()
             removeSearchHighlighting();
             casesensitivity_button->setVisible(false);
             wholeword_button->setVisible(false);
-            backwards_button->setVisible(false);
+            //backwards_button->setVisible(false);
             find_bar->setVisible(false);
+            find_next_button->setVisible(false);
+            find_previous_button->setVisible(false);
         }
         else
             find_bar->setFocus();
@@ -373,8 +429,10 @@ void PgxConsole::toggleFindBar()
         find_bar->setFocus();
         casesensitivity_button->setVisible(true);
         wholeword_button->setVisible(true);
-        backwards_button->setVisible(true);
+        //backwards_button->setVisible(true);
         find_bar->setVisible(true);
+        find_next_button->setVisible(true);
+        find_previous_button->setVisible(true);
     }
 }
 
@@ -402,7 +460,7 @@ void PgxConsole::historyUpCommand()
 
 void PgxConsole::historyDownCommand()
 {
-    if(!history.isEmpty() && hit < history.size()) {
+    if(!history.isEmpty() && hit < history.size()-1) {
         QTextCursor cursor = textCursor();
         cursor.movePosition(QTextCursor::End);
         setTextCursor(cursor);
@@ -430,33 +488,33 @@ void PgxConsole::__createWidgets()
 
 void PgxConsole::createActions()
 {
-    newpgxconsole_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/console.png")), tr("New"), this);
+    newpgxconsole_action = new QAction(QIcon(":/icons/console.png"), tr("New"), this);
     newpgxconsole_action->setShortcuts(QKeySequence::New);
     newpgxconsole_action->setStatusTip(tr("New console"));
     connect(newpgxconsole_action, SIGNAL(triggered()), this, SIGNAL(newPgxconsole()));
 
-    cut_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/cut.png")), tr("Cut"), this);
+    cut_action = new QAction(QIcon(":/icons/cut.png"), tr("Cut"), this);
     cut_action->setShortcuts(QKeySequence::Cut);
     cut_action->setStatusTip(tr("Cut selected text and copy to clipboard"));
     connect(cut_action, SIGNAL(triggered()), this, SLOT(cut()));
 
-    copy_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/copy.png")), tr("Copy"), this);
+    copy_action = new QAction(QIcon(":/icons/copy.png"), tr("Copy"), this);
     copy_action->setShortcuts(QKeySequence::Copy);
     copy_action->setStatusTip(tr("Copy selected text to clipboard"));
     connect(copy_action, SIGNAL(triggered()), this, SLOT(copy()));
 
-    paste_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/paste.png")), tr("Paste"), this);
+    paste_action = new QAction(QIcon(":/icons/paste.png"), tr("Paste"), this);
     paste_action->setShortcuts(QKeySequence::Paste);
     paste_action->setStatusTip(tr("Paste"));
     connect(paste_action, SIGNAL(triggered()), this, SLOT(pasteAsSingleFromClipboard()));
 
-    clear_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/clear.png")), tr("&Clear"), this);
+    clear_action = new QAction(QIcon(":/icons/clear.png"), tr("&Clear"), this);
     clear_action->setStatusTip(tr("Clear the console"));
     connect(clear_action, SIGNAL(triggered()), this, SLOT(clear()));
 
-    find_action = new QAction(QIcon(qApp->applicationDirPath().append("/icons/search.png")), tr("Find"), this);
+    find_action = new QAction(QIcon(":/icons/search.png"), tr("Find"), this);
     find_action->setShortcuts(QKeySequence::Find);
-    find_action->setStatusTip(tr("Find/replace text"));
+    find_action->setStatusTip(tr("Find text"));
     find_action->setCheckable(true);
     connect(find_action, SIGNAL(triggered()), this, SLOT(toggleFindBar()));
 
@@ -474,12 +532,28 @@ void PgxConsole::createActions()
     wholeword_button->setDefaultAction(wholeword_action);
     wholeword_button->setVisible(false);
 
-    backwards_action = new QAction(tr("B"), this);
-    backwards_action->setToolTip(tr("Backwards"));
-    backwards_action->setCheckable(true);
-    backwards_button = new QToolButton;
-    backwards_button->setDefaultAction(backwards_action);
-    backwards_button->setVisible(false);
+    //backwards_action = new QAction(tr("B"), this);
+    //backwards_action->setToolTip(tr("Backwards"));
+    //backwards_action->setCheckable(true);
+    //backwards_button = new QToolButton;
+    //backwards_button->setDefaultAction(backwards_action);
+    //backwards_button->setVisible(false);
+
+    find_previous_action = new QAction(QIcon(":/icons/find_previous.png"), "", this);
+    find_previous_action->setToolTip(tr("Find previous"));
+    connect(find_previous_action, SIGNAL(triggered()), this, SLOT(findPrevious()));
+    find_previous_button = new QToolButton;
+    find_previous_button->setAutoRaise(true);
+    find_previous_button->setDefaultAction(find_previous_action);
+    find_previous_button->setVisible(false);
+
+    find_next_action = new QAction(QIcon(":/icons/find_next.png"), "", this);
+    find_next_action->setToolTip(tr("Find next"));
+    connect(find_next_action, SIGNAL(triggered()), this, SLOT(findNext()));
+    find_next_button = new QToolButton;
+    find_next_button->setAutoRaise(true);
+    find_next_button->setDefaultAction(find_next_action);
+    find_next_button->setVisible(false);
 }
 
 void PgxConsole::setResizePos(QSize size, QPoint pos)
@@ -514,7 +588,7 @@ void PgxConsole::languageChanged(QEvent *event)
         copy_action->setStatusTip(tr("Copy selected text to clipboard"));
         paste_action->setStatusTip(tr("Paste"));
         clear_action->setStatusTip(tr("Clear the console"));
-        find_action->setStatusTip(tr("Find/replace text"));
+        find_action->setStatusTip(tr("Find text"));
         casesensitivity_action->setToolTip(tr("Case sensitive"));
         wholeword_action->setToolTip(tr("Whole word"));
         backwards_action->setToolTip(tr("Backwards"));
@@ -542,4 +616,10 @@ void PgxConsoleMainWindow::closeEvent(QCloseEvent *event)
     settings.setValue("pgxconsole_size", size());
 
     QMainWindow::closeEvent(event);
+}
+
+void PgxConsoleMainWindow::bringOnTop()
+{
+    activateWindow();
+    raise();
 }

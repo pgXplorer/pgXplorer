@@ -35,6 +35,7 @@ class Table : public QObject, public QGraphicsItem
     Q_INTERFACES(QGraphicsItem)
 
 private:
+    bool hidden;
     Database *database;
     QSqlQueryModel *model;
     Schema *parent_schema;
@@ -42,6 +43,7 @@ private:
     QStringList column_list;
     QStringList column_types;
     QStringList column_lengths;
+    QStringList column_nulls;
     QStringList primary_key;
     QBrush pink_brush;
     bool status;
@@ -65,7 +67,7 @@ public:
     {
         return Typet;
     }
-    Table(Database *database, Schema *parent, QString tblName, int index, QColor qcolor);
+    Table(Database *database, Schema *, QString, int, QColor);
     ~Table(){};
     void createBrush();
     void defaultPosition();
@@ -78,7 +80,7 @@ public:
         return QRectF(-40,-20,85,30);
     }
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
-               QWidget *widget)
+               QWidget *)
     {
         const qreal lod = option->levelOfDetailFromTransform(painter->worldTransform());
         if(isSelected())
@@ -233,17 +235,17 @@ public:
         this->model = model;
     }
     void setColumnData();
-    void setColumnData(QStringList column_list, QStringList column_types, QStringList column_lengths)
+    void setColumnData(QStringList column_list, QStringList column_types, QStringList column_lengths, QStringList column_nulls)
     {
         this->column_list = column_list;
         this->column_types = column_types;
         this->column_lengths = column_lengths;
+        this->column_nulls = column_nulls;
     }
     QStringList getColumnList()
     {
         return column_list;
     }
-
     QStringList getColumnTypes()
     {
         return column_types;
@@ -251,6 +253,10 @@ public:
     QStringList getColumnLengths()
     {
         return column_lengths;
+    }
+    QStringList getColumnNulls()
+    {
+        return column_nulls;
     }
     void copyPrimaryKey();
     void setPrimaryKey(QStringList primary_key)
@@ -267,8 +273,10 @@ public slots:
     void getSearchTerm(QString);
     void verticalPosition2();
 
-Q_SIGNALS:
+signals:
     void expandTable(Database *, Schema *, Table*);
+    void designTable(Database *, Schema *, Table*);
+    void rename(Database *, Schema *, Table*);
     void clearTable(Database *, Schema *, Table*);
     void dropTable(Database *, Schema *, Table*);
     void collapseTable(Database *, Schema *, Table*);

@@ -40,6 +40,7 @@ class Schema;
 class Table;
 class View;
 class TableView;
+class DesignView;
 class ViewView;
 class PgxConsole;
 class PgxEditor;
@@ -85,15 +86,66 @@ private:
     bool zoom;
     MainWin *mainwin;
     QCursor zoom_cursor;
-    QRubberBand *rubberBand;
     QPoint origin;
+};
+
+class GraphicsTextItem : public QGraphicsTextItem
+{
+    Q_OBJECT
+
+private:
+    QString schema_name; //if applicable
+
+protected:
+     void keyPressEvent(QKeyEvent *event)
+     {
+         switch(event->key()) {
+         case Qt::Key_Return:
+         case Qt::Key_Enter:
+             event->accept();
+             emit enterPressed(schema_name, this);
+             break;
+         default:
+             QGraphicsTextItem::keyPressEvent(event);
+         }
+     }
+
+     void focusOutEvent(QFocusEvent *event)
+     {
+         if(event->reason() == Qt::PopupFocusReason)
+             QGraphicsTextItem::focusOutEvent(event);
+         else
+            emit enterPressed(schema_name, this);
+     }
+
+public:
+     void setSchemaName(QString schema_name)
+     {
+         this->schema_name = schema_name;
+     }
+
+signals:
+     void enterPressed(QString, GraphicsTextItem*);
 };
 
 class MainWin : public QMainWindow {
     Q_OBJECT
+    Q_PROPERTY(Language language READ language WRITE setLanguage)
+    Q_ENUMS(Language)
+    Q_PROPERTY(DisplayMode display_mode READ displayMode WRITE setDisplayMode)
+    Q_ENUMS(DisplayMode)
 
 public:
-    static bool document_unsaved;
+    static bool session_unsaved;
+
+    enum Language {English, Japanese, French};
+    void setLanguage(Language language);
+    Language language() const;
+
+    enum DisplayMode {Tables, Views, Functions};
+    void setDisplayMode(DisplayMode display_mode);
+    DisplayMode displayMode() const;
+
     QStringList table_completer_list;
     QStringList view_completer_list;
     QStringList function_completer_list;
@@ -125,24 +177,24 @@ public:
     {
         return functionview_action->isChecked();
     }
-    QString getDisplaySetting()
-    {
-        return display_setting;
-    }
 
     void clearTableViewList();
+    void clearDesignViewList();
     void clearViewViewList();
     void clearPgxconsoleList();
     void clearPgxeditorList();
     void clearQueryViewList();
+    void newSchema();
     void clearSchemas();
     void clearChildWindows();
+    void checkForUpdates();
 
 public slots:
     void about();
     void showHelp();
     void document_changed();
     void tableViewClosed(TableView *);
+    void designViewClosed(DesignView *);
     void viewViewClosed(ViewView *);
     void queryViewClosed(QueryView *);
     void pgxconsoleClosed(PgxConsole *);
@@ -150,17 +202,22 @@ public slots:
     void newDatabase();
     bool newDatabase(QString, qint32, QString, QString, QString);
     void newPgxplorer(QString);
+    void createSchema(QString, QString);
+    void createTable(QString, GraphicsTextItem*);
+    void showAllTables();
+    void showAllViews();
+    void showAllFunctions();
+    void populateWindowMenu();
 
 protected:
-     void resizeEvent(QResizeEvent *event);
+     void resizeEvent(QResizeEvent *);
      void changeEvent(QEvent*);
      void dragEnterEvent(QDragEnterEvent *);
      void dropEvent(QDropEvent *);
-     void contextMenuEvent(QContextMenuEvent*);
-     void closeEvent(QCloseEvent*);
+     void contextMenuEvent(QContextMenuEvent *);
+     void closeEvent(QCloseEvent *);
 
 private slots:
-    void newView();
     void clear();
     void openFile();
     void open(QString);
@@ -175,8 +232,8 @@ private slots:
     void showPgxeditor();
     void showPgxeditor(QString);
     void showPgxeditor(QString, QString);
-    void showFunctionEditor(Schema *, Function*);
-    void showViewEditor(Schema *, View*);
+    void showFunctionEditor(Schema *, Function *);
+    void showViewEditor(Schema *, View *);
     void toggleFullscreen();
     void showTreeview();
     void search();
@@ -188,26 +245,25 @@ private slots:
     void explodeAndShowSchemas();
     void explodeAndShowSchemasVertically();
     void hideSchemas();
-    void showTables(Schema*);
-    void showAllTables();
-    void hideTables(Schema*);
+    void showTables(Schema *);
+    void hideTables(Schema *);
     void hideAllTables();
-    void showViews(Schema*);
-    void showAllViews();
-    void hideViews(Schema*);
+    void showViews(Schema *);
+    void hideViews(Schema *);
     void hideAllViews();
-    void showFunctions(Schema*);
-    void newFunction(Schema*);
-    void showAllFunctions();
-    void hideFunctions(Schema*);
+    void showFunctions(Schema *);
+    void newTable(Schema *);
+    void newFunction(Schema *);
+    void hideFunctions(Schema *);
     void hideAllFunctions();
-    void hideOtherTables(Schema*);
-    void showTableView(Database *, Schema *, Table*);
-    void clearTableView(Database *, Schema *, Table*);
-    void dropTable(Database *, Schema *, Table*);
-    void showViewView(Database *, Schema *, View*);
-    void dropView(Database *, Schema *, View*);
-    void dropFunction(Database *, Schema *, Function*);
+    void hideOtherTables(Schema *);
+    void showTableView(Database *, Schema *, Table *);
+    void showDesignView(Database *, Schema *, Table *);
+    void clearTableView(Database *, Schema *, Table *);
+    void dropTable(Database *, Schema *, Table *);
+    void showViewView(Database *, Schema *, View *);
+    void dropView(Database *, Schema *, View *);
+    void dropFunction(Database *, Schema *, Function *);
     void showQueryView(Database *, QString);
     void fitView();
     void zoomIn();
@@ -216,7 +272,7 @@ private slots:
     void zoomOut(const QPointF);
     void noZoom();
 
-Q_SIGNALS:
+signals:
     void languageChanged(QEvent *);
     void clicked();
     void closing();
@@ -226,6 +282,9 @@ private:
     QTranslator translator;
     QTranslator qt_translator;
 
+    Language lang;
+    DisplayMode disp_mode;
+
     QFile database_file;
 
     QGraphicsScene scene;
@@ -233,18 +292,19 @@ private:
     QLineEdit *search_box;
     QCompleter *completer;
     QPrinter *printer;
-    QString language_setting;
-    QString display_setting;
 
     Database *database;
-    QList<TableView*> table_view_list;
-    QList<ViewView*> view_view_list;
-    QList<QueryView*> query_view_list;
-    QList<PgxConsole*> pgxconsole_list;
-    QList<PgxEditor*> pgxeditor_list;
+    QList<TableView *> table_view_list;
+    QList<DesignView *> design_view_list;
+    QList<ViewView *> view_view_list;
+    QList<QueryView *> query_view_list;
+    QList<PgxConsole *> pgxconsole_list;
+    QList<PgxEditor *> pgxeditor_list;
+    QList<QAction*> windows;
 
     QMenu *file_menu;
     QMenu *tool_menu;
+    QMenu *windows_menu;
     QMenu *view_menu;
     QMenu *help_menu;
     QMenu *display_menu;

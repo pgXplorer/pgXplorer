@@ -71,14 +71,18 @@ void Database::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
         //menu.addAction("Explode all vertically");
         menu.addSeparator();
     }
-    menu.addAction(QIcon(qApp->applicationDirPath().append("/icons/properties.png")), QApplication::translate("Database", "Properties", 0, QApplication::UnicodeUTF8));
+    menu.addAction(QIcon(":/icons/properties.png"), QApplication::translate("Database", "Properties", 0, QApplication::UnicodeUTF8));
+    menu.addSeparator();
+    if(getDatabaseStatus())
+        menu.addAction(QApplication::translate("Database", "Refresh", 0, QApplication::UnicodeUTF8));
+
     QAction *a = menu.exec(event->screenPos());
-    if(a && QString::compare(a->text(),QApplication::translate("Database", "Explode", 0, QApplication::UnicodeUTF8))==0) {
+    if(a && QString::compare(a->text(),QApplication::translate("Database", "Explode", 0, QApplication::UnicodeUTF8)) == 0) {
         emit expandDatabase(this);
         setDatabaseCollapsed(false);
         update();
     }
-    else if(a && QString::compare(a->text(),QApplication::translate("Database", "Collapse", 0, QApplication::UnicodeUTF8))==0) {
+    else if(a && QString::compare(a->text(),QApplication::translate("Database", "Collapse", 0, QApplication::UnicodeUTF8)) == 0) {
         emit collapseDatabase(this);
         setDatabaseCollapsed(true);
         update();
@@ -95,6 +99,9 @@ void Database::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
     }
     else if(a && QString::compare(a->text(),tr("Properties"))==0) {
         showPropertyDialog();
+    }
+    else if(a && QString::compare(a->text(),tr("Refresh"))==0) {
+        populateDatabase();
     }
 }
 
@@ -117,6 +124,7 @@ void Database::delDatabase(Database *db)
 
 bool Database::populateDatabase()
 {
+    mainwin->clearSchemas();
     mainwin->table_completer_list.clear();
     mainwin->view_completer_list.clear();
     mainwin->function_completer_list.clear();
@@ -131,7 +139,8 @@ bool Database::populateDatabase()
             QMessageBox *error_message = new QMessageBox(QMessageBox::Critical,
                                         tr("Database error"),
                                         tr("Unable to retrieve database schemas.\n"
-                                        "Check your database connection or permissions.\n"), QMessageBox::Cancel,0,Qt::Dialog);
+                                           "Check your database connection or permissions.\n"),
+                                        QMessageBox::Cancel,0,Qt::Dialog);
             error_message->setWindowModality(Qt::NonModal);
             error_message->show();
             return false;
@@ -141,6 +150,8 @@ bool Database::populateDatabase()
         {
             QString schema_name = query->value(0).toString();
             Schema *schema = new Schema(mainwin, this, schema_name, schema_list.size(), number_of_schemas);
+            schema->resetPos();
+
             /*SchemaLink *schema_link = new SchemaLink(this, schema);
             if(mainwin->isColumnView())
                 schema_link->hide();
@@ -155,6 +166,8 @@ bool Database::populateDatabase()
             QObject::connect(schema, SIGNAL(collapseSchemaViews(Schema*)), mainwin, SLOT(hideViews(Schema*)));
             QObject::connect(schema, SIGNAL(expandSchemaFunctions(Schema*)), mainwin, SLOT(showFunctions(Schema*)));
             QObject::connect(schema, SIGNAL(collapseSchemaFunctions(Schema*)), mainwin, SLOT(hideFunctions(Schema*)));
+            QObject::connect(schema, SIGNAL(newTable(Schema*)), mainwin, SLOT(newTable(Schema*)));
+            //QObject::connect(schema, SIGNAL(newView(Schema*)), mainwin, SLOT(newView(Schema*)));
             QObject::connect(schema, SIGNAL(newFunction(Schema*)), mainwin, SLOT(newFunction(Schema*)));
             connect(this, SIGNAL(collapseSchemaTables(Schema*)), mainwin, SLOT(hideTables(Schema*)));
             connect(this, SIGNAL(collapseSchemaFunctions(Schema*)), mainwin, SLOT(hideFunctions(Schema*)));
@@ -172,8 +185,9 @@ bool Database::populateDatabase()
         {
             QMessageBox *error_message = new QMessageBox(QMessageBox::Critical,
                                         tr("Database error"),
-                                        tr("Unable to retrieve database schemas.\n"
-                                        "Check your database connection or permissions.\n"), QMessageBox::Cancel,0,Qt::Dialog);
+                                        tr("Unable to retrieve data types.\n"
+                                           "Check your database connection or permissions.\n"),
+                                        QMessageBox::Cancel,0,Qt::Dialog);
             error_message->setWindowModality(Qt::NonModal);
             error_message->show();
             return false;
@@ -185,8 +199,19 @@ bool Database::populateDatabase()
     }
     setSchemaList(schema_list);
     setDatabaseStatus(true);
+    if(mainwin->displayMode() == MainWin::Tables)
+        mainwin->showAllTables();
+    else if(mainwin->displayMode() == MainWin::Views)
+        mainwin->showAllViews();
+    else if(mainwin->displayMode() == MainWin::Functions)
+        mainwin->showAllFunctions();
     return true;
 }
+
+/*void Database::refresh()
+{
+
+}*/
 
 bool Database::setConnectionProperties(const QString srv,
                             const qint32 port,
@@ -197,9 +222,9 @@ bool Database::setConnectionProperties(const QString srv,
     QSqlDatabase::removeDatabase(QString("base").append(QString::number(database_id)));
     QStringList drivers(database_connection.drivers());
     if(!drivers.contains("QPSQL")) {
-        QMessageBox::critical(0, tr("Database error"),
+        QMessageBox::critical(mainwin, tr("Database error"),
             tr("Unable to establish a database connection.\n"
-                     "No PostgreSQL support.\n"), QMessageBox::Cancel);
+               "No PostgreSQL support.\n"), QMessageBox::Cancel);
         return false;
     }
 
@@ -210,6 +235,7 @@ bool Database::setConnectionProperties(const QString srv,
     setPassword(pass);
 
     database_connection = QSqlDatabase::addDatabase("QPSQL", QString("base").append(QString::number(database_id)));
+
     database_connection.setHostName(srv);
     database_connection.setPort(port);
     database_connection.setDatabaseName(dbname);
@@ -217,15 +243,15 @@ bool Database::setConnectionProperties(const QString srv,
     database_connection.setPassword(pass);
     setName(database_connection.databaseName());
     if (!database_connection.open()) {
-        QMessageBox::critical(0, tr("Database error"),
+        QMessageBox::critical(mainwin, tr("Database error"),
             tr("Couldn't connect to database.\n"
-                     "Check connection parameters.\n"), QMessageBox::Cancel);
-        MainWin::document_unsaved = false;
+               "Check connection parameters.\n"), QMessageBox::Cancel);
+        MainWin::session_unsaved = false;
         return false;
     }
-    if (!populateDatabase()) {
+
+    if (!populateDatabase())
         return false;
-    }
     setDatabaseCollapsed(false);
     update();
     return true;
@@ -249,6 +275,11 @@ void Database::arrangeHorizontally()
     }
     //scene()->setSceneRect(QRectF());
 }
+
+/*void Database::newSchema(QString new_schema_name)
+{
+
+}*/
 
 QVariant Database::itemChange(GraphicsItemChange change, const QVariant &value)
 {

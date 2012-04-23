@@ -70,7 +70,7 @@ bool TableModel::setData(const QModelIndex &index, const QVariant &value, int /*
     }
 
     //If UPDATE statement fails, do not store in cache
-    //Clear the primary key values either case
+    //Clear the primary key values in either case
     if(update()) {
         cache_values.insert(index, value);
         primary_key_values.clear();
@@ -88,7 +88,7 @@ QVariant TableModel::data(const QModelIndex &index, int role) const
     //Store the index into item to call the sibling of index.
     QModelIndex item = indexInQuery(index);
 
-    //Align integers to the right
+    //Align integers to the right.
     if ((index.isValid() && role == Qt::TextAlignmentRole) && index.data().type() != QMetaType::QString)
         return (Qt::AlignVCenter + Qt::AlignRight);
 
@@ -97,11 +97,8 @@ QVariant TableModel::data(const QModelIndex &index, int role) const
         return QVariant();
 
     //Return cached values for UPDATEd data
-    if(cache_values.contains(index)) {
-        if(role == Qt::TextAlignmentRole && cache_values.value(index).type() != QMetaType::QString)
-            return Qt::AlignVCenter + Qt::AlignRight;
+    if(cache_values.contains(index))
         return cache_values.value(index);
-    }
 
     //Return sibling of index
     return QSqlQueryModel::data(index.sibling(item.row(), index.column()), role);
@@ -159,4 +156,3 @@ void TableModel::clearCache()
 {
     cache_values.clear();
 }
-

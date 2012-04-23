@@ -152,6 +152,7 @@ public:
     {
         return this->function_arg_types;
     }
+    QString getArgsToText();
     QString getArgTypesToText();
     void setName(QString name)
     {
@@ -167,15 +168,15 @@ public:
     }
     bool getCollapsed()
     {
-        return this->collapsed;
-    }
-    bool getSearched()
-    {
-        return this->searched;
+        return collapsed;
     }
     void setCollapsed(bool collapsed)
     {
         this->collapsed = collapsed;
+    }
+    bool getSearched()
+    {
+        return searched;
     }
     void setSearched(bool searched)
     {
@@ -183,26 +184,26 @@ public:
     }
     bool getStatus()
     {
-        return this->status;
+        return status;
     }
     void setStatus(bool status)
     {
         this->status = status;
     }
+    Schema *getParent()
+    {
+        return parent_schema;
+    }
     void setParent(Schema *sch)
     {
         this->parent_schema = sch;
-    }
-    Schema *getParent()
-    {
-        return this->parent_schema;
     }
 
 public slots:
     void getSearchTerm(QString);
     void verticalPosition2();
 
-Q_SIGNALS:
+signals:
     void expandFunction(Schema*, Function*);
     void collapseFunction(Database *, Schema *, Function*);
     void runFunction(Database *, Schema *, Function*);

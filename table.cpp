@@ -24,14 +24,14 @@
 Table::Table(Database *database, Schema *schema, QString table_name, int table_index, QColor color)
 {
     this->database = database;
-    this->setParent(schema);
-    this->setParentItem(schema);
+    setParent(schema);
+    setParentItem(schema);
     this->table_index = table_index;
-    this->setName(table_name);
+    setName(table_name);
     ascii_length = table_name.toAscii().length();
     utf8_length = table_name.toUtf8().length();
-    this->setStatus(false);
-    this->setCollapsed(true);
+    setStatus(false);
+    setCollapsed(true);
     createBrush();
     //setFlag(QGraphicsItem::ItemIsMovable);
     setFlag(QGraphicsItem::ItemIsSelectable);
@@ -72,12 +72,12 @@ void Table::defaultPosition()
     qreal dtheta = 2*M_PI*i/table_count;
     if(xs < 0)
     {
-        this->setPos((-radius*cos(atan(ys/xs))+radius*(dtheta)*sin(atan(ys/xs))),
+        setPos((-radius*cos(atan(ys/xs))+radius*(dtheta)*sin(atan(ys/xs))),
                      (-radius*sin(atan(ys/xs))-radius*(dtheta)*cos(atan(ys/xs))));
     }
     else if(xs > 0)
     {
-        this->setPos(radius*cos(atan(ys/xs))-radius*(dtheta)*sin(atan(ys/xs)),
+        setPos(radius*cos(atan(ys/xs))-radius*(dtheta)*sin(atan(ys/xs)),
                      radius*sin(atan(ys/xs))+radius*(dtheta)*cos(atan(ys/xs)));
     }
 }
@@ -85,13 +85,12 @@ void Table::defaultPosition()
 void Table::setColumnData()
 {
     QSqlQuery column_query(database->getDatabaseConnection());
-    QString column_query_string = "SELECT column_name, data_type, character_maximum_length FROM information_schema.columns WHERE table_schema='" + parent_schema->getName() + "' AND table_name='" + table_name + "'";
+    QString column_query_string = "SELECT a.attname, pg_catalog.format_type(a.atttypid, a.atttypmod), a.atttypmod-4, attnotnull FROM pg_catalog.pg_attribute a WHERE a.attrelid in (SELECT c.oid FROM pg_catalog.pg_class c LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname='" + parent_schema->getName() + "' and c.relname='" + table_name + "') AND a.attnum > 0 AND NOT a.attisdropped ORDER BY a.attnum";
     column_query.exec(column_query_string);
-    if(column_query.lastError().isValid())
-    {
+    if(column_query.lastError().isValid()) {
         QMessageBox *error_message = new QMessageBox(QMessageBox::Critical,
                                     tr("Database error"),
-                                    tr("Unable to retrieve schema tables.\n"
+                                    tr("Unable to retrieve table information.\n"
                                     "Check your database connection or permissions.\n"), QMessageBox::Cancel,0,Qt::Dialog);
         error_message->setWindowModality(Qt::NonModal);
         error_message->show();
@@ -101,23 +100,24 @@ void Table::setColumnData()
     column_list.clear();
     column_types.clear();
     column_lengths.clear();
+    column_nulls.clear();
     while (column_query.next()) {
         column_list.append("\"" + column_query.value(0).toString() + "\"");
         column_types.append(column_query.value(1).toString());
         column_lengths.append(column_query.value(2).toString());
+        column_nulls.append(column_query.value(3).toString());
     }
 }
 
 void Table::copyPrimaryKey()
 {
     QSqlQuery column_query(database->getDatabaseConnection());
-    QString column_query_string = "SELECT column_name, constraint_name FROM information_schema.constraint_column_usage WHERE table_schema='" + parent_schema->getName() + "' AND table_name='" + table_name + "'";
+    QString column_query_string = "select conname, unnest(conkey)::int-1 from pg_constraint p left join pg_namespace n on p.connamespace=n.oid left join pg_class c on c.oid=conrelid where n.nspname='" + parent_schema->getName() + "' and c.relname='" + table_name + "' and contype in ('p','u') and conrelid > 0";
     column_query.exec(column_query_string);
-    if(column_query.lastError().isValid())
-    {
+    if(column_query.lastError().isValid()) {
         QMessageBox *error_message = new QMessageBox(QMessageBox::Critical,
                                     tr("Database error"),
-                                    tr("Unable to retrieve schema tables.\n"
+                                    tr("Unable to retrieve primary key information.\n"
                                     "Check your database connection or permissions.\n"), QMessageBox::Cancel,0,Qt::Dialog);
         error_message->setWindowModality(Qt::NonModal);
         error_message->show();
@@ -125,7 +125,7 @@ void Table::copyPrimaryKey()
     }
     primary_key.clear();
     while (column_query.next())
-        primary_key.append("\"" + column_query.value(0).toString() + "\"");
+        primary_key.append(column_list.at(column_query.value(1).toInt()));
 }
 
 void Table::verticalPosition()
@@ -149,14 +149,12 @@ void Table::verticalPosition()
     int radius = 8*table_count;
     if(radius < 100) radius = 100;
     qreal dtheta = 2*M_PI*i/table_count;
-    if(xs < 0)
-    {
-        this->setPos((-radius*cos(atan(ys/xs))+radius*(dtheta)*sin(atan(ys/xs))),
+    if(xs < 0) {
+        setPos((-radius*cos(atan(ys/xs))+radius*(dtheta)*sin(atan(ys/xs))),
                      (-radius*sin(atan(ys/xs))-radius*(dtheta)*cos(atan(ys/xs))));
     }
-    else if(xs > 0)
-    {
-        this->setPos(radius*cos(atan(ys/xs))-radius*(dtheta)*sin(atan(ys/xs)),
+    else if(xs > 0) {
+        setPos(radius*cos(atan(ys/xs))-radius*(dtheta)*sin(atan(ys/xs)),
                      radius*sin(atan(ys/xs))+radius*(dtheta)*cos(atan(ys/xs)));
     }
 }
@@ -168,56 +166,43 @@ void Table::verticalPosition2()
 
 void Table::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 {
+    setColumnData();
     QMenu menu;
-    //menu.setStyleSheet("QMenu { font-size:12px; width: 100px; color:white; left: 20px; background-color:qlineargradient(x1:0, y1:0, x2:0, y2:1, stop: 0 #cccccc, stop: 1 #333333);}");
-    menu.addAction(QIcon(qApp->applicationDirPath().append("/icons/table.png")), tr("View contents"));
-    if(!is_view) {
-        menu.addSeparator();
-        menu.addAction(tr("Clear contents"));
-        menu.addSeparator();
-        menu.addAction(tr("Drop table"));
-    }
+    if(column_list.isEmpty())
+        menu.addAction(QIcon(":/icons/design.png"), tr("Designer"));
+    else
+        menu.addAction(QIcon(":/icons/table.png"), tr("View contents"));
+    menu.addSeparator();
+    //menu.addAction(tr("Rename"));
+    menu.addAction(tr("Clear contents"));
+    menu.addSeparator();
+    menu.addAction(tr("Delete"));
+
     QAction *a = menu.exec(event->screenPos());
-    if(a && QString::compare(a->text(),tr("View contents")) == 0)
-    {
+    if(a && QString::compare(a->text(),tr("View contents")) == 0) {
         emit expandTable(database, parent_schema, this);
     }
-    else if(a && QString::compare(a->text(),tr("Clear contents")) == 0)
-    {
+    else if(a && QString::compare(a->text(),tr("Designer")) == 0) {
+        emit designTable(database, parent_schema, this);
+    }
+    else if(a && QString::compare(a->text(),tr("Clear contents")) == 0) {
         emit clearTable(database, parent_schema, this);
     }
-    else if(a && QString::compare(a->text(),tr("Drop table")) == 0)
-    {
+    else if(a && QString::compare(a->text(),tr("Rename")) == 0) {
+        emit rename(database, parent_schema, this);
+    }
+    else if(a && QString::compare(a->text(),tr("Delete")) == 0) {
         emit dropTable(database, parent_schema, this);
     }
 }
 
 void Table::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *)
 {
-    /*
-    if(this->getCollapsed())
-    {
-        this->setCollapsed(false);
-        this->view->show();;
-    }
+    setColumnData();
+    if(column_list.isEmpty())
+        emit designTable(database, parent_schema, this);
     else
-    {
-        this->setCollapsed(true);
-        this->view->raise();
-    }*/
-    /*
-    if(this->getCollapsed())
-    {
-        this->setCollapsed(false);
-        emit expand(this);
-    }
-    else
-    {
-        this->setCollapsed(true);
-        emit collapse(this);
-    }*/
-    emit expandTable(database, parent_schema, this);
-    //update();
+        emit expandTable(database, parent_schema, this);
 }
 
 void Table::hoverEnterEvent(QGraphicsSceneHoverEvent *)
@@ -244,6 +229,7 @@ bool Table::advance()
     setPos(newPos);
     return true;
 }
+
 /*
 QVariant Table::itemChange(GraphicsItemChange change, const QVariant &value)
 {

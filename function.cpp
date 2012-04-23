@@ -24,16 +24,16 @@
 Function::Function(Database *database, Schema *schema, QString function_name, QString function_args, QString function_arg_types, int function_index, QColor color)
 {
     this->database = database;
-    this->setParent(schema);
-    this->setParentItem(schema);
+    setParent(schema);
+    setParentItem(schema);
     this->function_index = function_index;
-    this->setName(function_name);
+    setName(function_name);
     ascii_length = function_name.toAscii().length();
     utf8_length = function_name.toUtf8().length();
-    this->setArgs(function_args);
-    this->setArgTypes(function_arg_types);
-    this->setStatus(false);
-    this->setCollapsed(true);
+    setArgs(function_args);
+    setArgTypes(function_arg_types);
+    setStatus(false);
+    setCollapsed(true);
     //setFlag(QGraphicsItem::ItemIsMovable);
     setFlag(QGraphicsItem::ItemIsSelectable);
     //setFlag(ItemSendsGeometryChanges);
@@ -65,13 +65,13 @@ void Function::defaultPosition()
     qreal dtheta = 2*M_PI*i/function_count;
     if(xs < 0)
     {
-        this->setPos((-radius*cos(atan(ys/xs))+radius*(dtheta)*sin(atan(ys/xs))),
-                     (-radius*sin(atan(ys/xs))-radius*(dtheta)*cos(atan(ys/xs))));
+        setPos((-radius*cos(atan(ys/xs))+radius*(dtheta)*sin(atan(ys/xs))),
+               (-radius*sin(atan(ys/xs))-radius*(dtheta)*cos(atan(ys/xs))));
     }
     else if(xs > 0)
     {
-        this->setPos(radius*cos(atan(ys/xs))-radius*(dtheta)*sin(atan(ys/xs)),
-                     radius*sin(atan(ys/xs))+radius*(dtheta)*cos(atan(ys/xs)));
+        setPos(radius*cos(atan(ys/xs))-radius*(dtheta)*sin(atan(ys/xs)),
+               radius*sin(atan(ys/xs))+radius*(dtheta)*cos(atan(ys/xs)));
     }
 }
 
@@ -98,13 +98,13 @@ void Function::verticalPosition()
     qreal dtheta = 2*M_PI*i/function_count;
     if(xs < 0)
     {
-        this->setPos((-radius*cos(atan(ys/xs))+radius*(dtheta)*sin(atan(ys/xs))),
-                     (-radius*sin(atan(ys/xs))-radius*(dtheta)*cos(atan(ys/xs))));
+        setPos((-radius*cos(atan(ys/xs))+radius*(dtheta)*sin(atan(ys/xs))),
+               (-radius*sin(atan(ys/xs))-radius*(dtheta)*cos(atan(ys/xs))));
     }
     else if(xs > 0)
     {
-        this->setPos(radius*cos(atan(ys/xs))-radius*(dtheta)*sin(atan(ys/xs)),
-                     radius*sin(atan(ys/xs))+radius*(dtheta)*cos(atan(ys/xs)));
+        setPos(radius*cos(atan(ys/xs))-radius*(dtheta)*sin(atan(ys/xs)),
+               radius*sin(atan(ys/xs))+radius*(dtheta)*cos(atan(ys/xs)));
     }
 }
 
@@ -116,8 +116,7 @@ void Function::verticalPosition2()
 void Function::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 {
     QMenu menu;
-    //menu.setStyleSheet("QMenu { font-size:12px; width: 100px; color:white; left: 20px; background-color:qlineargradient(x1:0, y1:0, x2:0, y2:1, stop: 0 #cccccc, stop: 1 #333333);}");
-    menu.addAction(QIcon(qApp->applicationDirPath().append("/icons/function.png")), tr("Function definition"));
+    menu.addAction(QIcon(":/icons/function.png"), tr("Function definition"));
     menu.addSeparator();
     menu.addAction(tr("Drop function"));
 
@@ -163,6 +162,11 @@ bool Function::advance()
     return true;
 }
 
+QString Function::getArgsToText()
+{
+    return function_args.replace(" ", ", ");
+}
+
 QString Function::getArgTypesToText()
 {
     QStringList args = function_arg_types.split(" ");
@@ -171,6 +175,7 @@ QString Function::getArgTypesToText()
         args_text.append(database->getTypeText(oid.toInt()));
     return args_text.join(", ").prepend("(").append(")");
 }
+
 /*
 QVariant Function::itemChange(GraphicsItemChange change, const QVariant &value)
 {

@@ -76,7 +76,7 @@ LicenseDialog::LicenseDialog(MainWin *mainwin)
     trial_button->setGeometry(QRect(100, 150, 150, 100));
     trial_button->setFont(font);
     trial_button->setAutoDefault(false);
-    trial_button->setIcon(QIcon(qApp->applicationDirPath().append("/icons/buy.png")));
+    trial_button->setIcon(QIcon(":/icons/buy.png"));
     trial_button->setGraphicsEffect(new QGraphicsDropShadowEffect);
     trial_button->setIconSize(QSize(48,48));
     trial_button->hide();

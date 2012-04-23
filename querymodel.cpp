@@ -18,6 +18,11 @@
 
 #include "querymodel.h"
 
+QueryModel::QueryModel()
+{
+    this->rows_from = 1;
+}
+
 void QueryModel::fetchData(QString command, QStringList vars)
 {
     emit busySignal();
@@ -44,6 +49,11 @@ void QueryModel::fetchData(QString command, QStringList vars)
     fetchDataSignal(ts.elapsed(), rowCount(), columnCount());
 }
 
+void QueryModel::setRowsFrom(int rows_from)
+{
+    this->rows_from = rows_from;
+}
+
 QVariant QueryModel::data(const QModelIndex &index, int role) const
 {
     //Store the index into item to call the sibling of index.
@@ -55,4 +65,12 @@ QVariant QueryModel::data(const QModelIndex &index, int role) const
 
     //Return sibling of index
     return QSqlQueryModel::data(index.sibling(item.row(), index.column()), role);
+}
+
+QVariant QueryModel::headerData(int section, Qt::Orientation orientation, int role) const
+{
+    if(orientation == Qt::Vertical && role == Qt::DisplayRole)
+        return QVariant(rows_from + section);
+    else
+        return QSqlQueryModel::headerData(section, orientation, role);
 }

@@ -34,7 +34,7 @@ private:
     Database *database;
     QMenu *fileMenu;
     QTime t;
-    QTableView *qview;
+    QTableView *query_view;
     QueryModel *query_model;
     QStandardItemModel *errors_model;
     QShortcut *shortcut_fullscreen;
@@ -56,6 +56,13 @@ public:
     {
         return this->thisQueryViewId;
     }
+    QString query()
+    {
+        return sql;
+    }
+
+public slots:
+    void bringOnTop();
 
 private slots:
     void copyc();
@@ -66,7 +73,7 @@ private slots:
     void restore();
     void fetchData(QString);
 
-Q_SIGNALS:
+signals:
     void busySignal();
     void updRowCntSignal(QString);
     void errMesg(QString, uint);

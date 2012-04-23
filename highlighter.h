@@ -21,6 +21,36 @@
 
 #include <QSyntaxHighlighter>
 
+struct ParenthesisInfo
+{
+    QChar character;
+    int position;
+};
+
+class TextBlockData : public QTextBlockUserData
+{
+public:
+    TextBlockData(){}
+
+    QVector<ParenthesisInfo *> parentheses()
+    {
+        return m_parentheses;
+    }
+
+    void insert(ParenthesisInfo *info)
+    {
+        int i = 0;
+        while (i < m_parentheses.size() &&
+            info->position > m_parentheses.at(i)->position)
+            ++i;
+
+        m_parentheses.insert(i, info);
+    }
+
+private:
+    QVector<ParenthesisInfo *> m_parentheses;
+};
+
 class Highlighter : public QSyntaxHighlighter
 {
      Q_OBJECT
@@ -38,10 +68,15 @@ class Highlighter : public QSyntaxHighlighter
          QTextCharFormat format;
      };
      QVector<HighlightingRule> highlightingRules;
+
+     QRegExp comment_start_exp;
+     QRegExp comment_end_exp;
+
      QTextCharFormat keywordFormat;
      QTextCharFormat keywordFormat2;
      QTextCharFormat classFormat;
      QTextCharFormat singleLineCommentFormat;
+     QTextCharFormat multiLineCommentFormat;
      QTextCharFormat singleQuoteFormat;
      QTextCharFormat doubleQuoteFormat;
      QTextCharFormat functionFormat;

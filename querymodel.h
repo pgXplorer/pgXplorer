@@ -30,19 +30,23 @@ class QueryModel : public QSqlQueryModel
 private:
     QString database_connection_id;
     QString query_name;
+    int rows_from;
 
 public slots:
     //void destroyQueryModel();
 
 public:
+    QueryModel();
     void fetchData(QString, QStringList);
     void setQueryName(QString query_name)
     {
         this->query_name = query_name;
     }
     QVariant data(const QModelIndex &index, int role) const;
+    QVariant headerData(int section, Qt::Orientation orientation, int role) const;
+    void setRowsFrom(int);
 
-Q_SIGNALS:
+signals:
     void fetchDataSignal(int, qint32, qint32);
     void busySignal();
 };

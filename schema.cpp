@@ -23,20 +23,16 @@ Schema::Schema(MainWin *mainwin, Database *database, QString schema_name, int sc
 {
     this->mainwin = mainwin;
     this->schema_index = schema_index;
-    int a_radius = A_RADIUS;
-    int b_radius = B_RADIUS;
+    this->number_of_schemas = number_of_schemas;
     qreal dtheta = -2*M_PI*schema_index/number_of_schemas - M_PI_2;
     setParent(database);
     setParentItem(database);
-    if(mainwin->isColumnView()) {
-        if(parent_database->getSchemaCount()%2 == 0)
-            setPos((a_radius/2)*(schema_index) + a_radius/2/2 -(parent_database->getSchemaCount()*a_radius/2/2), b_radius/2);
-        else
-            setPos((a_radius/2)*(schema_index)-(parent_database->getSchemaCount()*a_radius/2/2), b_radius/2);
-    }
+    /*
+    if(mainwin->isColumnView())
+        setPos((a_radius/2)*(schema_index) + a_radius/2/2 -(parent_database->getSchemaCount()*a_radius/2/2), b_radius/2);
     else
         setPos(a_radius*sin(dtheta), b_radius*cos(dtheta));
-
+    */
     setName(schema_name);
     setStatus(false);
     setSchemaCollapsed(true);
@@ -63,7 +59,7 @@ Schema::Schema(MainWin *mainwin, Database *database, QString schema_name, int sc
 void Schema::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *)
 {
     if(getSchemaCollapsed()) {
-        this->setSchemaCollapsed(false);
+        setSchemaCollapsed(false);
         if(mainwin->isColumnView()) {
             if(mainwin->isTableView())
                 emit expandSchemaTables(this);
@@ -77,7 +73,7 @@ void Schema::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *)
         }
     }
     else {
-        this->setSchemaCollapsed(true);
+        setSchemaCollapsed(true);
         if(mainwin->isColumnView()) {
             if(mainwin->isTableView())
                 emit collapseSchemaTables(this);
@@ -94,40 +90,37 @@ void Schema::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *)
 
 void Schema::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 {
-    QString display_setting = mainwin->getDisplaySetting();
+    MainWin::DisplayMode display_mode = mainwin->displayMode();
 
     QMenu menu;
     menu.addAction(tr("Refresh"));
-    if(display_setting.compare("view") == 0){
+    if(display_mode == MainWin::Views){
         //menu.addAction(tr("New view"));
     }
-    else if(display_setting.compare("function") == 0)
-        menu.addAction(tr("New function"));
-    else if (display_setting.compare("table") == 0) {
-        //menu.addAction(tr("New table"));
+    else if(display_mode == MainWin::Functions) {
+        //menu.addAction(tr("New function"));
+    }
+    else if (display_mode == MainWin::Tables) {
+        menu.addAction(tr("New table"));
     }
 
     QAction *a = menu.exec(event->screenPos());
 
-    if(a && QString::compare(a->text(),tr("Refresh")) == 0)
-    {
-        if(display_setting.compare("view") == 0)
+    if(a && QString::compare(a->text(),tr("Refresh")) == 0) {
+        if(display_mode == MainWin::Views)
             resetViewsVertically2();
-        else if(display_setting.compare("function") == 0)
+        else if(display_mode == MainWin::Functions)
             resetFunctionsVertically2();
-        else if(display_setting.compare("table") == 0)
+        else if(display_mode == MainWin::Tables)
             resetTablesVertically2();
     }
-    else if(a && QString::compare(a->text(),tr("New view")) == 0)
-    {
+    else if(a && QString::compare(a->text(),tr("New view")) == 0) {
         emit newView(this);
     }
-    else if(a && QString::compare(a->text(),tr("New function")) == 0)
-    {
+    else if(a && QString::compare(a->text(),tr("New function")) == 0) {
         emit newFunction(this);
     }
-    else if(a && QString::compare(a->text(),tr("New table")) == 0)
-    {
+    else if(a && QString::compare(a->text(),tr("New table")) == 0) {
         emit newTable(this);
     }
 }
@@ -145,24 +138,24 @@ void Schema::populateSchemaTables()
     foreach (Table *table, getTableList())
         delete table;
     this->table_list.clear();
+    this->setTableCount(0);
 
     QList<Table*> table_list;
     QSqlQuery table_query(parent_database->getDatabaseConnection());
     QString table_query_string = "SELECT 0, tablename FROM pg_tables WHERE schemaname='"+this->getName()+"' ORDER BY 1,2";
     table_query.exec(table_query_string);
     setTableCount(table_query.size());
-    if(table_query.lastError().isValid())
-    {
+    if(table_query.lastError().isValid()) {
         QMessageBox *error_message = new QMessageBox(QMessageBox::Critical,
                                     tr("Database error"),
                                     tr("Unable to retrieve schema tables.\n"
-                                    "Check your database connection or permissions.\n"), QMessageBox::Cancel,0,Qt::Dialog);
+                                       "Check your database connection or permissions.\n"),
+                                    QMessageBox::Cancel,0,Qt::Dialog);
         error_message->setWindowModality(Qt::NonModal);
         error_message->show();
         return;
     }
-    while (table_query.next())
-    {
+    while (table_query.next()) {
         QString table_name = table_query.value(1).toString();
         Table *table;
         if(table_query.value(0).toInt() == 0) {
@@ -170,9 +163,7 @@ void Schema::populateSchemaTables()
             table->setView(false);
         }
         else
-        {
             return;
-        }
 
         table->setSearched(true);
         if(mainwin->isColumnView())
@@ -183,6 +174,8 @@ void Schema::populateSchemaTables()
         QObject::connect(mainwin->getSearchBox(), SIGNAL(textChanged(QString)), table, SLOT(getSearchTerm(QString)));
         QObject::connect(mainwin, SIGNAL(showColumnView()), table, SLOT(verticalPosition2()));
         QObject::connect(table, SIGNAL(expandTable(Database *, Schema *, Table*)), mainwin, SLOT(showTableView(Database *, Schema *, Table*)));
+        QObject::connect(table, SIGNAL(designTable(Database *, Schema *, Table*)), mainwin, SLOT(showDesignView(Database *, Schema *, Table*)));
+        //QObject::connect(table, SIGNAL(rename(Database *, Schema *, Table*)), mainwin, SLOT(renameTable(Database *, Schema *, Table*)));
         QObject::connect(table, SIGNAL(clearTable(Database *, Schema *, Table*)), mainwin, SLOT(clearTableView(Database *, Schema *, Table*)));
         QObject::connect(table, SIGNAL(dropTable(Database *, Schema *, Table*)), mainwin, SLOT(dropTable(Database *, Schema *, Table*)));
 
@@ -198,14 +191,14 @@ void Schema::populateSchemaViews()
     foreach (View *view, getViewList())
         delete view;
     this->view_list.clear();
+    this->setViewCount(0);
 
     QList<View*> view_list;
     QSqlQuery *view_query = new QSqlQuery(parent_database->getDatabaseConnection());
     QString view_query_string = "SELECT 1, viewname FROM pg_views WHERE schemaname='"+this->getName()+"' ORDER BY 1,2";
     view_query->exec(view_query_string);
     setViewCount(view_query->size());
-    if(view_query->lastError().isValid())
-    {
+    if(view_query->lastError().isValid()) {
         QMessageBox *error_message = new QMessageBox(QMessageBox::Critical,
                                     tr("Database error"),
                                     tr("Unable to retrieve schema views.\n"
@@ -214,17 +207,14 @@ void Schema::populateSchemaViews()
         error_message->show();
         return;
     }
-    while (view_query->next())
-    {
+
+    while (view_query->next()) {
         QString view_name = view_query->value(1).toString();
         View *view;
-        if(view_query->value(0).toInt() == 1) {
+        if(view_query->value(0).toInt() == 1)
             view = new View(parent_database, this, view_name, view_list.size(), QColor(100,50,50));
-        }
         else
-        {
             return;
-        }
 
         view->setSearched(true);
         if(mainwin->isColumnView())
@@ -250,6 +240,7 @@ void Schema::populateSchemaFunctions()
     foreach (Function *func, getFunctionList())
         delete func;
     this->function_list.clear();
+    setFunctionCount(0);
 
     QList<Function*> function_list;
     QSqlQuery *function_query = new QSqlQuery(parent_database->getDatabaseConnection());
@@ -257,18 +248,18 @@ void Schema::populateSchemaFunctions()
     function_query->exec(function_query_string);
 
     setFunctionCount(function_query->size());
-    if(function_query->lastError().isValid())
-    {
+    if(function_query->lastError().isValid()) {
         QMessageBox *error_message = new QMessageBox(QMessageBox::Critical,
                                     tr("Database error"),
                                     tr("Unable to retrieve schema tables.\n"
-                                    "Check your database connection or permissions.\n"), QMessageBox::Cancel,0,Qt::Dialog);
+                                       "Check your database connection or permissions.\n"),
+                                    QMessageBox::Cancel,0,Qt::Dialog);
         error_message->setWindowModality(Qt::NonModal);
         error_message->show();
         return;
     }
-    while (function_query->next())
-    {
+
+    while (function_query->next()) {
         QString function_name = function_query->value(0).toString();
         QString function_args = function_query->value(1).toString();
         QString function_arg_types = function_query->value(2).toString();
@@ -295,12 +286,16 @@ void Schema::populateSchemaFunctions()
     setFunctionList(function_list);
 }
 
+void Schema::resetPos()
+{
+    setPos((A_RADIUS/2)*(schema_index) + A_RADIUS/2/2 -(number_of_schemas*A_RADIUS/2/2), B_RADIUS/2);
+}
+
 void Schema::resetTables()
 {
     populateSchemaTables();
     QList<Table*> table_list = getTableList();
-    foreach(Table *table, table_list)
-    {
+    foreach(Table *table, table_list) {
         if(mainwin->getSearchBox()->isVisible())
             table->getSearchTerm(mainwin->getSearchBox()->text());
         table->defaultPosition();
@@ -312,8 +307,7 @@ void Schema::resetTablesVertically()
 {
     populateSchemaTables();
     QList<Table*> table_list = getTableList();
-    foreach(Table *table, table_list)
-    {
+    foreach(Table *table, table_list) {
         if(mainwin->getSearchBox()->isVisible())
             table->getSearchTerm(mainwin->getSearchBox()->text());
         table->verticalPosition();
@@ -325,8 +319,7 @@ void Schema::resetTablesVertically2()
 {
     populateSchemaTables();
     QList<Table*> table_list = getTableList();
-    foreach(Table *table, table_list)
-    {
+    foreach(Table *table, table_list) {
         if(mainwin->getSearchBox()->isVisible())
             table->getSearchTerm(mainwin->getSearchBox()->text());
         table->verticalPosition2();
@@ -338,8 +331,7 @@ void Schema::resetViews()
 {
     populateSchemaViews();
     QList<View*> view_list = getViewList();
-    foreach(View *view, view_list)
-    {
+    foreach(View *view, view_list) {
         if(mainwin->getSearchBox()->isVisible())
             view->getSearchTerm(mainwin->getSearchBox()->text());
         view->defaultPosition();
@@ -351,8 +343,7 @@ void Schema::resetViewsVertically2()
 {
     populateSchemaViews();
     QList<View*> view_list = getViewList();
-    foreach(View *view, view_list)
-    {
+    foreach(View *view, view_list) {
         if(mainwin->getSearchBox()->isVisible())
             view->getSearchTerm(mainwin->getSearchBox()->text());
         view->verticalPosition2();
@@ -364,8 +355,7 @@ void Schema::resetFunctions()
 {
     populateSchemaFunctions();
     QList<Function*> function_list = getFunctionList();
-    foreach(Function *function, function_list)
-    {
+    foreach(Function *function, function_list) {
         if(mainwin->getSearchBox()->isVisible())
             function->getSearchTerm(mainwin->getSearchBox()->text());
         function->defaultPosition();
@@ -377,8 +367,7 @@ void Schema::resetFunctionsVertically2()
 {
     populateSchemaFunctions();
     QList<Function*> function_list = getFunctionList();
-    foreach(Function *function, function_list)
-    {
+    foreach(Function *function, function_list) {
         if(mainwin->getSearchBox()->isVisible())
             function->getSearchTerm(mainwin->getSearchBox()->text());
         function->verticalPosition2();
@@ -407,17 +396,16 @@ void Schema::horizontalPosition()
     int radius = 8*schema_count;
     if(radius < 100) radius = 100;
     qreal dtheta = 2*M_PI*i/schema_count;
-    if(xs < 0)
-    {
-        this->setPos((-radius*cos(atan(ys/xs))+radius*(dtheta)*sin(atan(ys/xs))),
+    if(xs < 0) {
+        setPos((-radius*cos(atan(ys/xs))+radius*(dtheta)*sin(atan(ys/xs))),
                      (-radius*sin(atan(ys/xs))-radius*(dtheta)*cos(atan(ys/xs))));
     }
-    else if(xs > 0)
-    {
-        this->setPos(radius*cos(atan(ys/xs))-radius*(dtheta)*sin(atan(ys/xs)),
+    else if(xs > 0) {
+        setPos(radius*cos(atan(ys/xs))-radius*(dtheta)*sin(atan(ys/xs)),
                      radius*sin(atan(ys/xs))+radius*(dtheta)*cos(atan(ys/xs)));
     }
 }
+
 /*
 QVariant Schema::itemChange(GraphicsItemChange change, const QVariant &value)
 {
@@ -437,6 +425,7 @@ void Schema::addEdge(SchemaLink *a_schema_link)
     schema_link = a_schema_link;
     a_schema_link->adjust();
 }
+
 /*
 void Schema::addEdge(TableLink *a_table_link)
 {

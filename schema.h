@@ -53,6 +53,7 @@ private:
     bool status;
     bool collapsed;
     int schema_index;
+    int number_of_schemas;
     SchemaLink *schema_link;
     //QList<TableLink *> table_link_list;
     //QList<FunctionLink *> function_link_list;
@@ -69,7 +70,7 @@ public:
     {
         return Types;
     }
-    Schema(MainWin *mainwin, Database *parent, QString schema_name, int schema_index, uint number_of_schemas);
+    Schema(MainWin *, Database *, QString, int, uint);
     ~Schema()
     {
     };
@@ -84,7 +85,7 @@ public:
         return QRectF(-35, -30, 80, 50);
     }
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
-               QWidget *widget)
+               QWidget *)
     {
         if(this->isSelected())
             painter->setPen(QColor(100,100,100));
@@ -110,9 +111,9 @@ public:
              };
             painter->drawPolygon(top, 4);
             painter->setPen(Qt::darkGray);
-            QPointF textPos(-3*this->name.left(8).length(),+5);
-            painter->drawText(textPos, this->name.length()>8?this->name.left(8)+
-                              "..":this->name);
+            QPointF textPos(-3*name.left(8).length(),+5);
+            painter->drawText(textPos, name.length()>8?name.left(8)+
+                              "..":name);
         }
         else {
             painter->setBrush(QColor(150,150,200));
@@ -134,9 +135,9 @@ public:
              };
             painter->drawPolygon(top, 4);
             painter->setPen(QColor(50,50,100));
-            QPointF textPos(-3*this->name.left(8).length(),+5);
-            painter->drawText(textPos, this->name.length()>8?this->name.left(8)+
-                              "..":this->name);
+            QPointF textPos(-3*name.left(8).length(),+5);
+            painter->drawText(textPos, name.length()>8?name.left(8)+
+                              "..":name);
         }
         painter->setRenderHint(QPainter::Antialiasing, true);
     }
@@ -166,8 +167,8 @@ public:
     }
     void setRt(int x, int y, qreal radius, qreal dtheta)
     {
-        this->setX(x + radius*sin(dtheta));
-        this->setY(y + radius*cos(dtheta));
+        setX(x + radius*sin(dtheta));
+        setY(y + radius*cos(dtheta));
     }
     Database *getParent()
     {
@@ -209,6 +210,10 @@ public:
     {
         this->table_list = table_list;
     }
+    void appendTableList(Table *table)
+    {
+        table_list.append(table);
+    }
     QList<View*> getViewList()
     {
         return this->view_list;
@@ -216,6 +221,10 @@ public:
     void setViewList(QList<View*> view_list)
     {
         this->view_list = view_list;
+    }
+    void appendViewList(View *view)
+    {
+        view_list.append(view);
     }
     QList<Function*> getFunctionList()
     {
@@ -225,6 +234,10 @@ public:
     {
         this->function_list = function_list;
     }
+    void appendFunctionList(Function *function)
+    {
+        function_list.append(function);
+    }
 //    QList<TableLink*> getTableLinkList()
 //    {
 //        return this->table_link_list;
@@ -233,6 +246,7 @@ public:
 //    {
 //        return this->function_link_list;
 //    }
+    void resetPos();
     void resetTables();
     void resetTablesVertically();
     void resetTablesVertically2();
@@ -247,7 +261,7 @@ public slots:
     void populateSchemaViews();
     void populateSchemaFunctions();
 
-Q_SIGNALS:
+signals:
     void expandSchemaTables(Schema*);
     void collapseSchemaTables(Schema*);
     void expandSchemaViews(Schema*);

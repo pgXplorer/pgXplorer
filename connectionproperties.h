@@ -28,74 +28,29 @@ class ConnectionProperties : public QDialog
     Q_OBJECT
 
 private:
-    QLabel *lTitle;
-    QLabel *lSrv;
-    QLabel *lDb;
-    QLabel *lPort;
-    QLabel *lUser;
-    QLabel *lPass;
-
-    QLineEdit *lESrv;
-    QLineEdit *lEPort;
-    QLineEdit *lEDb;
-    QLineEdit *lEUser;
-    QLineEdit *lEPass;
+    QLabel *title;
+    QLineEdit *server;
+    QLineEdit *port;
+    QLineEdit *db_name;
+    QLineEdit *username;
+    QLineEdit *password;
+    QDialogButtonBox *button_box;
 
 protected:
 
 private slots:
     void okslot()
     {
-        emit oksignal(lESrv->text(),lEPort->text().toInt(),lEDb->text(),
-                      lEUser->text(),lEPass->text());
+        emit oksignal(server->text(),port->text().toInt(),db_name->text(),
+                      username->text(),password->text());
         close();
     }
 
 public:
-    ConnectionProperties(Database *db, MainWin *mainwin);
+    ConnectionProperties(Database *database, MainWin *mainwin);
     ~ConnectionProperties();
-    void setSrv(QLineEdit *lESrv)
-    {
-        this->lESrv = lESrv;
-    }
-    void setPort(QLineEdit *lEPort)
-    {
-        this->lEPort = lEPort;
-    }
-    void setDb(QLineEdit *lEDb)
-    {
-        this->lEDb = lEDb;
-    }
-    void setUser(QLineEdit *lEUser)
-    {
-        this->lEUser = lEUser;
-    }
-    void setPass(QLineEdit *lEPass)
-    {
-        this->lEPass = lEPass;
-    }
 
-    QLineEdit *getSrv()
-    {
-        return this->lESrv;
-    }
-    QLineEdit *getPort()
-    {
-        return this->lEPort;
-    }
-    QLineEdit *getDb()
-    {
-        return this->lEDb;
-    }
-    QLineEdit *getUser()
-    {
-        return this->lEUser;
-    }
-    QLineEdit *getPass()
-    {
-        return this->lEPass;
-    }
-Q_SIGNALS:
+signals:
     void oksignal(QString, qint32, QString, QString, QString);
 };
 

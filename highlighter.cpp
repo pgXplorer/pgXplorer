@@ -17,6 +17,7 @@
 */
 
 #include "highlighter.h"
+#include <QDebug>
 
 Highlighter::Highlighter(QTextDocument *parent)
     : QSyntaxHighlighter(parent)
@@ -30,7 +31,7 @@ Highlighter::Highlighter(QTextDocument *parent)
     keywordFormat.setForeground(QColor(100,10,100));
     keywordFormat.setFontWeight(QFont::Bold);
     QStringList keywordPatterns;
-    keywordPatterns << "\\bselect\\b" << "\\bupdate\\b" << "\\bdelete\\b"
+    keywordPatterns << "\\bselect\\b" << "\\binsert\\b" << "\\bupdate\\b" << "\\bdelete\\b"
                     << "\\btruncate\\b" << "\\bunion\\b" << "\\ball\\b"
                     << "\\bintersect\\b" << "\\bexcept\\b";
     foreach (const QString &pattern, keywordPatterns) {
@@ -41,10 +42,10 @@ Highlighter::Highlighter(QTextDocument *parent)
     keywordFormat2.setForeground(Qt::darkBlue);
     //keywordFormat2.setFontItalic(true);
     QStringList keywordPatterns2;
-    keywordPatterns2 << "\\bfrom\\b" << "\\bin\\b" << "\\bwith\\b" << "\\bwhere\\b"
+    keywordPatterns2 << "\\bfrom\\b" << "\\bin\\b" << "\\binto\\b" << "\\bwith\\b" << "\\bwhere\\b"
                      << "\\bjoin\\b" << "\\bon\\b" << "\\band\\b" << "\\bgroup by\\b"
-                     << "\\bleft\\b" << "\\right\\b" << "\\bfull\\b" << "\\bcross\\b"
-                     << "\\binner\\b" << "\\bouter\\b" << "\\bnatural\\b"
+                     << "\\bleft\\b" << "\\bright\\b" << "\\bfull\\b" << "\\bcross\\b"
+                     << "\\binner\\b" << "\\bouter\\b" << "\\bnatural\\b" << "\\bvalues\\b"
                      << "\\border by\\b" << "\\blimit\\b" << "\\bfetch\\b"
                      << "\\bhaving\\b" << "\\bwindow\\b" << "\\boffset\\b";
     foreach (const QString &pattern, keywordPatterns2) {
@@ -65,14 +66,43 @@ Highlighter::Highlighter(QTextDocument *parent)
     rule.pattern = QRegExp("\\b[A-Za-z0-9_]+(?=\\()");
     rule.format = functionFormat;
     highlightingRules.append(rule);
-    singleLineCommentFormat.setForeground(Qt::darkGray);
+    singleLineCommentFormat.setForeground(Qt::darkGreen);
     rule.pattern = QRegExp("--[^\n]*");
     rule.format = singleLineCommentFormat;
     highlightingRules.append(rule);
+
+    multiLineCommentFormat.setForeground(Qt::darkGreen);
+    //multiLineCommentFormat.setBackground(QColor(Qt::green).lighter(190));
+
+    comment_start_exp = QRegExp("/\\*");
+    comment_end_exp = QRegExp("\\*/");
 }
 
 void Highlighter::highlightBlock(const QString &text)
 {
+    TextBlockData *data = new TextBlockData;
+
+    int leftPos = text.indexOf(QChar('('));
+    while (leftPos != -1) {
+        ParenthesisInfo *info = new ParenthesisInfo;
+        info->character = QChar('(');
+        info->position = leftPos;
+
+        data->insert(info);
+        leftPos = text.indexOf(QChar('('), leftPos + 1);
+    }
+
+    int rightPos = text.indexOf(QChar(')'));
+    while (rightPos != -1) {
+        ParenthesisInfo *info = new ParenthesisInfo;
+        info->character = QChar(')');
+        info->position = rightPos;
+
+        data->insert(info);
+        rightPos = text.indexOf(QChar(')'), rightPos + 1);
+    }
+    setCurrentBlockUserData(data);
+
     foreach (const HighlightingRule &rule, highlightingRules) {
         QRegExp expression(rule.pattern);
         int index = expression.indexIn(text);
@@ -83,4 +113,22 @@ void Highlighter::highlightBlock(const QString &text)
         }
     }
     setCurrentBlockState(0);
+
+    int start_index = 0;
+    if(previousBlockState() != 1)
+        start_index = comment_start_exp.indexIn(text);
+
+    while(start_index >= 0) {
+        int end_index = comment_end_exp.indexIn(text, start_index);
+        int comment_length;
+        if(end_index == -1) {
+            setCurrentBlockState(1);
+            comment_length = text.length() - start_index;
+        }
+        else {
+            comment_length = end_index - start_index + comment_end_exp.matchedLength();
+        }
+        setFormat(start_index, comment_length, multiLineCommentFormat);
+        start_index = comment_start_exp.indexIn(text, start_index + comment_length);
+    }
 }

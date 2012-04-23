@@ -24,14 +24,14 @@
 View::View(Database *database, Schema *schema, QString view_name, int view_index, QColor color)
 {
     this->database = database;
-    this->setParent(schema);
-    this->setParentItem(schema);
+    setParent(schema);
+    setParentItem(schema);
     this->view_index = view_index;
-    this->setName(view_name);
+    setName(view_name);
     ascii_length = view_name.toAscii().length();
     utf8_length = view_name.toUtf8().length();
-    this->setStatus(false);
-    this->setCollapsed(true);
+    setStatus(false);
+    setCollapsed(true);
     //setFlag(QGraphicsItem::ItemIsMovable);
     setFlag(QGraphicsItem::ItemIsSelectable);
     //setFlag(ItemSendsGeometryChanges);
@@ -63,12 +63,12 @@ void View::defaultPosition()
     qreal dtheta = 2*M_PI*i/view_count;
     if(xs < 0)
     {
-        this->setPos((-radius*cos(atan(ys/xs))+radius*(dtheta)*sin(atan(ys/xs))),
+        setPos((-radius*cos(atan(ys/xs))+radius*(dtheta)*sin(atan(ys/xs))),
                      (-radius*sin(atan(ys/xs))-radius*(dtheta)*cos(atan(ys/xs))));
     }
     else if(xs > 0)
     {
-        this->setPos(radius*cos(atan(ys/xs))-radius*(dtheta)*sin(atan(ys/xs)),
+        setPos(radius*cos(atan(ys/xs))-radius*(dtheta)*sin(atan(ys/xs)),
                      radius*sin(atan(ys/xs))+radius*(dtheta)*cos(atan(ys/xs)));
     }
 }
@@ -95,10 +95,10 @@ void View::verticalPosition()
     if(radius < 100) radius = 100;
     qreal dtheta = 2*M_PI*i/view_count;
     if(xs < 0)
-        this->setPos((-radius*cos(atan(ys/xs))+radius*(dtheta)*sin(atan(ys/xs))),
+        setPos((-radius*cos(atan(ys/xs))+radius*(dtheta)*sin(atan(ys/xs))),
                      (-radius*sin(atan(ys/xs))-radius*(dtheta)*cos(atan(ys/xs))));
     else if(xs > 0)
-        this->setPos(radius*cos(atan(ys/xs))-radius*(dtheta)*sin(atan(ys/xs)),
+        setPos(radius*cos(atan(ys/xs))-radius*(dtheta)*sin(atan(ys/xs)),
                      radius*sin(atan(ys/xs))+radius*(dtheta)*cos(atan(ys/xs)));
 }
 
@@ -107,12 +107,13 @@ void View::verticalPosition2()
     setPos(0,50*(view_index+1));
 }
 
-void View::setColumnList()
+void View::setColumnData()
 {
     QSqlQuery column_query(database->getDatabaseConnection());
-    QString column_query_string = "SELECT column_name, data_type FROM information_schema.columns WHERE table_schema='" + parent_schema->getName() + "' AND table_name='" + view_name + "'";
+    QString column_query_string = "SELECT a.attname, pg_catalog.format_type(a.atttypid, a.atttypmod), a.atttypmod-4 FROM pg_catalog.pg_attribute a WHERE a.attrelid in (SELECT c.oid FROM pg_catalog.pg_class c LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname='" + parent_schema->getName() + "' and c.relname='" + view_name + "') AND a.attnum > 0 AND NOT a.attisdropped ORDER BY a.attnum";
     column_query.exec(column_query_string);
-    if(column_query.lastError().isValid()) {
+    if(column_query.lastError().isValid())
+    {
         QMessageBox *error_message = new QMessageBox(QMessageBox::Critical,
                                     tr("Database error"),
                                     tr("Unable to retrieve schema views.\n"
@@ -123,15 +124,19 @@ void View::setColumnList()
     }
     //Clear the column list just before populating it.
     column_list.clear();
-    while (column_query.next())
+    column_types.clear();
+    column_lengths.clear();
+    while (column_query.next()) {
         column_list.append("\"" + column_query.value(0).toString() + "\"");
+        column_types.append(column_query.value(1).toString());
+        column_lengths.append(column_query.value(2).toString());
+    }
 }
 
 void View::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 {
     QMenu menu;
-    //menu.setStyleSheet("QMenu { font-size:12px; width: 100px; color:white; left: 20px; background-color:qlineargradient(x1:0, y1:0, x2:0, y2:1, stop: 0 #cccccc, stop: 1 #333333);}");
-    menu.addAction(QIcon(qApp->applicationDirPath().append("/icons/view2.png")), tr("View contents"));
+    menu.addAction(QIcon(":/icons/view2.png"), tr("View contents"));
     menu.addAction(tr("View definition"));
     menu.addSeparator();
     menu.addAction(tr("Drop view"));
@@ -150,9 +155,7 @@ void View::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 
 void View::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *)
 {
-    setColumnList();
     emit expandView(database, parent_schema, this);
-    update();
 }
 
 void View::hoverEnterEvent(QGraphicsSceneHoverEvent *)

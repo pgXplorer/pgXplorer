@@ -39,6 +39,8 @@ private:
     Schema *parent_schema;
     QString view_name;
     QStringList column_list;
+    QStringList column_types;
+    QStringList column_lengths;
     bool status;
     bool collapsed;
     bool searched;
@@ -70,7 +72,7 @@ public:
         return QRectF(-40,-20,85,30);
     }
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
-               QWidget *widget)
+               QWidget *)
     {
         const qreal lod = option->levelOfDetailFromTransform(painter->worldTransform());
         if(isSelected())
@@ -187,28 +189,37 @@ public:
     {
         this->model = model;
     }
-
-    void setColumnList();
-    void setColumnList(QStringList column_list)
+    void setColumnData();
+    void setColumnData(QStringList column_list, QStringList column_types, QStringList column_lengths)
     {
         this->column_list = column_list;
+        this->column_types = column_types;
+        this->column_lengths = column_lengths;
     }
     QStringList getColumnList()
     {
         return column_list;
     }
-    void showView2(View*);
+    QStringList getColumnTypes()
+    {
+        return column_types;
+    }
+    QStringList getColumnLengths()
+    {
+        return column_lengths;
+    }
+    void showView2(View *);
 
 public slots:
     void getSearchTerm(QString);
     void verticalPosition2();
 
-Q_SIGNALS:
-    void expandView(Database *, Schema *, View*);
-    void expandViewDefinition(Schema*, View*);
-    void clearView(Database *, Schema *, View*);
-    void dropView(Database *, Schema *, View*);
-    void collapseView(Database *, Schema *, View*);
+signals:
+    void expandView(Database *, Schema *, View *);
+    void expandViewDefinition(Schema *, View *);
+    void clearView(Database *, Schema *, View *);
+    void dropView(Database *, Schema *, View *);
+    void collapseView(Database *, Schema *, View *);
 };
 
 #endif // VIEW_H

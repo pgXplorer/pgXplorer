@@ -20,7 +20,6 @@
 #define TABLEMODEL_H
 
 #include <QtSql>
-#include <QSqlDriver>
 #include <QSqlDatabase>
 #include <QSqlQueryModel>
 #include "database.h"
@@ -29,7 +28,7 @@ class QSqlRecord;
 class QSqlField;
 class QSqlIndex;
 
-class TableModel: public QSqlQueryModel
+class TableModel : public QSqlQueryModel
 {
     Q_OBJECT
 
@@ -57,7 +56,7 @@ private:
     QVariant edit_value;
     QMap<QModelIndex, QVariant> cache_values;
 
-Q_SIGNALS:
+signals:
     void updateFailed(QString);
 };
 

@@ -20,128 +20,85 @@
 
 ConnectionProperties::ConnectionProperties(Database *database, MainWin *mainwin)
 {
-    QPushButton *pBOK;
-    QPushButton *pBCancel;
-    QWidget *layoutWidget;
-    QVBoxLayout *verticalLayout;
-
     setWindowFlags(Qt::FramelessWindowHint);
-    this->setAttribute(Qt::WA_DeleteOnClose);
-    resize(256, 288);
+    setAttribute(Qt::WA_DeleteOnClose);
     setModal(true);
     setParent(mainwin);
     setWindowFlags(Qt::Popup);
     setWindowModality(Qt::WindowModal);
-    pBOK = new QPushButton(this);
-    pBOK->setObjectName(QString::fromUtf8("pBOK"));
-    pBOK->setAutoDefault(true);
-    pBOK->setGeometry(QRect(30, 250, 75, 23));
-    QFont font;
-    font.setFamily(QString::fromUtf8("Verdana"));
-    pBOK->setFont(font);
-    pBCancel = new QPushButton(this);
-    pBCancel->setObjectName(QString::fromUtf8("pBCancel"));
-    pBCancel->setGeometry(QRect(140, 250, 75, 23));
-    pBCancel->setFont(font);
-    pBCancel->setAutoDefault(false);
-    setDb(new QLineEdit(this));
-    getDb()->setObjectName(QString::fromUtf8("lEDb"));
-    getDb()->setGeometry(QRect(100, 90, 133, 20));
-    getDb()->setFont(font);
-    getDb()->setAutoFillBackground(true);
-    getDb()->setInputMethodHints(Qt::ImhNone);
-    setSrv(new QLineEdit(this));
-    getSrv()->setObjectName(QString::fromUtf8("lESrv"));
-    getSrv()->setGeometry(QRect(100, 47, 133, 20));
-    getSrv()->setFont(font);
-    setPort(new QLineEdit(this));
-    getPort()->setObjectName(QString::fromUtf8("lEPort"));
-    getPort()->setGeometry(QRect(100, 130, 133, 20));
-    getPort()->setFont(font);
-    getPort()->setInputMethodHints(Qt::ImhFormattedNumbersOnly);
-    getPort()->setInputMask("00000");
-    setUser(new QLineEdit(this));
-    getUser()->setObjectName(QString::fromUtf8("lEUser"));
-    getUser()->setGeometry(QRect(100, 171, 133, 20));
-    getUser()->setFont(font);
-    setPass(new QLineEdit(this));
-    getPass()->setObjectName(QString::fromUtf8("lEPass"));
-    getPass()->setGeometry(QRect(100, 213, 133, 20));
-    getPass()->setEchoMode(QLineEdit::Password);
-    getPass()->setFont(font);
-    layoutWidget = new QWidget(this);
-    layoutWidget->setObjectName(QString::fromUtf8("layoutWidget"));
-    layoutWidget->setGeometry(QRect(20, 40, 71, 201));
-    verticalLayout = new QVBoxLayout(layoutWidget);
-    verticalLayout->setObjectName(QString::fromUtf8("verticalLayout"));
-    verticalLayout->setContentsMargins(0, 0, 0, 0);
-    lSrv = new QLabel(layoutWidget);
-    lSrv->setObjectName(QString::fromUtf8("lSrv"));
-    lSrv->setFont(font);
-    verticalLayout->addWidget(lSrv);
-    lDb = new QLabel(layoutWidget);
-    lDb->setObjectName(QString::fromUtf8("lDb"));
-    lDb->setFont(font);
-    verticalLayout->addWidget(lDb);
-    lPort = new QLabel(layoutWidget);
-    lPort->setObjectName(QString::fromUtf8("lPort"));
-    lPort->setFont(font);
-    verticalLayout->addWidget(lPort);
-    lUser = new QLabel(layoutWidget);
-    lUser->setObjectName(QString::fromUtf8("lUser"));
-    lUser->setFont(font);
-    verticalLayout->addWidget(lUser);
-    lPass = new QLabel(layoutWidget);
-    lPass->setObjectName(QString::fromUtf8("lPass"));
-    lPass->setFont(font);
-    verticalLayout->addWidget(lPass);
-    lTitle = new QLabel(this);
-    lTitle->setObjectName(QString::fromUtf8("lTitle"));
-    lTitle->setGeometry(QRect(20, 10, 211, 21));
-    lTitle->setAlignment(Qt::AlignHCenter);
-    QFont font1;
-    font1.setFamily(QString::fromUtf8("Verdana"));
-    font1.setPointSize(14);
-    lTitle->setFont(font1);
-    QWidget::setTabOrder(getSrv(), getDb());
-    QWidget::setTabOrder(getDb(), getPort());
-    QWidget::setTabOrder(getPort(), getUser());
-    QWidget::setTabOrder(getUser(), getPass());
-    QWidget::setTabOrder(getPass(), pBOK);
-    QWidget::setTabOrder(pBOK, pBCancel);
-    QObject::connect(pBCancel, SIGNAL(clicked()), this, SLOT(close()));
-    QObject::connect(pBOK, SIGNAL(clicked()), this, SLOT(okslot()));
+    setWindowTitle(tr("Connection"));
+
+    QFont title_font("Helvetica [Cronyx]", 14, QFont::Bold);
+    QFont font("Helvetica [Cronyx]");
+
+    title = new QLabel(this);
+    title->setAlignment(Qt::AlignHCenter);
+    title->setText(tr("Connection"));
+    title->setFont(title_font);
+
+    button_box = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+    button_box->setCenterButtons(true);
+    button_box->setFont(font);
+    connect(button_box, SIGNAL(accepted()), this, SLOT(okslot()));
+    connect(button_box, SIGNAL(rejected()), this, SLOT(close()));
+
+    server = new QLineEdit(this);
+    server->setFont(font);
+
+    db_name = new QLineEdit(this);
+    db_name->setFont(font);
+    db_name->setFocus();
+
+    port = new QLineEdit(this);
+    port->setFont(font);
+    port->setInputMethodHints(Qt::ImhDigitsOnly);
+
+    username = new QLineEdit(this);
+    username->setFont(font);
+
+    password = new QLineEdit(this);
+    password->setEchoMode(QLineEdit::Password);
+    password->setFont(font);
+
+    QFormLayout *form_layout = new QFormLayout;
+    form_layout->setVerticalSpacing(15);
+    form_layout->addRow(title);
+    form_layout->addRow(tr("Server"), server);
+    form_layout->labelForField(server)->setFont(font);
+    form_layout->addRow(tr("Database"), db_name);
+    form_layout->labelForField(db_name)->setFont(font);
+    form_layout->addRow(tr("Port"), port);
+    form_layout->labelForField(port)->setFont(font);
+    form_layout->addRow(tr("Username"), username);
+    form_layout->labelForField(username)->setFont(font);
+    form_layout->addRow(tr("Port"), password);
+    form_layout->labelForField(password)->setFont(font);
+    form_layout->addRow(button_box);
+    setLayout(form_layout);
+
+    QWidget::setTabOrder(server, db_name);
+    QWidget::setTabOrder(db_name, port);
+    QWidget::setTabOrder(port, username);
+    QWidget::setTabOrder(username, password);
+
     QObject::connect(this, SIGNAL(oksignal(QString,qint32,QString,QString,QString)),
                      mainwin, SLOT(newDatabase(QString,qint32,QString,QString,QString)));
-    QObject::connect(getSrv(), SIGNAL(returnPressed()), getDb(), SLOT(setFocus()));
-    QObject::connect(getDb(), SIGNAL(returnPressed()), getPort(), SLOT(setFocus()));
-    QObject::connect(getPort(), SIGNAL(returnPressed()), getUser(), SLOT(setFocus()));
-    QObject::connect(getUser(), SIGNAL(returnPressed()), getPass(), SLOT(setFocus()));
-    QObject::connect(getPass(), SIGNAL(returnPressed()), pBOK, SLOT(setFocus()));
-    setWindowTitle(QApplication::translate("Connection", "Connection", 0, QApplication::UnicodeUTF8));
-    pBOK->setText(QApplication::translate("Connection", "OK", 0, QApplication::UnicodeUTF8));
-    pBCancel->setText(QApplication::translate("Connection", "Cancel", 0, QApplication::UnicodeUTF8));
+
     if(!database->getDatabaseStatus()) {
-        getSrv()->setText(database->getHost());
-        getDb()->setText(database->getName());
-        getPort()->setText(database->getPort());
-        getUser()->setText(database->getUser());
-        getPass()->setText(database->getPassword());
+        server->setText(database->getHost());
+        db_name->setText(database->getName());
+        port->setText(database->getPort());
+        username->setText(database->getUser());
+        password->setText(database->getPassword());
     }
     else {
         QSqlDatabase database_connection = QSqlDatabase::database(QString("base").append(QString::number(database->getId())));
-        getSrv()->setText(database_connection.hostName());
-        getDb()->setText(database->getName());
-        getPort()->setText(QString::number(database_connection.port()));
-        getUser()->setText(database_connection.userName());
-        getPass()->setText(database_connection.password());
+        server->setText(database_connection.hostName());
+        db_name->setText(database->getName());
+        port->setText(QString::number(database_connection.port()));
+        username->setText(database_connection.userName());
+        password->setText(database_connection.password());
     }
-    lTitle->setText(QApplication::translate("Connection", "Connection", 0, QApplication::UnicodeUTF8));
-    lSrv->setText(QApplication::translate("Connection", "Server", 0, QApplication::UnicodeUTF8));
-    lDb->setText(QApplication::translate("Connection", "Database", 0, QApplication::UnicodeUTF8));
-    lPort->setText(QApplication::translate("Connection", "Port", 0, QApplication::UnicodeUTF8));
-    lUser->setText(QApplication::translate("Connection", "Username", 0, QApplication::UnicodeUTF8));
-    lPass->setText(QApplication::translate("Connection", "Password", 0, QApplication::UnicodeUTF8));
 }
 
 ConnectionProperties::~ConnectionProperties(){}

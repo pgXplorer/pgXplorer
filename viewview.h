@@ -27,6 +27,7 @@
 #include <QSqlError>
 #include <QtGui>
 #include "database.h"
+#include "querymodel.h"
 
 #define FETCHSIZ 10000
 
@@ -45,6 +46,9 @@ private:
 
     Database *database;
     QString view_name;
+    QStringList column_list;
+    QStringList column_types;
+    QStringList column_lengths;
     QMenuBar *menubar;
     QString status_message;
     QMenu context_menu;
@@ -52,8 +56,8 @@ private:
     QMenu disarrange_menu;
     QTime t;
     QToolBar *toolbar;
-    QSqlQueryModel *query_model;
-    QTableView *vview;
+    QueryModel *query_model;
+    QTableView *view_view;
     QString sql;
     QStringList where_clause;
     QStringList order_clause;
@@ -82,36 +86,47 @@ private:
     QAction *descend_action;
     QAction *remove_all_filters_action;
     QAction *remove_all_ordering_action;
+    QAction *previous_set_action;
+    QAction *next_set_action;
     QWidgetAction *custom_filter_action;
     QAction *copy_query_action;
     QLineEdit *filter_text;
+    QToolButton *previous_set_button;
+    QToolButton *next_set_button;
+    QMessageBox *error_message_box;
 
 public:
     static ulong viewViewObjectId;
-    ViewView(Database *, QString const, QString const, QStringList const, bool, Qt::WidgetAttribute f);
+    ViewView(Database *, QString const, QString const, QStringList const, QStringList const, bool, Qt::WidgetAttribute f);
     ~ViewView()
     {
     };
 
-    bool eventFilter(QObject *, QEvent*);
-    void keyReleaseEvent(QKeyEvent*);
+    bool eventFilter(QObject *, QEvent *);
+    void keyReleaseEvent(QKeyEvent *);
     //void contextMenuEvent(QContextMenuEvent*);
     void closeEvent(QCloseEvent*);
     void createIcons();
     void createActions();
-    void fetchNextData();
-    void fetchPreviousData();
     void fetchConditionDataInitial();
+    QString viewName()
+    {
+        return view_name;
+    }
 
 public slots:
-    void languageChanged(QEvent*);
+    void languageChanged(QEvent *);
     void customContextMenuViewport();
     void customContextMenuHeader();
+    void updateFailedSlot(QString);
+    void bringOnTop();
 
 private slots:
     void fetchDefaultData();
     void fetchRefreshData(QString);
     void fetchDataSlot();
+    void fetchNextData();
+    void fetchPreviousData();
     void copyToClipboard();
     void copyToClipboardWithHeaders();
     void defaultView();
@@ -136,10 +151,10 @@ private slots:
     void enableActions();
     void disableActions();
 
-Q_SIGNALS:
+signals:
     void busySignal();
     void updRowCntSignal(QString);
-    void viewViewClosing(ViewView*);
+    void viewViewClosing(ViewView *);
 };
 
 #endif // VIEWVIEW_H

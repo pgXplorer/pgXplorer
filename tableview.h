@@ -63,7 +63,7 @@ private:
     QTime t;
     QToolBar *toolbar;
     TableModel *table_model;
-    QTableView *tview;
+    QTableView *table_view;
     QStandardItemModel *new_row_model;
     NewRowTableView *new_row_view;
     QString sql;
@@ -90,6 +90,7 @@ private:
     QAction *remove_columns_action;
     QAction *filter_action;
     QAction *exclude_action;
+    QAction *group_action;
     QAction *ascend_action;
     QAction *descend_action;
     QAction *remove_all_filters_action;
@@ -99,12 +100,15 @@ private:
     QAction *previous_set_action;
     QAction *next_set_action;
     QWidgetAction *custom_filter_action;
+    QWidgetAction *bulk_update_action;
     QAction *copy_query_action;
     QLineEdit *filter_text;
+    QLineEdit *bulk_update;
     QBrush red_brush;
     QBrush green_brush;
     QToolButton *previous_set_button;
     QToolButton *next_set_button;
+    bool error_status;
     QMessageBox *error_message_box;
 
 public:
@@ -123,12 +127,17 @@ public:
     void createActions();
     void fetchConditionDataInitial();
     void deleteData();
+    QString tableName()
+    {
+        return table_name;
+    }
 
 public slots:
     void languageChanged(QEvent*);
     void customContextMenuViewport();
     void customContextMenuHeader();
-    void updateFailedSlot(QString);
+    void displayErrorMessage(QString);
+    void bringOnTop();
 
 private slots:
     void fetchDefaultData();
@@ -136,6 +145,7 @@ private slots:
     void fetchDataSlot();
     void fetchNextData();
     void fetchPreviousData();
+    void bulkUpdateData(QModelIndexList, QVariant);
     void copyToClipboard();
     void copyToClipboardWithHeaders();
     void defaultView();
@@ -156,8 +166,10 @@ private slots:
     void deleteRows();
     void deleteRow(int);
     void updatePrimaryKeyInfo();
+    void bulkUpdate();
 
     void busySlot();
+    void notBusySlot();
     void updRowCntSlot(QString);
     void fullscreen();
     void restore();
@@ -165,9 +177,11 @@ private slots:
     void enableActions();
     void disableActions();
 
-Q_SIGNALS:
+signals:
     void busySignal();
+    void notBusySignal();
     void updRowCntSignal(QString);
+    void queryFailed(QString);
     void tableViewClosing(TableView*);
 };
 
@@ -186,7 +200,7 @@ public:
 public slots:
     void resizeCells(int, int, int);
 
-Q_SIGNALS:
+signals:
     void insertRow();
 };
 

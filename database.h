@@ -47,7 +47,6 @@ private:
     MainWin *mainwin;
     int number_of_schemas;
     QSqlDatabase database_connection;
-    QStringList schema_name_list;
     QList<Schema*> schema_list;
     QString name;
     QString host;
@@ -66,6 +65,7 @@ protected:
 public slots:
     bool setConnectionProperties(const QString, const qint32, const QString, const QString, const QString);
     void showPropertyDialog();
+
 public:
     static ulong dbViewObjectId;
     enum { Typed = UserType + 1000 };
@@ -85,28 +85,28 @@ public:
     }
 
     void arrangeHorizontally();
-    void delDatabase(Database*);
+    void delDatabase(Database *);
     bool populateDatabase();
     bool advance();
-    void addEdge(SchemaLink *edge);
+    void addEdge(SchemaLink *);
     QRectF boundingRect() const
     {
         return QRectF(-50, -37.5, 100, 75);
     }
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
-               QWidget *widget)
+               QWidget *)
     {
         painter->setPen(QColor(0,0,0,0));
 
-        if(this->getDatabaseCollapsed()) {
+        if(getDatabaseCollapsed()) {
             painter->setBrush(QColor(200, 200, 200));
             painter->drawRect(-50, -25, 100, 50);
             painter->drawEllipse(-50, 12.5, 100, 25);
             painter->setBrush(QColor(220,220,220));
             painter->drawEllipse(-50, -37.5, 100, 25);
             painter->setPen(Qt::darkGray);
-            QPointF textPos(-3*this->name.length(), 10);
-            painter->drawText(textPos, this->name);
+            QPointF textPos(-3*name.length(), 10);
+            painter->drawText(textPos, name);
         }
         else {
             painter->setBrush(QColor(150,150,200));
@@ -115,19 +115,19 @@ public:
             painter->setBrush(QColor(200,200,250));
             painter->drawEllipse(-50,-37.5,100,25);
             painter->setPen(QColor(50,50,100));
-            QPointF textPos(-3*this->name.length(),+10);
-            painter->drawText(textPos, this->name);
+            QPointF textPos(-3*name.length(),+10);
+            painter->drawText(textPos, name);
         }
         painter->setRenderHint(QPainter::Antialiasing, true);
     }
 
     QSqlDatabase getDatabaseConnection()
     {
-        return this->database_connection;
+        return database_connection;
     }
     QString getName()
     {
-        return this->name;
+        return name;
     }
     void setName(QString name)
     {
@@ -135,7 +135,7 @@ public:
     }
     QString getHost()
     {
-        return this->host;
+        return host;
     }
     void setHost(QString host)
     {
@@ -143,7 +143,7 @@ public:
     }
     QString getPort()
     {
-        return this->port;
+        return port;
     }
     void setPort(QString port)
     {
@@ -151,7 +151,7 @@ public:
     }
     QString getUser()
     {
-        return this->user;
+        return user;
     }
     void setUser(QString user)
     {
@@ -159,7 +159,7 @@ public:
     }
     QString getPassword()
     {
-        return this->user;
+        return user;
     }
     void setPassword(QString password)
     {
@@ -167,7 +167,7 @@ public:
     }
     bool getDatabaseCollapsed()
     {
-        return this->collapsed;
+        return collapsed;
     }
     void setDatabaseCollapsed(bool collapsed)
     {
@@ -175,27 +175,23 @@ public:
     }
     bool getDatabaseStatus()
     {
-        return this->status;
+        return status;
     }
     void setDatabaseStatus(bool status)
     {
         this->status = status;
     }
-    QList<QString> getSchemaStringList()
-    {
-        return this->schema_name_list;
-    }
-    void setSchemaList(QStringList schema_name_list)
-    {
-        this->schema_name_list = schema_name_list;
-    }
     QList<Schema*> getSchemaList()
     {
-        return this->schema_list;
+        return schema_list;
     }
     void setSchemaList(QList<Schema*> schema_list)
     {
         this->schema_list = schema_list;
+    }
+    void appendSchemaList(Schema *schema)
+    {
+        schema_list.append(schema);
     }
     int getSchemaCount()
     {
@@ -208,7 +204,7 @@ public:
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent*);
     void contextMenuEvent(QGraphicsSceneContextMenuEvent*);
 
-Q_SIGNALS:
+signals:
     void expandDatabase(Database*);
     void expandAll(Database*);
     void expandAllVertically(Database*);

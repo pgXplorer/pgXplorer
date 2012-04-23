@@ -23,6 +23,7 @@ ulong QueryView::queryViewObjectId = 0;
 QueryView::QueryView(Database *database, QString command)
 {
     this->database = database;
+    this->sql = command;
 
     //Identify this object with thisTableViewId for constructing database connection
     //specific to this object and this object alone.
@@ -37,15 +38,12 @@ QueryView::QueryView(Database *database, QString command)
 
     errors_model = new QStandardItemModel(0,1);
     query_model = new QueryModel;
-    qview = new QTableView(this);
-    qview->resizeColumnsToContents();
-    setCentralWidget(qview);
+    query_view = new QTableView(this);
+    query_view->resizeColumnsToContents();
+    setCentralWidget(query_view);
     statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0, QApplication::UnicodeUTF8));
-    //qview->setModel(model);
-    //setWindowTitle(name);
-    qview->setStyleSheet("QTableView {font-weight: 400;}");
-    qview->setAlternatingRowColors(true);
-    qview->verticalHeader()->setDefaultAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    query_view->setAlternatingRowColors(true);
+    query_view->verticalHeader()->setDefaultAlignment(Qt::AlignRight | Qt::AlignVCenter);
 
     //Create Ctrl+Shift+C key combo to copy selected table contents with headers.
     QShortcut *shortcut_ctrl_c = new QShortcut(QKeySequence::Copy, this);
@@ -67,7 +65,7 @@ QueryView::QueryView(Database *database, QString command)
     //Tie a busy signal to a slot that changes the cursor to wait cursor.
     connect(this, SIGNAL(busySignal()), this, SLOT(busySlot()));
 
-    QFuture<void> future = QtConcurrent::run(this, &QueryView::fetchData, command);
+    QFuture<void> future = QtConcurrent::run(this, &QueryView::fetchData, sql);
 }
 
 void QueryView::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
@@ -113,7 +111,7 @@ void QueryView::closeEvent(QCloseEvent *event)
 
     if(!thread_busy)
     {
-        delete qview;
+        delete query_view;
         delete errors_model;
         delete query_model;
         delete shortcut_fullscreen;
@@ -125,7 +123,7 @@ void QueryView::closeEvent(QCloseEvent *event)
 
 void QueryView::copyc()
 {
-    QItemSelectionModel *s = qview->selectionModel();
+    QItemSelectionModel *s = query_view->selectionModel();
     QModelIndexList indices = s->selectedIndexes();
     if(indices.isEmpty()) {
         return;
@@ -138,7 +136,7 @@ void QueryView::copyc()
     QString selectedText;
 
     foreach(current, indices) {
-        QVariant data = qview->model()->data(prev);
+        QVariant data = query_view->model()->data(prev);
         selectedText.append(data.toString());
         if(current.row() != prev.row())
             selectedText.append(QLatin1Char('\n'));
@@ -146,15 +144,15 @@ void QueryView::copyc()
             selectedText.append(QLatin1Char('\t'));
         prev = current;
     }
-    selectedText.append(qview->model()->data(last).toString());
+    selectedText.append(query_view->model()->data(last).toString());
     selectedText.append(QLatin1Char('\n'));
     qApp->clipboard()->setText(selectedText);
 }
 
 void QueryView::copych()
 {
-    QAbstractItemModel *atm = qview->model();
-    QItemSelectionModel *s = qview->selectionModel();
+    QAbstractItemModel *atm = query_view->model();
+    QItemSelectionModel *s = query_view->selectionModel();
     QModelIndexList indices = s->selectedIndexes();
     if(indices.isEmpty())
         return;
@@ -198,7 +196,7 @@ void QueryView::busySlot()
 {
     thread_busy = true;
     setCursor(Qt::WaitCursor);
-    qview->horizontalHeader()->setStretchLastSection(false);
+    query_view->horizontalHeader()->setStretchLastSection(false);
 }
 
 void QueryView::fullscreen()
@@ -237,6 +235,12 @@ void QueryView::fetchData(QString command)
     }
 }
 
+void QueryView::bringOnTop()
+{
+    activateWindow();
+    raise();
+}
+
 void QueryView::updRowCntSlot(QString error)
 {
     QString time_elapsed = QApplication::translate("QueryView", "Time elapsed:", 0, QApplication::UnicodeUTF8);
@@ -251,11 +255,11 @@ void QueryView::updRowCntSlot(QString error)
         foreach(const QString m, messages)
             errors_model->appendRow(new QStandardItem(m));
 
-        QFont serifFont("Courier", 10, QFont::Bold);
-        qview->setFont(serifFont);
-        qview->setModel(errors_model);
-        qview->resizeColumnToContents(0);
-        qview->horizontalHeader()->setStretchLastSection(true);
+        QFont courier("Courier", 10, QFont::Bold);
+        query_view->setFont(courier);
+        query_view->setModel(errors_model);
+        query_view->resizeColumnToContents(0);
+        query_view->horizontalHeader()->setStretchLastSection(true);
 
         QStringList header;
         header << tr("Error messages");
@@ -269,21 +273,21 @@ void QueryView::updRowCntSlot(QString error)
         QString message_string = QString::number(query_model->query().numRowsAffected());
         model->appendRow(new QStandardItem(message_string));
 
-        QFont serifFont("Courier", 10, QFont::Bold);
-        qview->setFont(serifFont);
-        qview->setModel(model);
+        QFont courier("Courier", 10, QFont::Bold);
+        query_view->setFont(courier);
+        query_view->setModel(model);
         QStringList header;
         header << tr("Affected rows");
         model->setHorizontalHeaderLabels(header);
-        qview->resizeColumnToContents(0);
-        qview->setEditTriggers(QAbstractItemView::NoEditTriggers);
+        query_view->resizeColumnToContents(0);
+        query_view->setEditTriggers(QAbstractItemView::NoEditTriggers);
         statusBar()->showMessage(time_elapsed + QString::number((double)t.elapsed()/1000) +
                                  " " + seconds_string + " \t " + rows_string + "1" +
                                  " \t " + colums_string + "1");
     }
     else {
-        qview->setModel(query_model);
-        qview->verticalScrollBar()->setValue(0);
+        query_view->setModel(query_model);
+        query_view->verticalScrollBar()->setValue(0);
         if(query_model->rowCount() == 0)
             statusBar()->showMessage(time_elapsed + QString::number((double)t.elapsed()/1000) +
                                      " " + seconds_string + " \t " + rows_string + "0" +
