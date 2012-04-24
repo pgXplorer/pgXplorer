@@ -16,8 +16,10 @@
   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 
+#include <QtGui>
 #include "designview.h"
 #include "checkboxdelegate.h"
+#include "tableproperties.h"
 
 ulong DesignView::designViewObjectId = 0;
 
@@ -60,40 +62,7 @@ public:
         QStyledItemDelegate::updateEditorGeometry(editor, option, index);
     }
 };
-/*
-class TableProperties : public QDialog
-{
-    Q_OBJECT
 
-private:
-    QCheckBox *with_oid;
-    QDialogButtonBox *button_box;
-
-public:
-    TableProperties();
-};
-
-TableProperties::TableProperties()
-{
-    QFont font("Helvetica [Cronyx]");
-
-    with_oid = new QCheckBox(this);
-    with_oid->setFont(font);
-
-    button_box = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
-    button_box->setCenterButtons(true);
-    button_box->setFont(font);
-    connect(button_box, SIGNAL(accepted()), this, SLOT(okslot()));
-    connect(button_box, SIGNAL(rejected()), this, SLOT(close()));
-
-    QFormLayout *form_layout = new QFormLayout;
-    form_layout->setVerticalSpacing(15);
-    form_layout->addRow(tr("With oids"), with_oid);
-    form_layout->labelForField(with_oid)->setFont(font);
-    form_layout->addRow(button_box);
-    setLayout(form_layout);
-}
-*/
 DesignView::DesignView(Database *database, Table *table, QString const table_name, QString const name, QStringList column_list, QStringList primary_key, QStringList column_types, QStringList column_lengths, QStringList column_nulls, bool read_only, Qt::WidgetAttribute f)
 {
     setAttribute(Qt::WA_DeleteOnClose);
@@ -331,8 +300,8 @@ void DesignView::bringOnTop()
 
 void DesignView::showProperties()
 {
-    //TableProperties *table_props = new TableProperties;
-    //table_props->exec();
+    TableProperties *table_props = new TableProperties(this, table_name);
+    table_props->show();
 }
 
 void DesignView::languageChanged(QEvent *event)

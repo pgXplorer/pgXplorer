@@ -583,9 +583,10 @@ void TableView::updRowCntSlot(QString dataset)
             new_row_view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
         else
             new_row_view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-        if(!where_clause.isEmpty()) {
+
+        if(!where_clause.isEmpty())
             delete_rows_action->setEnabled(true);
-        }
+
         new_row_view->setEnabled(true);
     }
     thread_busy = false;
@@ -1487,11 +1488,13 @@ bool TableView::insertRow()
             statusBar()->showMessage(tr("Inserted data successfully"), 1000);
             for (int column = 0; column < column_count; ++column)
                 new_row_model->item(0, column)->setData("", Qt::EditRole);
-            if(!can_fetch_more)
+            if(!can_fetch_more) {
                 addRowRefreshView();
+            }
         }
     }
     QSqlDatabase::removeDatabase(QLatin1String("insert ") + objectName());
+    new_row_view->setFocus();
     QModelIndex idx = new_row_model->index(0, 0, QModelIndex());
     new_row_view->edit(idx);
     return true;

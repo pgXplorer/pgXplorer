@@ -595,16 +595,53 @@ void MainWin::contextMenuEvent(QContextMenuEvent *event)
         //menu.addAction(tr("New schema..."));
     }
     QAction *a = menu.exec(event->globalPos());
-    if(a && QString::compare(a->text(),MainWin::tr("Default view"))==0)
+    if(a && QString::compare(a->text(),MainWin::tr("Default view")) == 0)
         noZoom();
-    else if(a && QString::compare(a->text(),MainWin::tr("Zoom in"))==0)
+    else if(a && QString::compare(a->text(),MainWin::tr("Zoom in")) == 0)
         zoomIn(event->globalPos());
-    else if(a && QString::compare(a->text(),MainWin::tr("Zoom out"))==0)
+    else if(a && QString::compare(a->text(),MainWin::tr("Zoom out")) == 0)
         zoomOut(event->globalPos());
-    else if(a && QString::compare(a->text(),MainWin::tr("Fit view"))==0)
+    else if(a && QString::compare(a->text(),MainWin::tr("Fit view")) == 0)
         fitView();
-    else if(a && QString::compare(a->text(),MainWin::tr("Refresh"))==0)
+    else if(a && QString::compare(a->text(),MainWin::tr("Refresh")) == 0) {
         database->populateDatabase();
+        if(search_box->isVisible() && !search_box->text().isEmpty()) {
+            QString search_term = search_box->text();
+            if(displayMode() == MainWin::Tables) {
+                foreach(Schema *schema, database->getSchemaList()) {
+                    foreach(Table *table, schema->getTableList()) {
+                        if(table->getName().contains(search_term))
+                            table->setSearched(true);
+                        else
+                            table->setSearched(false);
+                        update();
+                    }
+                }
+            }
+            else if(displayMode() == MainWin::Views) {
+                foreach(Schema *schema, database->getSchemaList()) {
+                    foreach(View *view, schema->getViewList()) {
+                        if(view->getName().contains(search_term))
+                            view->setSearched(true);
+                        else
+                            view->setSearched(false);
+                        update();
+                    }
+                }
+            }
+            else if(displayMode() == MainWin::Functions) {
+                foreach(Schema *schema, database->getSchemaList()) {
+                    foreach(Function *function, schema->getFunctionList()) {
+                        if(function->getName().contains(search_term))
+                            function->setSearched(true);
+                        else
+                            function->setSearched(false);
+                        update();
+                    }
+                }
+            }
+        }
+    }
     else if(a && QString::compare(a->text(),MainWin::tr("New schema..."))==0)
         newSchema();
 }

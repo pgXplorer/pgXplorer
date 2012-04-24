@@ -23,9 +23,7 @@ ConnectionProperties::ConnectionProperties(Database *database, MainWin *mainwin)
     setWindowFlags(Qt::FramelessWindowHint);
     setAttribute(Qt::WA_DeleteOnClose);
     setModal(true);
-    setParent(mainwin);
-    setWindowFlags(Qt::Popup);
-    setWindowModality(Qt::WindowModal);
+    setWindowModality(Qt::ApplicationModal);
     setWindowTitle(tr("Connection"));
 
     QFont title_font("Helvetica [Cronyx]", 14, QFont::Bold);
@@ -61,7 +59,7 @@ ConnectionProperties::ConnectionProperties(Database *database, MainWin *mainwin)
     password->setFont(font);
 
     QFormLayout *form_layout = new QFormLayout;
-    form_layout->setVerticalSpacing(15);
+    form_layout->setSpacing(20);
     form_layout->addRow(title);
     form_layout->addRow(tr("Server"), server);
     form_layout->labelForField(server)->setFont(font);
@@ -101,4 +99,3 @@ ConnectionProperties::ConnectionProperties(Database *database, MainWin *mainwin)
     }
 }
 
-ConnectionProperties::~ConnectionProperties(){}

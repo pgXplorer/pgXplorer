@@ -61,8 +61,7 @@ void Database::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 void Database::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 {
     QMenu menu;
-    if(getDatabaseStatus())
-    {
+    if(getDatabaseStatus()) {
         if(getDatabaseCollapsed())
             menu.addAction(QApplication::translate("Database", "Explode", 0, QApplication::UnicodeUTF8));
         else
@@ -102,6 +101,42 @@ void Database::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
     }
     else if(a && QString::compare(a->text(),tr("Refresh"))==0) {
         populateDatabase();
+        if(mainwin->getSearchBox()->isVisible() && !mainwin->getSearchBox()->text().isEmpty()) {
+            QString search_term = mainwin->getSearchBox()->text();
+            if(mainwin->displayMode() == MainWin::Tables) {
+                foreach(Schema *schema, getSchemaList()) {
+                    foreach(Table *table, schema->getTableList()) {
+                        if(table->getName().contains(search_term))
+                            table->setSearched(true);
+                        else
+                            table->setSearched(false);
+                        update();
+                    }
+                }
+            }
+            else if(mainwin->displayMode() == MainWin::Views) {
+                foreach(Schema *schema, getSchemaList()) {
+                    foreach(View *view, schema->getViewList()) {
+                        if(view->getName().contains(search_term))
+                            view->setSearched(true);
+                        else
+                            view->setSearched(false);
+                        update();
+                    }
+                }
+            }
+            else if(mainwin->displayMode() == MainWin::Functions) {
+                foreach(Schema *schema, getSchemaList()) {
+                    foreach(Function *function, schema->getFunctionList()) {
+                        if(function->getName().contains(search_term))
+                            function->setSearched(true);
+                        else
+                            function->setSearched(false);
+                        update();
+                    }
+                }
+            }
+        }
     }
 }
 

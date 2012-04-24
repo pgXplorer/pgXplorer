@@ -36,8 +36,6 @@ private:
     QLineEdit *password;
     QDialogButtonBox *button_box;
 
-protected:
-
 private slots:
     void okslot()
     {
@@ -48,7 +46,16 @@ private slots:
 
 public:
     ConnectionProperties(Database *database, MainWin *mainwin);
-    ~ConnectionProperties();
+    ~ConnectionProperties()
+    {
+        delete title;
+        delete server;
+        delete port;
+        delete db_name;
+        delete username;
+        delete password;
+        delete button_box;
+    }
 
 signals:
     void oksignal(QString, qint32, QString, QString, QString);

@@ -30,7 +30,8 @@ HEADERS		= \
     viewview.h \
     help.h \
     designview.h \
-    checkboxdelegate.h
+    checkboxdelegate.h \
+    tableproperties.h
 SOURCES		= main.cpp \
     database.cpp \
     table.cpp \
@@ -53,7 +54,9 @@ SOURCES		= main.cpp \
     viewview.cpp \
     help.cpp \
     designview.cpp \
-    checkboxdelegate.cpp
+    checkboxdelegate.cpp \
+    tableproperties.cpp
+
 QT += sql translator network
 
 RESOURCES += pgXplorer.qrc
