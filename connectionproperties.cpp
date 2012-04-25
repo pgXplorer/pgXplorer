@@ -20,7 +20,8 @@
 
 ConnectionProperties::ConnectionProperties(Database *database, MainWin *mainwin)
 {
-    setWindowFlags(Qt::FramelessWindowHint);
+    setParent(mainwin);
+    setWindowFlags(Qt::Window | Qt::FramelessWindowHint);
     setAttribute(Qt::WA_DeleteOnClose);
     setModal(true);
     setWindowModality(Qt::ApplicationModal);
