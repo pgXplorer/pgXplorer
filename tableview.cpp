@@ -138,7 +138,7 @@ TableView::TableView(Database *database, QString const table_name, QString const
     //don't work too well.
     sql = QLatin1String("SELECT ");
     if(column_list.isEmpty())
-        sql.append(QLatin1String("* "));
+        sql.append(QLatin1String("*"));
     else {
         column_count = column_list.count();
         for(int column = 0; column < column_count; column++) {
