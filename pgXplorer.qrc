@@ -7,7 +7,6 @@
         <file>icons/columnview.png</file>
         <file>icons/console.png</file>
         <file>icons/copy.png</file>
-        <file>icons/copy.svgz</file>
         <file>icons/copy_sql.png</file>
         <file>icons/cut.png</file>
         <file>icons/database.png</file>
@@ -46,12 +45,13 @@
         <file>icons/wrap.png</file>
         <file>icons/zoom.png</file>
         <file>icons/zoom_icon.png</file>
-        <file>icons/copy_with_headers.svg</file>
         <file>icons/completer.png</file>
         <file>icons/design.png</file>
         <file>icons/scatter.png</file>
         <file>database.ico</file>
         <file>icons/line.png</file>
         <file>icons/bar.png</file>
+        <file>icons/copy_with_headers.png</file>
+        <file>icons/copy_without_headers.png</file>
     </qresource>
 </RCC>

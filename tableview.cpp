@@ -1706,13 +1706,13 @@ void TableView::createActions()
     refresh_action->setStatusTip(tr("Refresh"));
     connect(refresh_action, SIGNAL(triggered()), this, SLOT(refreshView()));
 
-    copy_action = new QAction(QIcon(":/icons/copy.svgz"), tr("Copy"), this);
+    copy_action = new QAction(QIcon(":/icons/copy_without_headers.png"), tr("Copy"), this);
     copy_action->setShortcuts(QKeySequence::Copy);
     copy_action->setStatusTip(tr("Copy selected"));
     //copy_action->setEnabled(false);
     connect(copy_action, SIGNAL(triggered()), this, SLOT(copyToClipboard()));
 
-    copy_with_headers_action = new QAction(QIcon(":/icons/copy_with_headers.svg"), tr("Copy with headers"), this);
+    copy_with_headers_action = new QAction(QIcon(":/icons/copy_with_headers.png"), tr("Copy with headers"), this);
     copy_with_headers_action->setShortcut(QKeySequence("Ctrl+Shift+C"));
     copy_with_headers_action->setStatusTip(tr("Copy selected with headers"));
     //copy_with_headers_action->setEnabled(false);

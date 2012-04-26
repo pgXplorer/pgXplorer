@@ -80,5 +80,4 @@ sources.path = C:/QtSDK/Examples/4.7/graphicsview/pgXplorer
 INSTALLS += target sources
 
 OTHER_FILES += \
-    pgXplorer.rc \
-    database.ico
+    pgXplorer.rc
