@@ -18,7 +18,6 @@
 
 #include "pgxconsole.h"
 #include "queryview.h"
-#include "explainview.h"
 
 PgxConsole::PgxConsole(Database *database)
 {
