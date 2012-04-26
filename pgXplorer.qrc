@@ -51,5 +51,7 @@
         <file>icons/design.png</file>
         <file>icons/scatter.png</file>
         <file>database.ico</file>
+        <file>icons/line.png</file>
+        <file>icons/bar.png</file>
     </qresource>
 </RCC>
