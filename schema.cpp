@@ -180,8 +180,8 @@ void Schema::populateSchemaTables()
         QObject::connect(table, SIGNAL(dropTable(Database *, Schema *, Table*)), mainwin, SLOT(dropTable(Database *, Schema *, Table*)));
 
         table_list.append(table);
-        if(!mainwin->table_completer_list.contains(table_name))
-            mainwin->table_completer_list.append(table_name);
+        if(!parent_database->tableNamesList().contains(table_name))
+            parent_database->appendTableName(table_name);
     }
     setTableList(table_list);
 }
@@ -229,8 +229,8 @@ void Schema::populateSchemaViews()
         QObject::connect(view, SIGNAL(dropView(Database *, Schema *, View*)), mainwin, SLOT(dropView(Database *, Schema *, View*)));
 
         view_list.append(view);
-        if(!mainwin->view_completer_list.contains(view_name))
-            mainwin->view_completer_list.append(view_name);
+        if(!parent_database->viewNamesList().contains(view_name))
+            parent_database->appendViewName(view_name);
     }
     setViewList(view_list);
 }
@@ -280,8 +280,8 @@ void Schema::populateSchemaFunctions()
         QObject::connect(function, SIGNAL(dropFunction(Database *, Schema *, Function*)), mainwin, SLOT(dropFunction(Database *, Schema *, Function*)));
 
         function_list.append(function);
-        if(!mainwin->function_completer_list.contains(function_name))
-            mainwin->function_completer_list.append(function_name);
+        if(!parent_database->functionNamesList().contains(function_name))
+            parent_database->appendFunctionName(function_name);
     }
     setFunctionList(function_list);
 }
