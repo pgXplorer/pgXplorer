@@ -8,4 +8,6 @@
 *.so
 moc_*.cpp
 pgXplorer.pro.user
+qrc_pgXplorer.cpp
 Makefile
+pgXplorer
