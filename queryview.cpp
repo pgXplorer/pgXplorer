@@ -43,6 +43,9 @@ QueryView::QueryView(Database *database, QString command)
     toolbar->setIconSize(QSize(36,36));
     toolbar->setObjectName("tableview");
     toolbar->setMovable(false);
+    toolbar->addAction(copy_action);
+    toolbar->addAction(copy_with_headers_action);
+    toolbar->addSeparator();
     toolbar->addAction(scatterplot_action);
     toolbar->addAction(lineplot_action);
     toolbar->addAction(barplot_action);
@@ -135,6 +138,18 @@ void QueryView::closeEvent(QCloseEvent *event)
 
 void QueryView::createActions()
 {
+    copy_action = new QAction(QIcon(":/icons/copy.svgz"), tr("Copy"), this);
+    copy_action->setShortcuts(QKeySequence::Copy);
+    copy_action->setStatusTip(tr("Copy selected"));
+    //copy_action->setEnabled(false);
+    connect(copy_action, SIGNAL(triggered()), this, SLOT(copyToClipboard()));
+
+    copy_with_headers_action = new QAction(QIcon(":/icons/copy_with_headers.svg"), tr("Copy with headers"), this);
+    copy_with_headers_action->setShortcut(QKeySequence("Ctrl+Shift+C"));
+    copy_with_headers_action->setStatusTip(tr("Copy selected with headers"));
+    //copy_with_headers_action->setEnabled(false);
+    connect(copy_with_headers_action, SIGNAL(triggered()), this, SLOT(copyToClipboardWithHeaders()));
+
     scatterplot_action = new QAction(QIcon(":/icons/scatter.png"), tr("Scatter plot"), this);
     scatterplot_action->setEnabled(false);
     scatterplot_action->setStatusTip(tr("Plot the selected columns as a scatter plot"));
@@ -151,7 +166,7 @@ void QueryView::createActions()
     connect(barplot_action, SIGNAL(triggered()), this, SLOT(barPlot()));
 }
 
-void QueryView::copyc()
+void QueryView::copyToClipboard()
 {
     QItemSelectionModel *selection_model = query_view->selectionModel();
     QModelIndexList indices = selection_model->selectedIndexes();
@@ -179,7 +194,7 @@ void QueryView::copyc()
     qApp->clipboard()->setText(selectedText);
 }
 
-void QueryView::copych()
+void QueryView::copyToClipboardWithHeaders()
 {
     QAbstractItemModel *model = query_view->model();
     QItemSelectionModel *selection_model = query_view->selectionModel();

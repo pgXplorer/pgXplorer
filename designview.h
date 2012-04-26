@@ -35,8 +35,6 @@ class DesignView : public QMainWindow
     Q_OBJECT
 
 private:
-    double time_elapsed;
-
     Database *database;
     Table *table;
     QString table_name;
@@ -59,6 +57,7 @@ private:
     QTableView *design_view;
     QStandardItemModel *design_model;
     QString sql;
+    QString properties;
     bool thread_busy;
     ulong thisDesignViewId;
     QAction *default_action;
@@ -73,12 +72,21 @@ private:
     QAction *save_action;
     QAction *properties_action;
 
+    struct Properties2 {
+        bool oid;
+        QString inherits;
+        QString tablespace;
+        int fill_factor;
+
+        Properties2() : oid(false), inherits(QString()), tablespace(QString()), fill_factor(100){}
+    };
+
+    Properties2 properties2;
+
 public:
     static ulong designViewObjectId;
     DesignView(Database *, Table *table, QString const, QString const, QStringList const, QStringList const, QStringList const, QStringList const, QStringList const, bool, Qt::WidgetAttribute f);
-    ~DesignView()
-    {
-    }
+    ~DesignView(){}
 
     void createBrushes();
     void createActions();
@@ -91,7 +99,8 @@ public:
 public slots:
     void bringOnTop();
     void languageChanged(QEvent*);
-    void showProperties();
+    void showTableProperties();
+    void setProperties2(bool, QString, QString, int);
 
 private slots:
     void updateDesigner(QModelIndex, QModelIndex);
@@ -101,6 +110,7 @@ signals:
     void busySignal();
     void notBusySignal();
     void queryFailed(QString);
+    void changeLanguage(QEvent*);
     void designViewClosing(DesignView*);
 };
 

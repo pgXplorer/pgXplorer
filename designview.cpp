@@ -109,7 +109,7 @@ DesignView::DesignView(Database *database, Table *table, QString const table_nam
 
     setContextMenuPolicy(Qt::NoContextMenu);
 
-    design_model = new QStandardItemModel(6, column_list.size()+1);
+    design_model = new QStandardItemModel(5, column_list.size()+1);
 
     QModelIndex idx;
     for (int column = 0; column < column_list.size(); ++column) {
@@ -150,7 +150,6 @@ DesignView::DesignView(Database *database, Table *table, QString const table_nam
     design_model->setHeaderData(2, Qt::Vertical, tr("Primary key"));
     design_model->setHeaderData(3, Qt::Vertical, tr("Not null"));
     design_model->setHeaderData(4, Qt::Vertical, tr("Default value"));
-    design_model->setHeaderData(5, Qt::Vertical, tr("Comment"));
 
     design_view = new QTableView(this);
     design_view->horizontalHeader()->setContextMenuPolicy(Qt::ActionsContextMenu);
@@ -229,7 +228,7 @@ void DesignView::createActions()
 
     properties_action = new QAction(QIcon(":/icons/properties.png"), MainWin::tr("&Properties"), this);
     properties_action->setStatusTip(MainWin::tr("Specify table properties"));
-    connect(properties_action, SIGNAL(triggered()), this, SLOT(showProperties()));
+    connect(properties_action, SIGNAL(triggered()), this, SLOT(showTableProperties()));
 }
 
 void DesignView::saveTable()
@@ -259,11 +258,14 @@ void DesignView::saveTable()
             QModelIndex idx1 = design_model->index(1, col, QModelIndex());
             QModelIndex idx2 = design_model->index(2, col, QModelIndex());
             QModelIndex idx3 = design_model->index(3, col, QModelIndex());
+            QModelIndex idx4 = design_model->index(4, col, QModelIndex());
             sql.append(design_model->data(idx0).toString());
             sql.append(QLatin1String(" "));
             sql.append(design_model->data(idx1).toString());
             if(design_model->data(idx3).toBool())
                 sql.append(QLatin1String(" NOT NULL "));
+            if(!design_model->data(idx4).toString().isEmpty())
+                sql.append(QLatin1String(" DEFAULT ")).append(design_model->data(idx4).toString());
             sql.append(QLatin1String(", "));
         }
         if(new_primary_key.isEmpty()) {
@@ -276,7 +278,7 @@ void DesignView::saveTable()
             sql.append(new_primary_key.join(",").prepend("(").append(")"));
         }
         sql.append(QLatin1String(") "));
-        qDebug() << sql;
+        sql.append(properties);
         QSqlQueryModel query;
         query.setQuery(sql, database_connection);
         if(query.lastError().isValid()) {
@@ -298,10 +300,39 @@ void DesignView::bringOnTop()
     raise();
 }
 
-void DesignView::showProperties()
+void DesignView::showTableProperties()
 {
-    TableProperties *table_props = new TableProperties(this, table_name);
+    QStringList completer_list;
+    foreach(Schema *schema, database->getSchemaList())
+        foreach (Table *table, schema->getTableList())
+            completer_list.append(schema->getName().append(".\"" + table->getName() + "\""));
+
+    TableProperties *table_props = new TableProperties(this, table_name, completer_list, properties2.oid, properties2.inherits, properties2.tablespace, properties2.fill_factor);
+    connect(this, SIGNAL(changeLanguage(QEvent*)), table_props, SLOT(languageChanged(QEvent*)));
+    connect(table_props, SIGNAL(oksignal(bool, QString, QString, int)), this, SLOT(setProperties2(bool, QString, QString, int)));
     table_props->show();
+}
+
+void DesignView::setProperties2(bool oid, QString inherits, QString tablespace, int fill_factor)
+{
+    properties2.oid = oid;
+    properties2.inherits = inherits;
+    properties2.tablespace = tablespace;
+    properties2.fill_factor = fill_factor;
+
+    properties.clear();
+
+    if(!inherits.isEmpty())
+        properties.append(QLatin1String(" INHERITS (")).append(inherits).append(QLatin1String(")"));
+    if(oid)
+        properties.append(QLatin1String(" WITH (oids=true"));
+    else
+        properties.append(QLatin1String(" WITH (oids=false"));
+    if(fill_factor != 100)
+        properties.append(QLatin1String(", fillfactor=")).append(QString::number(fill_factor));
+    properties.append(QLatin1String(")"));
+    if(!tablespace.isEmpty())
+        properties.append(QLatin1String(" TABLESPACE ")).append(tablespace);
 }
 
 void DesignView::languageChanged(QEvent *event)
@@ -317,18 +348,13 @@ void DesignView::languageChanged(QEvent *event)
         design_model->setHeaderData(3, Qt::Vertical, tr("Not null"));
         design_model->setHeaderData(4, Qt::Vertical, tr("Default value"));
         design_model->setHeaderData(5, Qt::Vertical, tr("Comment"));
+        emit changeLanguage(event);
     }
 }
 
 void DesignView::closeEvent(QCloseEvent *event)
 {
     event->accept();
-    //Clean-up only when there is no active thread.
-    //However, this will cause a memory leak when the
-    //TableView is closed when the thread is busy.
-    //Proper solution is to create a Thread class
-    //and cancel that before we clean-up. We cannot do
-    //this now because we are using QFuture (per Qt docs).
     emit designViewClosing(this);
 
     QSettings settings("pgXplorer", "pgXplorer");

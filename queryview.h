@@ -44,6 +44,8 @@ private:
     QStringList whereCl;
     QStringList orderCl;
     ulong thisQueryViewId;
+    QAction *copy_action;
+    QAction *copy_with_headers_action;
     QAction *scatterplot_action;
     QAction *lineplot_action;
     QAction *barplot_action;
@@ -73,8 +75,8 @@ public slots:
     void togglePlots();
 
 private slots:
-    void copyc();
-    void copych();
+    void copyToClipboard();
+    void copyToClipboardWithHeaders();
     void busySlot();
     void updRowCntSlot(QString);
     void fullscreen();
