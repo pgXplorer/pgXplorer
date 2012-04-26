@@ -48,7 +48,8 @@ class Function;
 class QueryView;
 class Help;
 
-class GraphicsView : public QGraphicsView {
+class GraphicsView : public QGraphicsView
+{
     Q_OBJECT
 
 public:
@@ -146,9 +147,6 @@ public:
     void setDisplayMode(DisplayMode display_mode);
     DisplayMode displayMode() const;
 
-    QStringList table_completer_list;
-    QStringList view_completer_list;
-    QStringList function_completer_list;
     MainWin(QWidget *parent=0, const QString arg1=QLatin1String(""), Qt::WindowFlags f=0);
     ~MainWin();
     QGraphicsScene& getScn()
@@ -273,7 +271,7 @@ private slots:
     void noZoom();
 
 signals:
-    void languageChanged(QEvent *);
+    void changeLanguage(QEvent *);
     void clicked();
     void closing();
     void showColumnView();

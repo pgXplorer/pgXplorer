@@ -46,7 +46,7 @@
 bool MainWin::session_unsaved = false;
 
 GraphicsView::GraphicsView(
-        QGraphicsScene& s, QWidget *parent,
+        QGraphicsScene &s, QWidget *parent,
         const char *name, Qt::WindowFlags f) :
     QGraphicsView(&s, parent)
 {
@@ -218,7 +218,7 @@ void MainWin::changeEvent(QEvent *event)
         windows_menu->setTitle(MainWin::tr("&Windows"));
         display_menu->setTitle(MainWin::tr("&Display"));
         language_menu->setTitle(MainWin::tr("&Language"));
-        help_menu->setTitle(MainWin::tr("&Help"));
+        //help_menu->setTitle(MainWin::tr("&Help"));
 
         new_file_action->setText(MainWin::tr("&New"));
         open_file_action->setText(MainWin::tr("&Open..."));
@@ -241,7 +241,7 @@ void MainWin::changeEvent(QEvent *event)
         help_action->setText(MainWin::tr("&Help"));
         about_action->setText(MainWin::tr("&License key/About"));
 
-        emit languageChanged(event);
+        emit changeLanguage(event);
     }
 }
 
@@ -984,6 +984,7 @@ bool MainWin::newDatabase(QString host, qint32 port, QString dbname, QString use
     graphics_view->setMainWin(this);
     console_action->setEnabled(true);
     editor_action->setEnabled(true);
+    search_action->setEnabled(true);
     save_file_action->setEnabled(true);
     save_file_as_action->setEnabled(true);
     session_unsaved = true;
@@ -1049,20 +1050,11 @@ void MainWin::showPgxconsole()
     // DDL and DML commands and produce output
     // accordingly.
     PgxConsole *pgxconsole = new PgxConsole(database);
-    /*foreach(Schema *schema, database->getSchemaList()) {
-        foreach (Table *table, schema->getTableList())
-            pgxconsole->appendCompleterList(table->getName());
-        foreach (View *view, schema->getViewList())
-            pgxconsole->appendCompleterList(view->getName());
-        foreach (Function *function, schema->getFunctionList())
-            pgxconsole->appendCompleterList(function->getName());
-    }*/
-
     pgxconsole_list.append(pgxconsole);
     QObject::connect(pgxconsole, SIGNAL(showQueryView(Database *, QString)), this, SLOT(showQueryView(Database*,QString)));
     QObject::connect(pgxconsole, SIGNAL(pgxconsoleClosing(PgxConsole*)), this, SLOT(pgxconsoleClosed(PgxConsole*)));
     QObject::connect(pgxconsole, SIGNAL(newPgxconsole()), this, SLOT(showPgxconsole()));
-    QObject::connect(this, SIGNAL(languageChanged(QEvent*)), pgxconsole, SLOT(languageChanged(QEvent*)));
+    QObject::connect(this, SIGNAL(changeLanguage(QEvent*)), pgxconsole, SLOT(languageChanged(QEvent*)));
 
     QSettings settings("pgXplorer","pgXplorer");
     QPoint pos = settings.value("pgxconsole_pos", QPoint(100, 100)).toPoint();
@@ -1096,11 +1088,11 @@ void MainWin::search()
         search_action->setChecked(true);
         delete completer;
         if(tableview_action->isChecked())
-            completer = new QCompleter(table_completer_list, this);
+            completer = new QCompleter(database->tableNamesList(), this);
         else if(viewview_action->isChecked())
-            completer = new QCompleter(view_completer_list, this);
+            completer = new QCompleter(database->viewNamesList(), this);
         else if(functionview_action->isChecked())
-            completer = new QCompleter(function_completer_list, this);
+            completer = new QCompleter(database->functionNamesList(), this);
         else
             completer = new QCompleter;
 
@@ -1251,7 +1243,7 @@ void MainWin::showAllTables()
 {
     setDisplayMode(MainWin::Tables);
     delete completer;
-    completer = new QCompleter(table_completer_list, this);
+    completer = new QCompleter(database->tableNamesList(), this);
     search_box->setCompleter(completer);
     QList<Schema*> schema_list = database->getSchemaList();
     foreach (Schema *schema, schema_list)
@@ -1289,7 +1281,7 @@ void MainWin::showAllViews()
 {
     setDisplayMode(MainWin::Views);
     delete completer;
-    completer = new QCompleter(view_completer_list, this);
+    completer = new QCompleter(database->viewNamesList(), this);
     search_box->setCompleter(completer);
     QList<Schema*> schema_list = database->getSchemaList();
     foreach (Schema *schema, schema_list)
@@ -1326,7 +1318,7 @@ void MainWin::showAllFunctions()
 {
     setDisplayMode(MainWin::Functions);
     delete completer;
-    completer = new QCompleter(function_completer_list, this);
+    completer = new QCompleter(database->functionNamesList(), this);
     search_box->setCompleter(completer);
     QList<Schema*> schema_list = database->getSchemaList();
     foreach (Schema *schema, schema_list)
@@ -1377,8 +1369,10 @@ void MainWin::populateWindowMenu()
         connect(window, SIGNAL(triggered()), pgxconsole->mainWin(), SLOT(bringOnTop()));
         windows.append(window);
     }
-    if(windows.isEmpty())
-        windows_menu->addAction(tr(""));
+    if(windows.isEmpty()) {
+        windows_menu->addAction(tr("Empty"));
+        windows_menu->actions().at(0)->setEnabled(false);
+    }
     windows_menu->addActions(windows);
 }
 
@@ -1492,6 +1486,7 @@ void MainWin::createActions()
     //search_action->setShortcuts(QKeySequence::Find);
     search_action->setStatusTip(MainWin::tr("Highlight items that match"));
     search_action->setCheckable(true);
+    search_action->setEnabled(false);
     connect(search_action, SIGNAL(triggered()), this, SLOT(search()));
 
     fullscreen_action = new QAction(QIcon(":/icons/fullscreen.png"), MainWin::tr("Fullscreen"), this);
@@ -1601,11 +1596,11 @@ void MainWin::createMenus()
     language_menu->addAction(japanese_action);
     //language_menu->addAction(french_action);
 
-    menuBar()->addSeparator();
+    //menuBar()->addSeparator();
 
-    help_menu = menuBar()->addMenu(MainWin::tr("&Help"));
-    help_menu->addAction(help_action);
-    //help_menu->addAction(about_action);
+    //help_menu = menuBar()->addMenu(MainWin::tr("&Help"));
+    //help_menu->addAction(help_action);
+    ////help_menu->addAction(about_action);
 }
 
 void MainWin::showTableView(Database *database, Schema *schema, Table *table)
@@ -1620,7 +1615,7 @@ void MainWin::showTableView(Database *database, Schema *schema, Table *table)
     TableView *table_view = new TableView(database, table_name, table_name, table->getColumnList(), table->getPrimaryKey(), table->getColumnTypes(), table->getColumnLengths(), false, Qt::WA_DeleteOnClose);
     table_view_list.append(table_view);
     QObject::connect(table_view, SIGNAL(tableViewClosing(TableView*)), this, SLOT(tableViewClosed(TableView*)));
-    QObject::connect(this, SIGNAL(languageChanged(QEvent*)), table_view, SLOT(languageChanged(QEvent*)));
+    QObject::connect(this, SIGNAL(changeLanguage(QEvent*)), table_view, SLOT(languageChanged(QEvent*)));
 
     QPoint pos = settings.value("tableview_pos", QPoint(100, 100)).toPoint();
     QSize size = settings.value("tableview_size", QSize(1024, 768)).toSize();
@@ -1650,7 +1645,7 @@ void MainWin::showDesignView(Database *database, Schema *schema, Table *table)
     DesignView *design_view = new DesignView(database, table, table_name, table_name, table->getColumnList(), table->getPrimaryKey(), table->getColumnTypes(), table->getColumnLengths(), table->getColumnNulls(), false, Qt::WA_DeleteOnClose);
     design_view_list.append(design_view);
     QObject::connect(design_view, SIGNAL(designViewClosing(DesignView*)), this, SLOT(designViewClosed(DesignView*)));
-    QObject::connect(this, SIGNAL(languageChanged(QEvent*)), design_view, SLOT(languageChanged(QEvent*)));
+    QObject::connect(this, SIGNAL(changeLanguage(QEvent*)), design_view, SLOT(languageChanged(QEvent*)));
 
     QPoint pos = settings.value("designview_pos", QPoint(100, 100)).toPoint();
     QSize size = settings.value("designview_size", QSize(1024, 768)).toSize();
@@ -1672,7 +1667,7 @@ void MainWin::showViewView(Database *database, Schema *schema, View *view)
     ViewView *view_view = new ViewView(database, view_name, view_name, view->getColumnList(), view->getColumnTypes(), true, Qt::WA_DeleteOnClose);
     view_view_list.append(view_view);
     QObject::connect(view_view, SIGNAL(viewViewClosing(ViewView*)), this, SLOT(viewViewClosed(ViewView*)));
-    QObject::connect(this, SIGNAL(languageChanged(QEvent*)), view_view, SLOT(languageChanged(QEvent*)));
+    QObject::connect(this, SIGNAL(changeLanguage(QEvent*)), view_view, SLOT(languageChanged(QEvent*)));
 
     QSettings settings("pgXplorer", "pgXplorer");
     QPoint pos = settings.value("viewview_pos", QPoint(100, 100)).toPoint();
@@ -1860,7 +1855,7 @@ void MainWin::showFunctionEditor(Schema *schema, Function *function)
     QObject::connect(pgxeditor, SIGNAL(pgxeditorClosing(PgxEditor*)), this, SLOT(pgxeditorClosed(PgxEditor*)));
     QObject::connect(pgxeditor, SIGNAL(newPgxeditor()), this, SLOT(showPgxeditor()));
     QObject::connect(pgxeditor, SIGNAL(newPgxeditor(QString)), this, SLOT(showPgxeditor(QString)));
-    QObject::connect(this, SIGNAL(languageChanged(QEvent*)), pgxeditor, SLOT(languageChanged(QEvent*)));
+    QObject::connect(this, SIGNAL(changeLanguage(QEvent*)), pgxeditor, SLOT(languageChanged(QEvent*)));
 
     QString function_definition;
     {
@@ -1911,7 +1906,7 @@ void MainWin::showViewEditor(Schema *schema, View *view)
     QObject::connect(pgxeditor, SIGNAL(pgxeditorClosing(PgxEditor*)), this, SLOT(pgxeditorClosed(PgxEditor*)));
     QObject::connect(pgxeditor, SIGNAL(newPgxeditor()), this, SLOT(showPgxeditor()));
     QObject::connect(pgxeditor, SIGNAL(newPgxeditor(QString)), this, SLOT(showPgxeditor(QString)));
-    QObject::connect(this, SIGNAL(languageChanged(QEvent*)), pgxeditor, SLOT(languageChanged(QEvent*)));
+    QObject::connect(this, SIGNAL(changeLanguage(QEvent*)), pgxeditor, SLOT(languageChanged(QEvent*)));
 
     QString view_definition;
     {
@@ -1959,7 +1954,7 @@ void MainWin::showPgxeditor()
     QObject::connect(pgxeditor, SIGNAL(pgxeditorClosing(PgxEditor*)), this, SLOT(pgxeditorClosed(PgxEditor*)));
     QObject::connect(pgxeditor, SIGNAL(newPgxeditor()), this, SLOT(showPgxeditor()));
     QObject::connect(pgxeditor, SIGNAL(newPgxeditor(QString)), this, SLOT(showPgxeditor(QString)));
-    QObject::connect(this, SIGNAL(languageChanged(QEvent*)), pgxeditor, SLOT(languageChanged(QEvent*)));
+    QObject::connect(this, SIGNAL(changeLanguage(QEvent*)), pgxeditor, SLOT(languageChanged(QEvent*)));
 
     pgxeditor->moveCursor(QTextCursor::Start);
     pgxeditor->ensureCursorVisible();
