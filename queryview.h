@@ -36,6 +36,7 @@ private:
     QTime t;
     QTableView *query_view;
     QueryModel *query_model;
+    QToolBar *toolbar;
     QStandardItemModel *errors_model;
     QShortcut *shortcut_fullscreen;
     QShortcut *shortcut_restore;
@@ -43,14 +44,20 @@ private:
     QStringList whereCl;
     QStringList orderCl;
     ulong thisQueryViewId;
+    QAction *scatterplot_action;
+    QAction *lineplot_action;
+    QAction *barplot_action;
     bool thread_busy;
+
+protected:
+    void contextMenuEvent(QGraphicsSceneContextMenuEvent *);
+    void closeEvent(QCloseEvent *);
 
 public:
     static ulong queryViewObjectId;
     QueryView(Database *, QString);
-    ~QueryView(){};
-    void contextMenuEvent(QGraphicsSceneContextMenuEvent *);
-    void closeEvent(QCloseEvent *);
+    ~QueryView(){}
+    void createActions();
 
     ulong getId()
     {
@@ -63,6 +70,7 @@ public:
 
 public slots:
     void bringOnTop();
+    void togglePlots();
 
 private slots:
     void copyc();
@@ -72,6 +80,9 @@ private slots:
     void fullscreen();
     void restore();
     void fetchData(QString);
+    void scatterPlot();
+    void linePlot();
+    void barPlot();
 
 signals:
     void busySignal();

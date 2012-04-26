@@ -17,6 +17,7 @@
 */
 
 #include "queryview.h"
+#include "graphwindow.h"
 
 ulong QueryView::queryViewObjectId = 0;
 
@@ -35,6 +36,17 @@ QueryView::QueryView(Database *database, QString command)
 
     //Start the timer.
     t.start();
+
+    createActions();
+
+    toolbar = new QToolBar;
+    toolbar->setIconSize(QSize(36,36));
+    toolbar->setObjectName("tableview");
+    toolbar->setMovable(false);
+    toolbar->addAction(scatterplot_action);
+    toolbar->addAction(lineplot_action);
+    toolbar->addAction(barplot_action);
+    addToolBar(toolbar);
 
     errors_model = new QStandardItemModel(0,1);
     query_model = new QueryModel;
@@ -65,7 +77,7 @@ QueryView::QueryView(Database *database, QString command)
     //Tie a busy signal to a slot that changes the cursor to wait cursor.
     connect(this, SIGNAL(busySignal()), this, SLOT(busySlot()));
 
-    QFuture<void> future = QtConcurrent::run(this, &QueryView::fetchData, sql);
+    QtConcurrent::run(this, &QueryView::fetchData, sql);
 }
 
 void QueryView::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
@@ -121,10 +133,28 @@ void QueryView::closeEvent(QCloseEvent *event)
     }
 }
 
+void QueryView::createActions()
+{
+    scatterplot_action = new QAction(QIcon(":/icons/scatter.png"), tr("Scatter plot"), this);
+    scatterplot_action->setEnabled(false);
+    scatterplot_action->setStatusTip(tr("Plot the selected columns as a scatter plot"));
+    connect(scatterplot_action, SIGNAL(triggered()), this, SLOT(scatterPlot()));
+
+    lineplot_action = new QAction(QIcon(":/icons/line.png"), tr("Line plot"), this);
+    lineplot_action->setEnabled(false);
+    lineplot_action->setStatusTip(tr("Plot the selected columns as a line plot"));
+    connect(lineplot_action, SIGNAL(triggered()), this, SLOT(linePlot()));
+
+    barplot_action = new QAction(QIcon(":/icons/bar.png"), tr("Bar plot"), this);
+    barplot_action->setEnabled(false);
+    barplot_action->setStatusTip(tr("Plot the selected columns as a bar plot"));
+    connect(barplot_action, SIGNAL(triggered()), this, SLOT(barPlot()));
+}
+
 void QueryView::copyc()
 {
-    QItemSelectionModel *s = query_view->selectionModel();
-    QModelIndexList indices = s->selectedIndexes();
+    QItemSelectionModel *selection_model = query_view->selectionModel();
+    QModelIndexList indices = selection_model->selectedIndexes();
     if(indices.isEmpty()) {
         return;
     }
@@ -151,9 +181,9 @@ void QueryView::copyc()
 
 void QueryView::copych()
 {
-    QAbstractItemModel *atm = query_view->model();
-    QItemSelectionModel *s = query_view->selectionModel();
-    QModelIndexList indices = s->selectedIndexes();
+    QAbstractItemModel *model = query_view->model();
+    QItemSelectionModel *selection_model = query_view->selectionModel();
+    QModelIndexList indices = selection_model->selectedIndexes();
     if(indices.isEmpty())
         return;
     qSort(indices);
@@ -162,7 +192,7 @@ void QueryView::copych()
     int prevRow = indices.at(0).row();
     foreach(current, indices) {
         if(current.row() == prevRow) {
-            QVariant data = atm->headerData(current.column(), Qt::Horizontal);
+            QVariant data = model->headerData(current.column(), Qt::Horizontal);
             headerText.append(data.toString());
             headerText.append(QLatin1Char('\t'));
         }
@@ -179,7 +209,7 @@ void QueryView::copych()
     QModelIndex last = indices.last();
     indices.removeFirst();
     foreach(current, indices) {
-        QVariant data = atm->data(prev);
+        QVariant data = model->data(prev);
         selectedText.append(data.toString());
         if(current.row() != prev.row())
             selectedText.append(QLatin1Char('\n'));
@@ -187,7 +217,7 @@ void QueryView::copych()
             selectedText.append(QLatin1Char('\t'));
         prev = current;
     }
-    selectedText.append(atm->data(last).toString());
+    selectedText.append(model->data(last).toString());
     selectedText.append(QLatin1Char('\n'));
     qApp->clipboard()->setText(headerText + selectedText);
 }
@@ -287,6 +317,8 @@ void QueryView::updRowCntSlot(QString error)
     }
     else {
         query_view->setModel(query_model);
+        connect(query_view->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)), this, SLOT(togglePlots()));
+
         query_view->verticalScrollBar()->setValue(0);
         if(query_model->rowCount() == 0)
             statusBar()->showMessage(time_elapsed + QString::number((double)t.elapsed()/1000) +
@@ -299,4 +331,65 @@ void QueryView::updRowCntSlot(QString error)
     }
     setCursor(Qt::ArrowCursor);
     thread_busy = false;
+}
+
+void QueryView::togglePlots()
+{
+    QItemSelectionModel *selection_model = query_view->selectionModel();
+    QModelIndexList indices = selection_model->selectedIndexes();
+
+    if(indices.isEmpty())
+        return;
+    qSort(indices);
+
+    int row_count = 0;
+    int column_count = 0;
+
+    int first_row = indices.first().row();
+    int first_column = indices.first().column();
+    int last_row = indices.last().row();
+    int row = indices.first().row();
+    int column = indices.first().column();
+    foreach(QModelIndex index, indices) {
+        if(index.row() == first_row)
+            column_count++;
+        if(index.column() == first_column)
+            row_count++;
+        column = index.column();
+        row = index.row();
+    }
+    if((column_count == 2) && (row_count - (last_row-first_row+1) == 0)) {
+        scatterplot_action->setEnabled(true);
+        lineplot_action->setEnabled(true);
+        barplot_action->setEnabled(true);
+    }
+    else {
+        scatterplot_action->setEnabled(false);
+        lineplot_action->setEnabled(false);
+        barplot_action->setEnabled(false);
+    }
+}
+
+void QueryView::scatterPlot()
+{
+    QModelIndexList list = query_view->selectionModel()->selectedIndexes();
+    qSort(list);
+    GraphWindow *graph_win = new GraphWindow(list, GraphWindow::Scatter);
+    graph_win->show();
+}
+
+void QueryView::linePlot()
+{
+    QModelIndexList list = query_view->selectionModel()->selectedIndexes();
+    qSort(list);
+    GraphWindow *graph_win = new GraphWindow(list, GraphWindow::Line);
+    graph_win->show();
+}
+
+void QueryView::barPlot()
+{
+    QModelIndexList list = query_view->selectionModel()->selectedIndexes();
+    qSort(list);
+    GraphWindow *graph_win = new GraphWindow(list, GraphWindow::Bar);
+    graph_win->show();
 }
