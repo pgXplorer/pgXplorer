@@ -70,6 +70,7 @@ TableProperties::TableProperties(QMainWindow *parent, QString table_name, QStrin
 void TableProperties::languageChanged(QEvent *event)
 {
     if (event->type() == QEvent::LanguageChange) {
+        title->setText(tr("Properties"));
         (static_cast<QLabel*>(form_layout->labelForField(with_oid)))->setText(tr("With oids"));
         (static_cast<QLabel*>(form_layout->labelForField(tablespace)))->setText(tr("Tablespace"));
         (static_cast<QLabel*>(form_layout->labelForField(fill_factor)))->setText(tr("Fill factor"));
