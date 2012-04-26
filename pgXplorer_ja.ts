@@ -40,29 +40,29 @@
 <context>
     <name>ConnectionProperties</name>
     <message>
-        <location filename="connectionproperties.cpp" line="29"/>
-        <location filename="connectionproperties.cpp" line="36"/>
+        <location filename="connectionproperties.cpp" line="28"/>
+        <location filename="connectionproperties.cpp" line="35"/>
         <source>Connection</source>
         <translation>接続</translation>
     </message>
     <message>
-        <location filename="connectionproperties.cpp" line="66"/>
+        <location filename="connectionproperties.cpp" line="65"/>
         <source>Server</source>
         <translation>サーバー</translation>
     </message>
     <message>
-        <location filename="connectionproperties.cpp" line="68"/>
+        <location filename="connectionproperties.cpp" line="67"/>
         <source>Database</source>
         <translation>データベース</translation>
     </message>
     <message>
-        <location filename="connectionproperties.cpp" line="70"/>
-        <location filename="connectionproperties.cpp" line="74"/>
+        <location filename="connectionproperties.cpp" line="69"/>
+        <location filename="connectionproperties.cpp" line="73"/>
         <source>Port</source>
         <translation>ポート</translation>
     </message>
     <message>
-        <location filename="connectionproperties.cpp" line="72"/>
+        <location filename="connectionproperties.cpp" line="71"/>
         <source>Username</source>
         <translation>ユーザー名</translation>
     </message>
@@ -74,70 +74,70 @@
         <translation type="obsolete">削除</translation>
     </message>
     <message>
-        <location filename="database.cpp" line="67"/>
-        <location filename="database.cpp" line="80"/>
+        <location filename="database.cpp" line="66"/>
+        <location filename="database.cpp" line="79"/>
         <source>Explode</source>
         <translation>爆</translation>
     </message>
     <message>
-        <location filename="database.cpp" line="69"/>
-        <location filename="database.cpp" line="85"/>
+        <location filename="database.cpp" line="68"/>
+        <location filename="database.cpp" line="84"/>
         <source>Collapse</source>
         <translation>崩</translation>
     </message>
     <message>
-        <location filename="database.cpp" line="74"/>
-        <location filename="database.cpp" line="100"/>
+        <location filename="database.cpp" line="76"/>
+        <location filename="database.cpp" line="99"/>
         <source>Properties</source>
         <translation>プロパティー</translation>
     </message>
     <message>
-        <location filename="database.cpp" line="77"/>
-        <location filename="database.cpp" line="103"/>
+        <location filename="database.cpp" line="74"/>
+        <location filename="database.cpp" line="102"/>
         <source>Refresh</source>
         <translation>リフレッシュ</translation>
     </message>
     <message>
-        <location filename="database.cpp" line="90"/>
+        <location filename="database.cpp" line="89"/>
         <source>Explode all</source>
         <translation>全て爆</translation>
     </message>
     <message>
-        <location filename="database.cpp" line="95"/>
+        <location filename="database.cpp" line="94"/>
         <source>Explode all vertically</source>
         <translation>全て縦爆</translation>
     </message>
     <message>
-        <location filename="database.cpp" line="140"/>
-        <location filename="database.cpp" line="187"/>
-        <location filename="database.cpp" line="225"/>
-        <location filename="database.cpp" line="246"/>
+        <location filename="database.cpp" line="176"/>
+        <location filename="database.cpp" line="223"/>
+        <location filename="database.cpp" line="261"/>
+        <location filename="database.cpp" line="282"/>
         <source>Database error</source>
         <translation>データベースエラー</translation>
     </message>
     <message>
-        <location filename="database.cpp" line="141"/>
+        <location filename="database.cpp" line="177"/>
         <source>Unable to retrieve database schemas.
 Check your database connection or permissions.
 </source>
         <translation>スキーマ情報の取得出来ませんでした。データベース接続値を確認して下さい。</translation>
     </message>
     <message>
-        <location filename="database.cpp" line="188"/>
+        <location filename="database.cpp" line="224"/>
         <source>Unable to retrieve data types.
 Check your database connection or permissions.
 </source>
         <translation>データ型情報の取得出来ませんでした。データベース接続値を確認して下さい。</translation>
     </message>
     <message>
-        <location filename="database.cpp" line="226"/>
+        <location filename="database.cpp" line="262"/>
         <source>Unable to establish a database connection.
 No PostgreSQL support.
 </source>
         <translation>データベース接続は出来ませんでした。PostgreSQLドライバサポートは有りません。</translation>
     </message>
     <message>
-        <location filename="database.cpp" line="247"/>
+        <location filename="database.cpp" line="283"/>
         <source>Couldn&apos;t connect to database.
 Check connection parameters.
 </source>
@@ -153,37 +153,36 @@ Contact database administrator.
 <context>
     <name>DesignView</name>
     <message>
-        <location filename="designview.cpp" line="179"/>
+        <location filename="designview.cpp" line="148"/>
         <location filename="designview.cpp" line="345"/>
         <source>Name</source>
         <translation>名称</translation>
     </message>
     <message>
-        <location filename="designview.cpp" line="180"/>
+        <location filename="designview.cpp" line="149"/>
         <location filename="designview.cpp" line="346"/>
         <source>Type</source>
         <translation>データ型</translation>
     </message>
     <message>
-        <location filename="designview.cpp" line="181"/>
+        <location filename="designview.cpp" line="150"/>
         <location filename="designview.cpp" line="347"/>
         <source>Primary key</source>
         <translation>主キー</translation>
     </message>
     <message>
-        <location filename="designview.cpp" line="182"/>
+        <location filename="designview.cpp" line="151"/>
         <location filename="designview.cpp" line="348"/>
         <source>Not null</source>
         <translation>ヌルなし</translation>
     </message>
     <message>
-        <location filename="designview.cpp" line="183"/>
+        <location filename="designview.cpp" line="152"/>
         <location filename="designview.cpp" line="349"/>
         <source>Default value</source>
         <translation>既定値</translation>
     </message>
     <message>
-        <location filename="designview.cpp" line="184"/>
         <location filename="designview.cpp" line="350"/>
         <source>Comment</source>
         <translation>コメント</translation>
@@ -290,7 +289,7 @@ Refer to the README document at the source code location for more details on bui
     <name>MainWin</name>
     <message>
         <location filename="mainwin.cpp" line="223"/>
-        <location filename="mainwin.cpp" line="1408"/>
+        <location filename="mainwin.cpp" line="1441"/>
         <source>&amp;New</source>
         <translation>新しい</translation>
     </message>
@@ -348,17 +347,17 @@ Refer to the README document at the source code location for more details on bui
         <translation>リフレッシュ</translation>
     </message>
     <message>
-        <location filename="mainwin.cpp" line="608"/>
+        <location filename="mainwin.cpp" line="645"/>
         <source>New schema...</source>
         <translation>新しいスキーマ。。。</translation>
     </message>
     <message>
-        <location filename="mainwin.cpp" line="636"/>
+        <location filename="mainwin.cpp" line="673"/>
         <source>New schema</source>
         <translation>新しいスキーマ</translation>
     </message>
     <message>
-        <location filename="mainwin.cpp" line="691"/>
+        <location filename="mainwin.cpp" line="728"/>
         <source>A table with this name &quot;&lt;html&gt;&lt;b&gt;%1&lt;/b&gt;&lt;/html&gt;&quot; already exists in schema &quot;&lt;html&gt;&lt;b&gt;%2&lt;/b&gt;&lt;/html&gt;&quot;.
 Please choose another name or discard.
 </source>
@@ -366,47 +365,51 @@ Please choose another name or discard.
 名称直してください。</translation>
     </message>
     <message>
-        <location filename="mainwin.cpp" line="878"/>
-        <location filename="mainwin.cpp" line="970"/>
+        <location filename="mainwin.cpp" line="915"/>
+        <location filename="mainwin.cpp" line="1008"/>
         <source>The database session has been modified.</source>
         <translation>このデータベースセッションが変更されています。</translation>
     </message>
     <message>
-        <location filename="mainwin.cpp" line="935"/>
+        <location filename="mainwin.cpp" line="972"/>
         <source>Host</source>
         <translation>ホスト</translation>
     </message>
     <message>
-        <location filename="mainwin.cpp" line="936"/>
+        <location filename="mainwin.cpp" line="973"/>
         <source>Port</source>
         <translation>ポート</translation>
     </message>
     <message>
-        <location filename="mainwin.cpp" line="937"/>
+        <location filename="mainwin.cpp" line="974"/>
         <source>User</source>
         <translation>ユーザー</translation>
     </message>
     <message>
-        <location filename="mainwin.cpp" line="1369"/>
+        <source>None</source>
+        <translation type="obsolete">なし</translation>
+    </message>
+    <message>
+        <location filename="mainwin.cpp" line="1402"/>
         <source>New table</source>
         <translation>新しいテーブル</translation>
     </message>
     <message>
-        <location filename="mainwin.cpp" line="1690"/>
+        <location filename="mainwin.cpp" line="1724"/>
         <source>Delete table &lt;html&gt;&lt;b&gt;%1&lt;/b&gt;&lt;/html&gt;?
 This action will destroy this table and all its data and cannot be undone.
 Do you want to continue?</source>
         <translation>テーブル &lt;html&gt;&lt;b&gt;%1&lt;/b&gt;&lt;/html&gt; を削除しますか？テーブルのデータ抹消してテーブルを削除します。戻ることは出来ません。進めますか？</translation>
     </message>
     <message>
-        <location filename="mainwin.cpp" line="1726"/>
+        <location filename="mainwin.cpp" line="1760"/>
         <source>Delete view &lt;html&gt;&lt;b&gt;%1&lt;/b&gt;&lt;/html&gt;?
 This action will destroy this view and all its data and cannot be undone.
 Do you want to continue?</source>
         <translation>ビュー &lt;html&gt;&lt;b&gt;%1&lt;/b&gt;&lt;/html&gt; を削除しますか？ビューを削除します。戻ることは出来ません。進めますか？</translation>
     </message>
     <message>
-        <location filename="mainwin.cpp" line="1762"/>
+        <location filename="mainwin.cpp" line="1796"/>
         <source>Delete function &lt;html&gt;&lt;b&gt;%1&lt;/b&gt;&lt;/html&gt;?
 This action will destroy this function and cannot be undone.
 Do you want to continue?</source>
@@ -417,116 +420,116 @@ Do you want to continue?</source>
         <translation type="obsolete">はい</translation>
     </message>
     <message>
-        <location filename="mainwin.cpp" line="1410"/>
+        <location filename="mainwin.cpp" line="1443"/>
         <source>Create a new file</source>
         <translation>新しいファイル作成</translation>
     </message>
     <message>
         <location filename="mainwin.cpp" line="224"/>
-        <location filename="mainwin.cpp" line="1413"/>
+        <location filename="mainwin.cpp" line="1446"/>
         <source>&amp;Open...</source>
         <translation>開く...</translation>
     </message>
     <message>
-        <location filename="mainwin.cpp" line="1415"/>
+        <location filename="mainwin.cpp" line="1448"/>
         <source>Open an existing file</source>
         <translation>在来ファイルを開く</translation>
     </message>
     <message>
-        <location filename="designview.cpp" line="255"/>
+        <location filename="designview.cpp" line="223"/>
         <location filename="designview.cpp" line="341"/>
         <location filename="mainwin.cpp" line="225"/>
-        <location filename="mainwin.cpp" line="1418"/>
+        <location filename="mainwin.cpp" line="1451"/>
         <source>&amp;Save</source>
         <translation>保存</translation>
     </message>
     <message>
-        <location filename="mainwin.cpp" line="1420"/>
+        <location filename="mainwin.cpp" line="1453"/>
         <source>Save the database session to disk</source>
         <oldsource>Save the document to disk</oldsource>
         <translation>データベースセッションを保存する</translation>
     </message>
     <message>
         <location filename="mainwin.cpp" line="226"/>
-        <location filename="mainwin.cpp" line="1424"/>
+        <location filename="mainwin.cpp" line="1457"/>
         <source>Save &amp;As...</source>
         <translation>別名保存</translation>
     </message>
     <message>
-        <location filename="mainwin.cpp" line="1426"/>
+        <location filename="mainwin.cpp" line="1459"/>
         <source>Save the database session under a new name</source>
         <oldsource>Save the document under a new name</oldsource>
         <translation>データベースセッションを別名で保存する</translation>
     </message>
     <message>
         <location filename="mainwin.cpp" line="227"/>
-        <location filename="mainwin.cpp" line="1430"/>
+        <location filename="mainwin.cpp" line="1463"/>
         <source>E&amp;xit</source>
         <translation>終了</translation>
     </message>
     <message>
-        <location filename="mainwin.cpp" line="1432"/>
+        <location filename="mainwin.cpp" line="1465"/>
         <source>Exit the application</source>
         <translation>アプリ終了</translation>
     </message>
     <message>
         <location filename="mainwin.cpp" line="228"/>
-        <location filename="mainwin.cpp" line="1435"/>
+        <location filename="mainwin.cpp" line="1468"/>
         <source>Connection properties</source>
         <translation>接続プロパティー</translation>
     </message>
     <message>
-        <location filename="mainwin.cpp" line="1437"/>
+        <location filename="mainwin.cpp" line="1470"/>
         <source>Set connection properties</source>
         <translation>連絡プロパティー構成</translation>
     </message>
     <message>
         <location filename="mainwin.cpp" line="229"/>
-        <location filename="mainwin.cpp" line="1440"/>
+        <location filename="mainwin.cpp" line="1473"/>
         <source>SQL Console</source>
         <translation>SQLコンソール</translation>
     </message>
     <message>
-        <location filename="mainwin.cpp" line="1443"/>
+        <location filename="mainwin.cpp" line="1476"/>
         <source>Launch SQL console</source>
         <translation>コンソール立ち上げる</translation>
     </message>
     <message>
         <location filename="mainwin.cpp" line="230"/>
-        <location filename="mainwin.cpp" line="1446"/>
+        <location filename="mainwin.cpp" line="1479"/>
         <source>SQL Editor</source>
         <translation>SQLエディター</translation>
     </message>
     <message>
-        <location filename="mainwin.cpp" line="1449"/>
+        <location filename="mainwin.cpp" line="1482"/>
         <source>Launch SQL editor</source>
         <translation>エディター立ち上げる</translation>
     </message>
     <message>
         <location filename="mainwin.cpp" line="231"/>
-        <location filename="mainwin.cpp" line="1452"/>
+        <location filename="mainwin.cpp" line="1485"/>
         <source>Search for items</source>
         <translation>検索</translation>
     </message>
     <message>
-        <location filename="mainwin.cpp" line="1454"/>
+        <location filename="mainwin.cpp" line="1487"/>
         <source>Highlight items that match</source>
         <translation>項目ハイライト</translation>
     </message>
     <message>
         <location filename="mainwin.cpp" line="239"/>
-        <location filename="mainwin.cpp" line="1515"/>
+        <location filename="mainwin.cpp" line="1549"/>
         <source>Japanese</source>
         <translation>日本語</translation>
     </message>
     <message>
         <location filename="mainwin.cpp" line="242"/>
-        <location filename="mainwin.cpp" line="1530"/>
+        <location filename="mainwin.cpp" line="1564"/>
         <source>&amp;License key/About</source>
         <translation>ライセンスキー・アプリについて</translation>
     </message>
     <message>
-        <location filename="mainwin.cpp" line="1531"/>
+        <location filename="mainwin.cpp" line="1565"/>
         <source>License key and other information</source>
         <translation>ラインセンスキー情報</translation>
     </message>
@@ -550,71 +553,71 @@ Do you want to continue?</source>
     </message>
     <message>
         <location filename="mainwin.cpp" line="232"/>
-        <location filename="mainwin.cpp" line="1458"/>
+        <location filename="mainwin.cpp" line="1492"/>
         <source>Fullscreen</source>
         <translation>全画面表示</translation>
     </message>
     <message>
-        <location filename="mainwin.cpp" line="1460"/>
+        <location filename="mainwin.cpp" line="1494"/>
         <source>Occupy full desktop</source>
         <translation>デスクトップを乗り撮る</translation>
     </message>
     <message>
-        <location filename="mainwin.cpp" line="1463"/>
+        <location filename="mainwin.cpp" line="1497"/>
         <source>Treeview</source>
         <translation>木ビュー</translation>
     </message>
     <message>
-        <location filename="mainwin.cpp" line="1465"/>
+        <location filename="mainwin.cpp" line="1499"/>
         <source>Show database contents in tree view</source>
         <translation>データベース内容を木ビューに示す</translation>
     </message>
     <message>
-        <location filename="mainwin.cpp" line="1469"/>
+        <location filename="mainwin.cpp" line="1503"/>
         <source>Column view</source>
         <translation>欄ビュー</translation>
     </message>
     <message>
-        <location filename="mainwin.cpp" line="1471"/>
+        <location filename="mainwin.cpp" line="1505"/>
         <source>Show database contents in column view</source>
         <translation>データベース内容を欄ビューに示す</translation>
     </message>
     <message>
         <location filename="mainwin.cpp" line="235"/>
-        <location filename="mainwin.cpp" line="1480"/>
+        <location filename="mainwin.cpp" line="1514"/>
         <source>Tables</source>
         <translation>テーブル</translation>
     </message>
     <message>
-        <location filename="mainwin.cpp" line="1482"/>
+        <location filename="mainwin.cpp" line="1516"/>
         <source>Show database tables</source>
         <translation>データベーステーブル表示</translation>
     </message>
     <message>
         <location filename="mainwin.cpp" line="236"/>
-        <location filename="mainwin.cpp" line="1486"/>
+        <location filename="mainwin.cpp" line="1520"/>
         <source>Views</source>
         <translation>ビュー</translation>
     </message>
     <message>
-        <location filename="mainwin.cpp" line="1488"/>
+        <location filename="mainwin.cpp" line="1522"/>
         <source>Show database views</source>
         <translation>データベースビュー表示</translation>
     </message>
     <message>
         <location filename="mainwin.cpp" line="237"/>
-        <location filename="mainwin.cpp" line="1492"/>
+        <location filename="mainwin.cpp" line="1526"/>
         <source>Functions</source>
         <translation>関数</translation>
     </message>
     <message>
-        <location filename="mainwin.cpp" line="1494"/>
+        <location filename="mainwin.cpp" line="1528"/>
         <source>Show database functions</source>
         <translation>データベース関数表示</translation>
     </message>
     <message>
         <location filename="mainwin.cpp" line="238"/>
-        <location filename="mainwin.cpp" line="1510"/>
+        <location filename="mainwin.cpp" line="1544"/>
         <source>English (default)</source>
         <translation>English (既定)</translation>
     </message>
@@ -624,20 +627,18 @@ Do you want to continue?</source>
     </message>
     <message>
         <location filename="mainwin.cpp" line="240"/>
-        <location filename="mainwin.cpp" line="1520"/>
+        <location filename="mainwin.cpp" line="1554"/>
         <source>French</source>
         <translation>Francois</translation>
     </message>
     <message>
-        <location filename="mainwin.cpp" line="221"/>
         <location filename="mainwin.cpp" line="241"/>
-        <location filename="mainwin.cpp" line="1525"/>
-        <location filename="mainwin.cpp" line="1567"/>
+        <location filename="mainwin.cpp" line="1559"/>
         <source>&amp;Help</source>
         <translation>ヘルプ</translation>
     </message>
     <message>
-        <location filename="mainwin.cpp" line="1527"/>
+        <location filename="mainwin.cpp" line="1561"/>
         <source>Help contents</source>
         <translation>ヘルプ目次</translation>
     </message>
@@ -651,31 +652,31 @@ Do you want to continue?</source>
     </message>
     <message>
         <location filename="mainwin.cpp" line="216"/>
-        <location filename="mainwin.cpp" line="1537"/>
+        <location filename="mainwin.cpp" line="1571"/>
         <source>&amp;File</source>
         <translation>ファイル</translation>
     </message>
     <message>
         <location filename="mainwin.cpp" line="217"/>
-        <location filename="mainwin.cpp" line="1545"/>
+        <location filename="mainwin.cpp" line="1579"/>
         <source>&amp;Tools</source>
         <translation>ツール</translation>
     </message>
     <message>
         <location filename="mainwin.cpp" line="218"/>
-        <location filename="mainwin.cpp" line="1552"/>
+        <location filename="mainwin.cpp" line="1586"/>
         <source>&amp;Windows</source>
         <translation>ショーウインドー</translation>
     </message>
     <message>
         <location filename="mainwin.cpp" line="219"/>
-        <location filename="mainwin.cpp" line="1555"/>
+        <location filename="mainwin.cpp" line="1589"/>
         <source>&amp;Display</source>
         <translation>表示</translation>
     </message>
     <message>
         <location filename="mainwin.cpp" line="220"/>
-        <location filename="mainwin.cpp" line="1560"/>
+        <location filename="mainwin.cpp" line="1594"/>
         <source>&amp;Language</source>
         <translation>言語</translation>
     </message>
@@ -686,23 +687,28 @@ Do you want to continue?</source>
     </message>
     <message>
         <location filename="mainwin.cpp" line="282"/>
-        <location filename="mainwin.cpp" line="879"/>
-        <location filename="mainwin.cpp" line="971"/>
+        <location filename="mainwin.cpp" line="916"/>
+        <location filename="mainwin.cpp" line="1009"/>
         <source>Do you want to save your changes?</source>
         <translation>変更を保存しますか？</translation>
     </message>
     <message>
-        <location filename="mainwin.cpp" line="1655"/>
+        <location filename="mainwin.cpp" line="1373"/>
+        <source>Empty</source>
+        <translation>空っぽ</translation>
+    </message>
+    <message>
+        <location filename="mainwin.cpp" line="1689"/>
         <source>Clear contents of table &lt;html&gt;&lt;b&gt;%1&lt;/b&gt;&lt;/html&gt;?
 This action will destroy all data in this table and cannot be undone.
 Do you want to continue?</source>
         <translation>テーブル &lt;html&gt;&lt;b&gt;%1&lt;/b&gt;&lt;/html&gt; 内容を抹消しますか？テーブルのデータ抹消します。戻ることは出来ません。進めますか？</translation>
     </message>
     <message>
-        <location filename="mainwin.cpp" line="1657"/>
-        <location filename="mainwin.cpp" line="1692"/>
-        <location filename="mainwin.cpp" line="1728"/>
-        <location filename="mainwin.cpp" line="1764"/>
+        <location filename="mainwin.cpp" line="1691"/>
+        <location filename="mainwin.cpp" line="1726"/>
+        <location filename="mainwin.cpp" line="1762"/>
+        <location filename="mainwin.cpp" line="1798"/>
         <source>pgXplorer</source>
         <translation>ｐｇXplorer</translation>
     </message>
@@ -712,48 +718,48 @@ Do you want to continue?</source>
         <translation type="obsolete">テーブルのデータ抹消します。戻ることは出来ません。進めますか？</translation>
     </message>
     <message>
-        <location filename="designview.cpp" line="257"/>
+        <location filename="designview.cpp" line="225"/>
         <location filename="designview.cpp" line="342"/>
         <source>Save the table definition to database</source>
         <translation>テーブル定義の保存</translation>
     </message>
     <message>
-        <location filename="designview.cpp" line="261"/>
+        <location filename="designview.cpp" line="229"/>
         <location filename="designview.cpp" line="343"/>
         <source>&amp;Properties</source>
         <translation>プロパティー</translation>
     </message>
     <message>
-        <location filename="designview.cpp" line="262"/>
+        <location filename="designview.cpp" line="230"/>
         <location filename="designview.cpp" line="344"/>
         <source>Specify table properties</source>
         <translation>テーブルプロパティーの設定</translation>
     </message>
     <message>
-        <location filename="designview.cpp" line="277"/>
-        <location filename="designview.cpp" line="316"/>
-        <location filename="mainwin.cpp" line="664"/>
-        <location filename="mainwin.cpp" line="690"/>
-        <location filename="mainwin.cpp" line="709"/>
-        <location filename="mainwin.cpp" line="1670"/>
-        <location filename="mainwin.cpp" line="1705"/>
-        <location filename="mainwin.cpp" line="1741"/>
-        <location filename="mainwin.cpp" line="1777"/>
-        <location filename="mainwin.cpp" line="1835"/>
-        <location filename="mainwin.cpp" line="1886"/>
+        <location filename="designview.cpp" line="245"/>
+        <location filename="designview.cpp" line="287"/>
+        <location filename="mainwin.cpp" line="701"/>
+        <location filename="mainwin.cpp" line="727"/>
+        <location filename="mainwin.cpp" line="746"/>
+        <location filename="mainwin.cpp" line="1704"/>
+        <location filename="mainwin.cpp" line="1739"/>
+        <location filename="mainwin.cpp" line="1775"/>
+        <location filename="mainwin.cpp" line="1811"/>
+        <location filename="mainwin.cpp" line="1869"/>
+        <location filename="mainwin.cpp" line="1920"/>
         <source>Database error</source>
         <translation>データベースエラー</translation>
     </message>
     <message>
-        <location filename="designview.cpp" line="278"/>
-        <location filename="mainwin.cpp" line="665"/>
-        <location filename="mainwin.cpp" line="710"/>
-        <location filename="mainwin.cpp" line="1671"/>
-        <location filename="mainwin.cpp" line="1706"/>
-        <location filename="mainwin.cpp" line="1742"/>
-        <location filename="mainwin.cpp" line="1778"/>
-        <location filename="mainwin.cpp" line="1836"/>
-        <location filename="mainwin.cpp" line="1887"/>
+        <location filename="designview.cpp" line="246"/>
+        <location filename="mainwin.cpp" line="702"/>
+        <location filename="mainwin.cpp" line="747"/>
+        <location filename="mainwin.cpp" line="1705"/>
+        <location filename="mainwin.cpp" line="1740"/>
+        <location filename="mainwin.cpp" line="1776"/>
+        <location filename="mainwin.cpp" line="1812"/>
+        <location filename="mainwin.cpp" line="1870"/>
+        <location filename="mainwin.cpp" line="1921"/>
         <source>Unable to establish a database connection.
 No PostgreSQL support.
 </source>
@@ -1289,22 +1295,22 @@ Check connection parameters.
 <context>
     <name>QueryView</name>
     <message>
-        <location filename="queryview.cpp" line="43"/>
+        <location filename="queryview.cpp" line="44"/>
         <location filename="tableview.cpp" line="234"/>
-        <location filename="tableview.cpp" line="845"/>
-        <location filename="tableview.cpp" line="854"/>
-        <location filename="tableview.cpp" line="1054"/>
-        <location filename="tableview.cpp" line="1067"/>
-        <location filename="tableview.cpp" line="1076"/>
-        <location filename="tableview.cpp" line="1088"/>
-        <location filename="tableview.cpp" line="1115"/>
-        <location filename="tableview.cpp" line="1133"/>
-        <location filename="tableview.cpp" line="1158"/>
-        <location filename="tableview.cpp" line="1179"/>
-        <location filename="tableview.cpp" line="1347"/>
-        <location filename="tableview.cpp" line="1370"/>
-        <location filename="tableview.cpp" line="1404"/>
-        <location filename="tableview.cpp" line="1415"/>
+        <location filename="tableview.cpp" line="846"/>
+        <location filename="tableview.cpp" line="855"/>
+        <location filename="tableview.cpp" line="1055"/>
+        <location filename="tableview.cpp" line="1068"/>
+        <location filename="tableview.cpp" line="1077"/>
+        <location filename="tableview.cpp" line="1089"/>
+        <location filename="tableview.cpp" line="1116"/>
+        <location filename="tableview.cpp" line="1134"/>
+        <location filename="tableview.cpp" line="1159"/>
+        <location filename="tableview.cpp" line="1180"/>
+        <location filename="tableview.cpp" line="1348"/>
+        <location filename="tableview.cpp" line="1371"/>
+        <location filename="tableview.cpp" line="1405"/>
+        <location filename="tableview.cpp" line="1416"/>
         <location filename="viewview.cpp" line="136"/>
         <location filename="viewview.cpp" line="632"/>
         <location filename="viewview.cpp" line="641"/>
@@ -1324,73 +1330,73 @@ Check connection parameters.
         <translation>データ取得中。。。</translation>
     </message>
     <message>
-        <location filename="queryview.cpp" line="225"/>
+        <location filename="queryview.cpp" line="226"/>
         <source>Couldn&apos;t connect to database.
 Check connection parameters.
 </source>
         <translation>データベース接続は出来ませんでした。連関値を確認して下さい。</translation>
     </message>
     <message>
-        <location filename="queryview.cpp" line="245"/>
+        <location filename="queryview.cpp" line="246"/>
         <location filename="tableview.cpp" line="515"/>
-        <location filename="tableview.cpp" line="601"/>
-        <location filename="tableview.cpp" line="1197"/>
+        <location filename="tableview.cpp" line="602"/>
+        <location filename="tableview.cpp" line="1198"/>
         <location filename="viewview.cpp" line="414"/>
         <location filename="viewview.cpp" line="928"/>
         <source>Time elapsed:</source>
         <translation>時間：</translation>
     </message>
     <message>
-        <location filename="queryview.cpp" line="246"/>
+        <location filename="queryview.cpp" line="247"/>
         <location filename="tableview.cpp" line="516"/>
-        <location filename="tableview.cpp" line="602"/>
-        <location filename="tableview.cpp" line="1198"/>
+        <location filename="tableview.cpp" line="603"/>
+        <location filename="tableview.cpp" line="1199"/>
         <location filename="viewview.cpp" line="415"/>
         <location filename="viewview.cpp" line="929"/>
         <source>Rows:</source>
         <translation>行数：</translation>
     </message>
     <message>
-        <location filename="queryview.cpp" line="247"/>
+        <location filename="queryview.cpp" line="248"/>
         <location filename="tableview.cpp" line="518"/>
-        <location filename="tableview.cpp" line="604"/>
-        <location filename="tableview.cpp" line="1200"/>
+        <location filename="tableview.cpp" line="605"/>
+        <location filename="tableview.cpp" line="1201"/>
         <location filename="viewview.cpp" line="417"/>
         <location filename="viewview.cpp" line="931"/>
         <source>Columns:</source>
         <translation>欄数：</translation>
     </message>
     <message>
-        <location filename="queryview.cpp" line="248"/>
+        <location filename="queryview.cpp" line="249"/>
         <location filename="tableview.cpp" line="519"/>
-        <location filename="tableview.cpp" line="605"/>
-        <location filename="tableview.cpp" line="1201"/>
+        <location filename="tableview.cpp" line="606"/>
+        <location filename="tableview.cpp" line="1202"/>
         <location filename="viewview.cpp" line="418"/>
         <location filename="viewview.cpp" line="932"/>
         <source>s</source>
         <translation>秒</translation>
     </message>
     <message>
-        <location filename="queryview.cpp" line="264"/>
+        <location filename="queryview.cpp" line="265"/>
         <source>Error messages</source>
         <translation>エラーメッセージ</translation>
     </message>
     <message>
-        <location filename="queryview.cpp" line="279"/>
+        <location filename="queryview.cpp" line="280"/>
         <source>Affected rows</source>
         <translation></translation>
     </message>
     <message>
         <location filename="tableview.cpp" line="517"/>
-        <location filename="tableview.cpp" line="603"/>
-        <location filename="tableview.cpp" line="1199"/>
+        <location filename="tableview.cpp" line="604"/>
+        <location filename="tableview.cpp" line="1200"/>
         <location filename="viewview.cpp" line="416"/>
         <location filename="viewview.cpp" line="930"/>
         <source> of whole set</source>
         <translation>部</translation>
     </message>
     <message>
-        <location filename="tableview.cpp" line="1549"/>
+        <location filename="tableview.cpp" line="1552"/>
         <source>Deleting data...</source>
         <translation>データ削除中。。。</translation>
     </message>
@@ -1477,8 +1483,8 @@ Check your database connection or permissions.
         <translation type="obsolete">ビュー</translation>
     </message>
     <message>
-        <location filename="table.cpp" line="179"/>
-        <location filename="table.cpp" line="194"/>
+        <location filename="table.cpp" line="180"/>
+        <location filename="table.cpp" line="195"/>
         <source>Delete</source>
         <translation>削除</translation>
     </message>
@@ -1496,35 +1502,35 @@ Check your database connection or permissions.
         <oldsource>Unable to retrieve schema tables.
 Check your database connection or permissions.
 </oldsource>
-        <translation type="unfinished">テーブル情報取得出来ませんでした。データベース接続値を確認して下さい。</translation>
+        <translation>テーブル情報取得出来ませんでした。データベース接続値を確認して下さい。</translation>
     </message>
     <message>
         <location filename="table.cpp" line="120"/>
         <source>Unable to retrieve primary key information.
 Check your database connection or permissions.
 </source>
-        <translation type="unfinished"></translation>
+        <translation>主キー情報取得出来ませんでした。データベース接続値を確認して下さい。</translation>
     </message>
     <message>
         <location filename="table.cpp" line="172"/>
-        <location filename="table.cpp" line="185"/>
+        <location filename="table.cpp" line="186"/>
         <source>Designer</source>
         <translation>設計</translation>
     </message>
     <message>
         <location filename="table.cpp" line="174"/>
-        <location filename="table.cpp" line="182"/>
+        <location filename="table.cpp" line="183"/>
         <source>View contents</source>
         <translation>内容表示</translation>
     </message>
     <message>
         <location filename="table.cpp" line="177"/>
-        <location filename="table.cpp" line="188"/>
+        <location filename="table.cpp" line="189"/>
         <source>Clear contents</source>
         <translation>内容クリアー</translation>
     </message>
     <message>
-        <location filename="table.cpp" line="191"/>
+        <location filename="table.cpp" line="192"/>
         <source>Rename</source>
         <translation>名称の変更</translation>
     </message>
@@ -1548,36 +1554,62 @@ No PostgreSQL support.
     </message>
 </context>
 <context>
+    <name>TableProperties</name>
+    <message>
+        <location filename="tableproperties.cpp" line="17"/>
+        <source>Properties</source>
+        <translation>プロパティー</translation>
+    </message>
+    <message>
+        <location filename="tableproperties.cpp" line="58"/>
+        <location filename="tableproperties.cpp" line="73"/>
+        <source>With oids</source>
+        <translation>oid付けて</translation>
+    </message>
+    <message>
+        <location filename="tableproperties.cpp" line="62"/>
+        <location filename="tableproperties.cpp" line="74"/>
+        <source>Tablespace</source>
+        <translation>テーブルスペース</translation>
+    </message>
+    <message>
+        <location filename="tableproperties.cpp" line="64"/>
+        <location filename="tableproperties.cpp" line="75"/>
+        <source>Fill factor</source>
+        <translation>フィル・ファクター</translation>
+    </message>
+</context>
+<context>
     <name>TableView</name>
     <message>
         <location filename="tableview.cpp" line="80"/>
-        <location filename="tableview.cpp" line="1253"/>
+        <location filename="tableview.cpp" line="1254"/>
         <source>custom filter</source>
         <translation>カスタムフィルター</translation>
     </message>
     <message>
         <location filename="tableview.cpp" line="115"/>
         <location filename="tableview.cpp" line="116"/>
-        <location filename="tableview.cpp" line="1217"/>
         <location filename="tableview.cpp" line="1218"/>
+        <location filename="tableview.cpp" line="1219"/>
         <source>Remove filter</source>
         <translation>フィルター外す</translation>
     </message>
     <message>
         <location filename="tableview.cpp" line="117"/>
         <location filename="tableview.cpp" line="118"/>
-        <location filename="tableview.cpp" line="1219"/>
         <location filename="tableview.cpp" line="1220"/>
+        <location filename="tableview.cpp" line="1221"/>
         <source>Remove order</source>
         <translation>順外す</translation>
     </message>
     <message>
         <location filename="tableview.cpp" line="436"/>
         <location filename="tableview.cpp" line="492"/>
-        <location filename="tableview.cpp" line="693"/>
-        <location filename="tableview.cpp" line="743"/>
-        <location filename="tableview.cpp" line="780"/>
-        <location filename="tableview.cpp" line="810"/>
+        <location filename="tableview.cpp" line="694"/>
+        <location filename="tableview.cpp" line="744"/>
+        <location filename="tableview.cpp" line="781"/>
+        <location filename="tableview.cpp" line="811"/>
         <source>Couldn&apos;t connect to database.
 Check connection parameters.
 </source>
@@ -1588,13 +1620,13 @@ Check connection parameters.
         <translation type="obsolete">エラー：フィルター間違い</translation>
     </message>
     <message>
-        <location filename="tableview.cpp" line="900"/>
-        <location filename="tableview.cpp" line="929"/>
+        <location filename="tableview.cpp" line="901"/>
+        <location filename="tableview.cpp" line="930"/>
         <source>Nothing copied</source>
         <translation>コピー無視</translation>
     </message>
     <message>
-        <location filename="tableview.cpp" line="1487"/>
+        <location filename="tableview.cpp" line="1488"/>
         <source>Inserted data successfully</source>
         <translation>データ登録正常終了</translation>
     </message>
@@ -1603,222 +1635,222 @@ Check connection parameters.
         <translation type="obsolete">ｐｇXplorer</translation>
     </message>
     <message>
-        <location filename="tableview.cpp" line="1504"/>
+        <location filename="tableview.cpp" line="1507"/>
         <source>This action will destroy all data in this table and cannot be undone.
 Do you want to continue?</source>
         <translation>テーブルのデータを全て抹消します。戻ることは出来ません。進めますか？</translation>
     </message>
     <message>
-        <location filename="tableview.cpp" line="1446"/>
-        <location filename="tableview.cpp" line="1482"/>
-        <location filename="tableview.cpp" line="1521"/>
-        <location filename="tableview.cpp" line="1563"/>
-        <location filename="tableview.cpp" line="1603"/>
+        <location filename="tableview.cpp" line="1447"/>
+        <location filename="tableview.cpp" line="1483"/>
+        <location filename="tableview.cpp" line="1524"/>
+        <location filename="tableview.cpp" line="1566"/>
+        <location filename="tableview.cpp" line="1606"/>
         <source>Database error</source>
         <translation>データベースエラー</translation>
     </message>
     <message>
-        <location filename="tableview.cpp" line="1447"/>
-        <location filename="tableview.cpp" line="1522"/>
-        <location filename="tableview.cpp" line="1564"/>
-        <location filename="tableview.cpp" line="1604"/>
+        <location filename="tableview.cpp" line="1448"/>
+        <location filename="tableview.cpp" line="1525"/>
+        <location filename="tableview.cpp" line="1567"/>
+        <location filename="tableview.cpp" line="1607"/>
         <source>Unable to establish a database connection.
 No PostgreSQL support.
 </source>
         <translation>データベース接続は出来ませんでした。PostgreSQLドライバサポートは有りません。</translation>
     </message>
     <message>
-        <location filename="tableview.cpp" line="1532"/>
+        <location filename="tableview.cpp" line="1535"/>
         <source>All table rows deleted</source>
         <translation>テーブルの全て行削除されました</translation>
     </message>
     <message>
-        <location filename="tableview.cpp" line="1222"/>
         <location filename="tableview.cpp" line="1223"/>
-        <location filename="tableview.cpp" line="1696"/>
-        <location filename="tableview.cpp" line="1698"/>
+        <location filename="tableview.cpp" line="1224"/>
+        <location filename="tableview.cpp" line="1699"/>
+        <location filename="tableview.cpp" line="1701"/>
         <source>Default</source>
         <translation>既定</translation>
     </message>
     <message>
         <location filename="tableview.cpp" line="83"/>
-        <location filename="tableview.cpp" line="1254"/>
+        <location filename="tableview.cpp" line="1255"/>
         <source>bulk update</source>
         <translation>バルク更新</translation>
     </message>
     <message>
         <location filename="tableview.cpp" line="209"/>
-        <location filename="tableview.cpp" line="1216"/>
+        <location filename="tableview.cpp" line="1217"/>
         <source>Insert new data</source>
         <translation>新規データ登録</translation>
     </message>
     <message>
-        <location filename="tableview.cpp" line="998"/>
+        <location filename="tableview.cpp" line="999"/>
         <source>Updating data...</source>
         <translation>データ更新中。。。</translation>
     </message>
     <message>
-        <location filename="tableview.cpp" line="1002"/>
+        <location filename="tableview.cpp" line="1003"/>
         <source>Nothing selected</source>
         <translation>選択なし</translation>
     </message>
     <message>
-        <location filename="tableview.cpp" line="1018"/>
+        <location filename="tableview.cpp" line="1019"/>
         <source>Couldn&apos;t convert input &quot;%1&quot; to a number.</source>
         <translation>入力 &quot;%1&quot;の数字変換出来ませんでした。</translation>
     </message>
     <message>
-        <location filename="tableview.cpp" line="1224"/>
         <location filename="tableview.cpp" line="1225"/>
-        <location filename="tableview.cpp" line="1701"/>
-        <location filename="tableview.cpp" line="1703"/>
+        <location filename="tableview.cpp" line="1226"/>
+        <location filename="tableview.cpp" line="1704"/>
+        <location filename="tableview.cpp" line="1706"/>
         <source>Refresh</source>
         <translation>リフレッシュ</translation>
     </message>
     <message>
-        <location filename="tableview.cpp" line="1226"/>
-        <location filename="tableview.cpp" line="1706"/>
+        <location filename="tableview.cpp" line="1227"/>
+        <location filename="tableview.cpp" line="1709"/>
         <source>Copy</source>
         <translation>コピー</translation>
     </message>
     <message>
-        <location filename="tableview.cpp" line="1227"/>
-        <location filename="tableview.cpp" line="1708"/>
+        <location filename="tableview.cpp" line="1228"/>
+        <location filename="tableview.cpp" line="1711"/>
         <source>Copy selected</source>
         <translation>範囲コピー</translation>
     </message>
     <message>
-        <location filename="tableview.cpp" line="1228"/>
-        <location filename="tableview.cpp" line="1712"/>
+        <location filename="tableview.cpp" line="1229"/>
+        <location filename="tableview.cpp" line="1715"/>
         <source>Copy with headers</source>
         <translation>ヘッダー付けてコピー</translation>
     </message>
     <message>
-        <location filename="tableview.cpp" line="1229"/>
-        <location filename="tableview.cpp" line="1714"/>
+        <location filename="tableview.cpp" line="1230"/>
+        <location filename="tableview.cpp" line="1717"/>
         <source>Copy selected with headers</source>
         <translation>ヘッダー付けて範囲コピー</translation>
     </message>
     <message>
-        <location filename="tableview.cpp" line="1230"/>
-        <location filename="tableview.cpp" line="1718"/>
+        <location filename="tableview.cpp" line="1231"/>
+        <location filename="tableview.cpp" line="1721"/>
         <source>Remove column(s)</source>
         <translation>欄を外す</translation>
     </message>
     <message>
-        <location filename="tableview.cpp" line="1231"/>
-        <location filename="tableview.cpp" line="1719"/>
+        <location filename="tableview.cpp" line="1232"/>
+        <location filename="tableview.cpp" line="1722"/>
         <source>Removes the column from this display.</source>
         <translation>この欄を外します。</translation>
     </message>
     <message>
-        <location filename="tableview.cpp" line="1232"/>
-        <location filename="tableview.cpp" line="1722"/>
+        <location filename="tableview.cpp" line="1233"/>
+        <location filename="tableview.cpp" line="1725"/>
         <source>Filter</source>
         <translation>フィルター</translation>
     </message>
     <message>
-        <location filename="tableview.cpp" line="1233"/>
-        <location filename="tableview.cpp" line="1723"/>
+        <location filename="tableview.cpp" line="1234"/>
+        <location filename="tableview.cpp" line="1726"/>
         <source>Filter table with selected cell value on column</source>
         <translation>範囲された項目でテーブルフィルター</translation>
     </message>
     <message>
-        <location filename="tableview.cpp" line="1234"/>
-        <location filename="tableview.cpp" line="1727"/>
+        <location filename="tableview.cpp" line="1235"/>
+        <location filename="tableview.cpp" line="1730"/>
         <source>Exclude</source>
         <translation>除く</translation>
     </message>
     <message>
-        <location filename="tableview.cpp" line="1235"/>
-        <location filename="tableview.cpp" line="1728"/>
+        <location filename="tableview.cpp" line="1236"/>
+        <location filename="tableview.cpp" line="1731"/>
         <source>Filter table exclusive of selected cell value on column</source>
         <translation>範囲された項目の以外でテーブルフィルター</translation>
     </message>
     <message>
-        <location filename="tableview.cpp" line="1236"/>
         <location filename="tableview.cpp" line="1237"/>
-        <location filename="tableview.cpp" line="1732"/>
-        <location filename="tableview.cpp" line="1733"/>
+        <location filename="tableview.cpp" line="1238"/>
+        <location filename="tableview.cpp" line="1735"/>
+        <location filename="tableview.cpp" line="1736"/>
         <source>Ascending order</source>
         <translation>昇順</translation>
     </message>
     <message>
-        <location filename="tableview.cpp" line="1238"/>
         <location filename="tableview.cpp" line="1239"/>
-        <location filename="tableview.cpp" line="1737"/>
-        <location filename="tableview.cpp" line="1738"/>
+        <location filename="tableview.cpp" line="1240"/>
+        <location filename="tableview.cpp" line="1740"/>
+        <location filename="tableview.cpp" line="1741"/>
         <source>Descending order</source>
         <translation>降順</translation>
     </message>
     <message>
-        <location filename="tableview.cpp" line="1240"/>
-        <location filename="tableview.cpp" line="1742"/>
+        <location filename="tableview.cpp" line="1241"/>
+        <location filename="tableview.cpp" line="1745"/>
         <source>All filters</source>
         <translation>全てフィルタ</translation>
     </message>
     <message>
-        <location filename="tableview.cpp" line="1241"/>
-        <location filename="tableview.cpp" line="1743"/>
+        <location filename="tableview.cpp" line="1242"/>
+        <location filename="tableview.cpp" line="1746"/>
         <source>Remove all filters</source>
         <translation>全てフィルターを外す</translation>
     </message>
     <message>
-        <location filename="tableview.cpp" line="1242"/>
-        <location filename="tableview.cpp" line="1746"/>
+        <location filename="tableview.cpp" line="1243"/>
+        <location filename="tableview.cpp" line="1749"/>
         <source>All ordering</source>
         <translation>全て順</translation>
     </message>
     <message>
-        <location filename="tableview.cpp" line="1243"/>
-        <location filename="tableview.cpp" line="1747"/>
+        <location filename="tableview.cpp" line="1244"/>
+        <location filename="tableview.cpp" line="1750"/>
         <source>Remove all ordering</source>
         <translation>全て順を外す</translation>
     </message>
     <message>
-        <location filename="tableview.cpp" line="1246"/>
         <location filename="tableview.cpp" line="1247"/>
-        <location filename="tableview.cpp" line="1751"/>
+        <location filename="tableview.cpp" line="1248"/>
+        <location filename="tableview.cpp" line="1754"/>
         <source>Custom filter</source>
         <translation>カスタムフィルター</translation>
     </message>
     <message>
-        <location filename="tableview.cpp" line="1248"/>
         <location filename="tableview.cpp" line="1249"/>
-        <location filename="tableview.cpp" line="1757"/>
+        <location filename="tableview.cpp" line="1250"/>
+        <location filename="tableview.cpp" line="1760"/>
         <source>Bulk update</source>
         <translation>大量更新</translation>
     </message>
     <message>
-        <location filename="tableview.cpp" line="1250"/>
-        <location filename="tableview.cpp" line="1762"/>
+        <location filename="tableview.cpp" line="1251"/>
+        <location filename="tableview.cpp" line="1765"/>
         <source>Copy query</source>
         <translation>クエリーコピー</translation>
     </message>
     <message>
-        <location filename="tableview.cpp" line="1251"/>
-        <location filename="tableview.cpp" line="1763"/>
+        <location filename="tableview.cpp" line="1252"/>
+        <location filename="tableview.cpp" line="1766"/>
         <source>Copy the query to clipboard</source>
         <translation>クリップボードクエリーコピー</translation>
     </message>
     <message>
-        <location filename="tableview.cpp" line="1484"/>
+        <location filename="tableview.cpp" line="1485"/>
         <source>Error: Couldn&apos;t insert data</source>
         <translation>エラー：データ登録失敗しました</translation>
     </message>
     <message>
-        <location filename="tableview.cpp" line="1541"/>
+        <location filename="tableview.cpp" line="1544"/>
         <source>This action will delete this data and cannot be undone.
 Do you want to continue?</source>
         <translation>このデータを削除します。戻ることは出来ません。進めますか？</translation>
     </message>
     <message>
-        <location filename="tableview.cpp" line="1776"/>
+        <location filename="tableview.cpp" line="1779"/>
         <source>Fetch previous set</source>
         <translation>次のデータセット</translation>
     </message>
     <message>
-        <location filename="tableview.cpp" line="1783"/>
+        <location filename="tableview.cpp" line="1786"/>
         <source>Fetch next set</source>
         <translation>前のデータセット</translation>
     </message>
@@ -1828,24 +1860,24 @@ Do you want to continue?</source>
         <translation type="obsolete">データ登録正常終了</translation>
     </message>
     <message>
-        <location filename="tableview.cpp" line="1770"/>
+        <location filename="tableview.cpp" line="1773"/>
         <source>Delete row(s)</source>
         <translation>行目削除</translation>
     </message>
     <message>
-        <location filename="tableview.cpp" line="1772"/>
+        <location filename="tableview.cpp" line="1775"/>
         <source>Delete the selected row(s) of the table</source>
         <translation>範囲削除</translation>
     </message>
     <message>
-        <location filename="tableview.cpp" line="1244"/>
-        <location filename="tableview.cpp" line="1766"/>
+        <location filename="tableview.cpp" line="1245"/>
+        <location filename="tableview.cpp" line="1769"/>
         <source>Clear table</source>
         <translation>テーブル抹消</translation>
     </message>
     <message>
-        <location filename="tableview.cpp" line="1245"/>
-        <location filename="tableview.cpp" line="1767"/>
+        <location filename="tableview.cpp" line="1246"/>
+        <location filename="tableview.cpp" line="1770"/>
         <source>Delete the contents of the table</source>
         <translation>テーブル内容の削除</translation>
     </message>
