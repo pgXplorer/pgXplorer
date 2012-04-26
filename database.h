@@ -58,6 +58,9 @@ private:
     QList<SchemaLink*> edgeList;
     QPointF newPos;
     QHash<int, QString> types_hash;
+    QStringList table_names_list;
+    QStringList view_names_list;
+    QStringList function_names_list;
 
 protected:
     QVariant itemChange(GraphicsItemChange change, const QVariant &value);
@@ -201,6 +204,31 @@ public:
     {
         this->number_of_schemas = number_of_schemas;
     }
+    void appendTableName(QString table_name)
+    {
+        table_names_list.append(table_name);
+    }
+    void appendViewName(QString view_name)
+    {
+        view_names_list.append(view_name);
+    }
+    void appendFunctionName(QString function_name)
+    {
+        function_names_list.append(function_name);
+    }
+    QStringList tableNamesList()
+    {
+        return table_names_list;
+    }
+    QStringList viewNamesList()
+    {
+        return view_names_list;
+    }
+    QStringList functionNamesList()
+    {
+        return function_names_list;
+    }
+
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent*);
     void contextMenuEvent(QGraphicsSceneContextMenuEvent*);
 

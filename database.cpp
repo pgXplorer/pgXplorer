@@ -63,43 +63,43 @@ void Database::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
     QMenu menu;
     if(getDatabaseStatus()) {
         if(getDatabaseCollapsed())
-            menu.addAction(QApplication::translate("Database", "Explode", 0, QApplication::UnicodeUTF8));
+            menu.addAction(tr("Explode"));
         else
-            menu.addAction(QApplication::translate("Database", "Collapse", 0, QApplication::UnicodeUTF8));
+            menu.addAction(tr("Collapse"));
         //menu.addAction("Explode all");
         //menu.addAction("Explode all vertically");
         menu.addSeparator();
     }
-    menu.addAction(QIcon(":/icons/properties.png"), QApplication::translate("Database", "Properties", 0, QApplication::UnicodeUTF8));
-    menu.addSeparator();
     if(getDatabaseStatus())
-        menu.addAction(QApplication::translate("Database", "Refresh", 0, QApplication::UnicodeUTF8));
+        menu.addAction(tr("Refresh"));
+    menu.addSeparator();
+    menu.addAction(QIcon(":/icons/properties.png"), tr("Properties"));
 
     QAction *a = menu.exec(event->screenPos());
-    if(a && QString::compare(a->text(),QApplication::translate("Database", "Explode", 0, QApplication::UnicodeUTF8)) == 0) {
+    if(a && QString::compare(a->text(), tr("Explode")) == 0) {
         emit expandDatabase(this);
         setDatabaseCollapsed(false);
         update();
     }
-    else if(a && QString::compare(a->text(),QApplication::translate("Database", "Collapse", 0, QApplication::UnicodeUTF8)) == 0) {
+    else if(a && QString::compare(a->text(), tr("Collapse")) == 0) {
         emit collapseDatabase(this);
         setDatabaseCollapsed(true);
         update();
     }
-    else if(a && QString::compare(a->text(),tr("Explode all"))==0) {
+    else if(a && QString::compare(a->text(), tr("Explode all"))==0) {
         emit expandAll(this);
         setDatabaseCollapsed(false);
         update();
     }
-    else if(a && QString::compare(a->text(),tr("Explode all vertically"))==0) {
+    else if(a && QString::compare(a->text(), tr("Explode all vertically"))==0) {
         emit expandAllVertically(this);
         setDatabaseCollapsed(false);
         update();
     }
-    else if(a && QString::compare(a->text(),tr("Properties"))==0) {
+    else if(a && QString::compare(a->text(), tr("Properties"))==0) {
         showPropertyDialog();
     }
-    else if(a && QString::compare(a->text(),tr("Refresh"))==0) {
+    else if(a && QString::compare(a->text(), tr("Refresh"))==0) {
         populateDatabase();
         if(mainwin->getSearchBox()->isVisible() && !mainwin->getSearchBox()->text().isEmpty()) {
             QString search_term = mainwin->getSearchBox()->text();
@@ -160,9 +160,10 @@ void Database::delDatabase(Database *db)
 bool Database::populateDatabase()
 {
     mainwin->clearSchemas();
-    mainwin->table_completer_list.clear();
-    mainwin->view_completer_list.clear();
-    mainwin->function_completer_list.clear();
+    table_names_list.clear();
+    view_names_list.clear();
+    function_names_list.clear();
+
     QList<Schema*> schema_list;
     {
         QSqlQuery *query = new QSqlQuery(database_connection);
