@@ -70,7 +70,7 @@ ConnectionProperties::ConnectionProperties(Database *database, MainWin *mainwin)
     form_layout->labelForField(port)->setFont(font);
     form_layout->addRow(tr("Username"), username);
     form_layout->labelForField(username)->setFont(font);
-    form_layout->addRow(tr("Port"), password);
+    form_layout->addRow(tr("Password"), password);
     form_layout->labelForField(password)->setFont(font);
     form_layout->addRow(button_box);
     setLayout(form_layout);
