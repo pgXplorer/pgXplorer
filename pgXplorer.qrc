@@ -53,5 +53,8 @@
         <file>icons/bar.png</file>
         <file>icons/copy_with_headers.png</file>
         <file>icons/copy_without_headers.png</file>
+        <file>icons/area.png</file>
+        <file>icons/zoom-in.png</file>
+        <file>icons/zoom-out.png</file>
     </qresource>
 </RCC>

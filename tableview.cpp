@@ -875,11 +875,11 @@ void TableView::closeEvent(QCloseEvent *event)
     }
     else
         settings.setValue("tableview_maximized", false);
+
     settings.setValue("tableview_pos", pos());
     settings.setValue("tableview_size", size());
 
-    if(!thread_busy)
-    {
+    if(!thread_busy) {
         delete toolbar;
         delete table_view;
         delete table_model;
@@ -889,9 +889,8 @@ void TableView::closeEvent(QCloseEvent *event)
         QSqlDatabase::removeDatabase("tableview" + sql + QString::number(thisTableViewId));
         QMainWindow::closeEvent(event);
     }
-    else {
+    else
         hide();
-    }
 }
 
 void TableView::copyToClipboard()

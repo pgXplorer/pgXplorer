@@ -49,6 +49,7 @@ private:
     QAction *scatterplot_action;
     QAction *lineplot_action;
     QAction *barplot_action;
+    QAction *areaplot_action;
     bool thread_busy;
 
 protected:
@@ -69,6 +70,9 @@ public:
     {
         return sql;
     }
+    void notBusy();
+    void enableCopyActions();
+    void disableCopyActions();
 
 public slots:
     void bringOnTop();
@@ -85,6 +89,7 @@ private slots:
     void scatterPlot();
     void linePlot();
     void barPlot();
+    void areaPlot();
 
 signals:
     void busySignal();

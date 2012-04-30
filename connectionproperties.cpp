@@ -37,7 +37,6 @@ ConnectionProperties::ConnectionProperties(Database *database, MainWin *mainwin)
 
     button_box = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
     button_box->setCenterButtons(true);
-    button_box->setFont(font);
     connect(button_box, SIGNAL(accepted()), this, SLOT(okslot()));
     connect(button_box, SIGNAL(rejected()), this, SLOT(close()));
 

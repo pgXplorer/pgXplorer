@@ -49,6 +49,7 @@ QueryView::QueryView(Database *database, QString command)
     toolbar->addAction(scatterplot_action);
     toolbar->addAction(lineplot_action);
     toolbar->addAction(barplot_action);
+    toolbar->addAction(areaplot_action);
     addToolBar(toolbar);
 
     errors_model = new QStandardItemModel(0,1);
@@ -124,8 +125,7 @@ void QueryView::closeEvent(QCloseEvent *event)
     settings.setValue("queryview_pos", pos());
     settings.setValue("queryview_size", size());
 
-    if(!thread_busy)
-    {
+    if(!thread_busy) {
         delete query_view;
         delete errors_model;
         delete query_model;
@@ -141,13 +141,13 @@ void QueryView::createActions()
     copy_action = new QAction(QIcon(":/icons/copy_without_headers.png"), tr("Copy"), this);
     copy_action->setShortcuts(QKeySequence::Copy);
     copy_action->setStatusTip(tr("Copy selected"));
-    //copy_action->setEnabled(false);
+    copy_action->setEnabled(false);
     connect(copy_action, SIGNAL(triggered()), this, SLOT(copyToClipboard()));
 
     copy_with_headers_action = new QAction(QIcon(":/icons/copy_with_headers.png"), tr("Copy with headers"), this);
     copy_with_headers_action->setShortcut(QKeySequence("Ctrl+Shift+C"));
     copy_with_headers_action->setStatusTip(tr("Copy selected with headers"));
-    //copy_with_headers_action->setEnabled(false);
+    copy_with_headers_action->setEnabled(false);
     connect(copy_with_headers_action, SIGNAL(triggered()), this, SLOT(copyToClipboardWithHeaders()));
 
     scatterplot_action = new QAction(QIcon(":/icons/scatter.png"), tr("Scatter plot"), this);
@@ -164,6 +164,11 @@ void QueryView::createActions()
     barplot_action->setEnabled(false);
     barplot_action->setStatusTip(tr("Plot the selected columns as a bar plot"));
     connect(barplot_action, SIGNAL(triggered()), this, SLOT(barPlot()));
+
+    areaplot_action = new QAction(QIcon(":/icons/area.png"), tr("Area plot"), this);
+    areaplot_action->setEnabled(false);
+    areaplot_action->setStatusTip(tr("Plot the selected columns as an area plot"));
+    connect(areaplot_action, SIGNAL(triggered()), this, SLOT(areaPlot()));
 }
 
 void QueryView::copyToClipboard()
@@ -242,6 +247,26 @@ void QueryView::busySlot()
     thread_busy = true;
     setCursor(Qt::WaitCursor);
     query_view->horizontalHeader()->setStretchLastSection(false);
+    disableCopyActions();
+}
+
+void QueryView::notBusy()
+{
+    enableCopyActions();
+    setCursor(Qt::ArrowCursor);
+    thread_busy = false;
+}
+
+void QueryView::enableCopyActions()
+{
+    copy_action->setEnabled(true);
+    copy_with_headers_action->setEnabled(true);
+}
+
+void QueryView::disableCopyActions()
+{
+    copy_action->setEnabled(false);
+    copy_with_headers_action->setEnabled(false);
 }
 
 void QueryView::fullscreen()
@@ -344,8 +369,7 @@ void QueryView::updRowCntSlot(QString error)
                                      " " + seconds_string + " \t " + rows_string + QString::number(query_model->rowCount()) +
                                      " \t " + colums_string + QString::number(query_model->columnCount()));
     }
-    setCursor(Qt::ArrowCursor);
-    thread_busy = false;
+    notBusy();
 }
 
 void QueryView::togglePlots()
@@ -377,17 +401,23 @@ void QueryView::togglePlots()
         scatterplot_action->setEnabled(true);
         lineplot_action->setEnabled(true);
         barplot_action->setEnabled(true);
+        areaplot_action->setEnabled(true);
     }
     else {
         scatterplot_action->setEnabled(false);
         lineplot_action->setEnabled(false);
         barplot_action->setEnabled(false);
+        areaplot_action->setEnabled(false);
     }
 }
 
 void QueryView::scatterPlot()
 {
     QModelIndexList list = query_view->selectionModel()->selectedIndexes();
+    if(list.isEmpty()) {
+        statusBar()->showMessage(tr("Cannot plot without anything selected"));
+        return;
+    }
     qSort(list);
     GraphWindow *graph_win = new GraphWindow(list, GraphWindow::Scatter);
     graph_win->show();
@@ -396,6 +426,10 @@ void QueryView::scatterPlot()
 void QueryView::linePlot()
 {
     QModelIndexList list = query_view->selectionModel()->selectedIndexes();
+    if(list.isEmpty()) {
+        statusBar()->showMessage(tr("Cannot plot without anything selected"));
+        return;
+    }
     qSort(list);
     GraphWindow *graph_win = new GraphWindow(list, GraphWindow::Line);
     graph_win->show();
@@ -404,7 +438,23 @@ void QueryView::linePlot()
 void QueryView::barPlot()
 {
     QModelIndexList list = query_view->selectionModel()->selectedIndexes();
+    if(list.isEmpty()) {
+        statusBar()->showMessage(tr("Cannot plot without anything selected"));
+        return;
+    }
     qSort(list);
     GraphWindow *graph_win = new GraphWindow(list, GraphWindow::Bar);
+    graph_win->show();
+}
+
+void QueryView::areaPlot()
+{
+    QModelIndexList list = query_view->selectionModel()->selectedIndexes();
+    if(list.isEmpty()) {
+        statusBar()->showMessage(tr("Cannot plot without anything selected"));
+        return;
+    }
+    qSort(list);
+    GraphWindow *graph_win = new GraphWindow(list, GraphWindow::Area);
     graph_win->show();
 }
