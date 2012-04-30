@@ -75,11 +75,6 @@ ConnectionProperties::ConnectionProperties(Database *database, MainWin *mainwin)
     form_layout->addRow(button_box);
     setLayout(form_layout);
 
-    QWidget::setTabOrder(server, db_name);
-    QWidget::setTabOrder(db_name, port);
-    QWidget::setTabOrder(port, username);
-    QWidget::setTabOrder(username, password);
-
     QObject::connect(this, SIGNAL(oksignal(QString,qint32,QString,QString,QString)),
                      mainwin, SLOT(newDatabase(QString,qint32,QString,QString,QString)));
 
