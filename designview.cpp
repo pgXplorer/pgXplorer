@@ -94,6 +94,8 @@ DesignView::DesignView(Database *database, Table *table, QString const table_nam
     toolbar->addAction(save_action);
     toolbar->addSeparator();
     toolbar->addAction(properties_action);
+    toolbar->addSeparator();
+    toolbar->addAction(delete_column_action);
 
     addToolBar(toolbar);
     statusBar()->show();
@@ -110,7 +112,28 @@ DesignView::DesignView(Database *database, Table *table, QString const table_nam
     setContextMenuPolicy(Qt::NoContextMenu);
 
     design_model = new QStandardItemModel(5, column_list.size()+1);
+    initialiseModel();
 
+    design_view = new QTableView(this);
+    design_view->horizontalHeader()->setContextMenuPolicy(Qt::ActionsContextMenu);
+    CheckBoxDelegate *check_delegate = new CheckBoxDelegate(design_view);
+    design_view->setItemDelegateForRow(2, check_delegate);
+    design_view->setItemDelegateForRow(3, check_delegate);
+    CompleterDelegate *completer_delegate = new CompleterDelegate(design_view);
+    design_view->setItemDelegateForRow(1, completer_delegate);
+    design_view->viewport()->installEventFilter(this);
+    design_view->installEventFilter(this);
+    design_view->setAlternatingRowColors(true);
+    design_view->verticalHeader()->setDefaultAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    design_view->setModel(design_model);
+    connect(design_model, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(updateDesigner(QModelIndex,QModelIndex)));
+    connect(design_view->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)), this, SLOT(updateSelectionChanged()));
+
+    setCentralWidget(design_view);
+}
+
+void DesignView::initialiseModel()
+{
     QModelIndex idx;
     for (int column = 0; column < column_list.size(); ++column) {
         QString column_name = column_list.at(column);
@@ -150,28 +173,14 @@ DesignView::DesignView(Database *database, Table *table, QString const table_nam
     design_model->setHeaderData(2, Qt::Vertical, tr("Primary key"));
     design_model->setHeaderData(3, Qt::Vertical, tr("Not null"));
     design_model->setHeaderData(4, Qt::Vertical, tr("Default value"));
-
-    design_view = new QTableView(this);
-    design_view->horizontalHeader()->setContextMenuPolicy(Qt::ActionsContextMenu);
-    CheckBoxDelegate *check_delegate = new CheckBoxDelegate(design_view);
-    design_view->setItemDelegateForRow(2, check_delegate);
-    design_view->setItemDelegateForRow(3, check_delegate);
-    CompleterDelegate *completer_delegate = new CompleterDelegate(design_view);
-    design_view->setItemDelegateForRow(1, completer_delegate);
-    design_view->viewport()->installEventFilter(this);
-    design_view->installEventFilter(this);
-    design_view->setAlternatingRowColors(true);
-    design_view->verticalHeader()->setDefaultAlignment(Qt::AlignRight | Qt::AlignVCenter);
-    design_view->setModel(design_model);
-    connect(design_model, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(updateDesigner(QModelIndex,QModelIndex)));
-
-    setCentralWidget(design_view);
 }
 
 void DesignView::updateDesigner(QModelIndex from, QModelIndex to)
 {
-    if(design_model->columnCount() > 1)
+    if(design_model->columnCount() > 1) {
         save_action->setEnabled(true);
+    }
+
     QModelIndex idx = design_model->index(0, design_model->columnCount()-1, QModelIndex());
     QModelIndex idx2 = design_model->index(1, design_model->columnCount()-1, QModelIndex());
     if(!design_model->data(idx).toString().isEmpty() && !design_model->data(idx2).toString().isEmpty()) {
@@ -192,15 +201,19 @@ void DesignView::updateDesigner(QModelIndex from, QModelIndex to)
 
     if(from != to || from.row() != 2)
         return;
+}
 
-    if(from.data().toBool()) {
-        idx = design_model->index(0, from.column(), QModelIndex());
-        new_primary_key.append(idx.data().toString());
+void DesignView::updateSelectionChanged()
+{
+    if(design_view->selectionModel()) {
+        QModelIndexList indices = design_view->selectionModel()->selectedColumns();
+        if(indices.isEmpty() || (indices.last().column() == design_model->columnCount()-1))
+            delete_column_action->setEnabled(false);
+        else
+            delete_column_action->setEnabled(true);
     }
-    else {
-        idx = design_model->index(0, from.column(), QModelIndex());
-        new_primary_key.removeOne(idx.data().toString());
-    }
+    else
+        delete_column_action->setEnabled(false);
 }
 
 void DesignView::createBrushes()
@@ -229,6 +242,11 @@ void DesignView::createActions()
     properties_action = new QAction(QIcon(":/icons/properties.png"), MainWin::tr("&Properties"), this);
     properties_action->setStatusTip(MainWin::tr("Specify table properties"));
     connect(properties_action, SIGNAL(triggered()), this, SLOT(showTableProperties()));
+
+    delete_column_action = new QAction(QIcon(":/icons/removecolumn.png"), MainWin::tr("&Delete column(s)"), this);
+    delete_column_action->setStatusTip(MainWin::tr("Delete selected column(s)"));
+    delete_column_action->setEnabled(false);
+    connect(delete_column_action, SIGNAL(triggered()), this, SLOT(deleteColumns()));
 }
 
 void DesignView::saveTable()
@@ -252,6 +270,7 @@ void DesignView::saveTable()
         sql.append(QLatin1String("; CREATE TABLE "));
         sql.append(table_name);
         sql.append(QLatin1String(" ("));
+        new_primary_key.clear();
         int column_count = design_model->columnCount();
         for(int col = 0; col < column_count-1; col++) {
             QModelIndex idx0 = design_model->index(0, col, QModelIndex());
@@ -259,14 +278,17 @@ void DesignView::saveTable()
             QModelIndex idx2 = design_model->index(2, col, QModelIndex());
             QModelIndex idx3 = design_model->index(3, col, QModelIndex());
             QModelIndex idx4 = design_model->index(4, col, QModelIndex());
-            sql.append(design_model->data(idx0).toString());
+            sql.append("\"" + QString(idx0.data().toString()).remove("\"") + "\"");
             sql.append(QLatin1String(" "));
-            sql.append(design_model->data(idx1).toString());
-            if(design_model->data(idx3).toBool())
+            sql.append(idx1.data().toString());
+            if(idx3.data().toBool())
                 sql.append(QLatin1String(" NOT NULL "));
-            if(!design_model->data(idx4).toString().isEmpty())
+            if(!idx4.data().toString().isEmpty())
                 sql.append(QLatin1String(" DEFAULT ")).append(design_model->data(idx4).toString());
             sql.append(QLatin1String(", "));
+
+            if(idx2.data().toBool())
+                new_primary_key.append("\"" + QString(idx0.data().toString()).remove("\"") + "\"");
         }
         if(new_primary_key.isEmpty()) {
             sql.remove(sql.length()-2, 2);
@@ -279,6 +301,7 @@ void DesignView::saveTable()
         }
         sql.append(QLatin1String(") "));
         sql.append(properties);
+
         QSqlQueryModel query;
         query.setQuery(sql, database_connection);
         if(query.lastError().isValid()) {
@@ -371,4 +394,16 @@ void DesignView::closeEvent(QCloseEvent *event)
     delete design_view;
     delete design_model;
     QMainWindow::closeEvent(event);
+}
+
+void DesignView::deleteColumns()
+{
+    QModelIndexList indices;
+    qSort(indices);
+
+    while(indices = design_view->selectionModel()->selectedColumns(), !indices.isEmpty())
+        design_model->removeColumn(indices.at(0).column());
+
+    if(design_model->columnCount() == 1)
+        save_action->setEnabled(false);
 }

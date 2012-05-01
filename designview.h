@@ -71,6 +71,7 @@ private:
     QMessageBox *error_message_box;
     QAction *save_action;
     QAction *properties_action;
+    QAction *delete_column_action;
 
     struct Properties2 {
         bool oid;
@@ -94,6 +95,9 @@ public:
     {
         return table_name;
     }
+    void initialiseModel();
+
+protected:
     void closeEvent(QCloseEvent*);
 
 public slots:
@@ -104,7 +108,9 @@ public slots:
 
 private slots:
     void updateDesigner(QModelIndex, QModelIndex);
+    void updateSelectionChanged();
     void saveTable();
+    void deleteColumns();
 
 signals:
     void busySignal();
