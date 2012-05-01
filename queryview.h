@@ -31,9 +31,15 @@ class QueryView : public QMainWindow
     Q_OBJECT
 
 private:
+    QString time_elapsed_string;
+    QString rows_string;
+    QString colums_string;
+    QString seconds_string;
+
     Database *database;
     QMenu *fileMenu;
     QTime t;
+    double time_elapsed;
     QTableView *query_view;
     QueryModel *query_model;
     QToolBar *toolbar;
@@ -77,6 +83,7 @@ public:
 public slots:
     void bringOnTop();
     void togglePlots();
+    void languageChanged(QEvent*);
 
 private slots:
     void copyToClipboard();

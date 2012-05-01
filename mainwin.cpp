@@ -1828,6 +1828,7 @@ void MainWin::showQueryView(Database *database, QString command)
     QueryView *query_view = new QueryView(database, command);
     query_view_list.append(query_view);
     QObject::connect(query_view, SIGNAL(queryViewClosing(QueryView*)), this, SLOT(queryViewClosed(QueryView*)));
+    QObject::connect(this, SIGNAL(changeLanguage(QEvent*)), query_view, SLOT(languageChanged(QEvent*)));
 
     QSettings settings("pgXplorer","pgXplorer");
     QPoint pos = settings.value("queryview_pos", QPoint(100, 100)).toPoint();

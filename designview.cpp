@@ -95,6 +95,7 @@ DesignView::DesignView(Database *database, Table *table, QString const table_nam
     toolbar->addSeparator();
     toolbar->addAction(properties_action);
     toolbar->addSeparator();
+    toolbar->addAction(insert_column_left_action);
     toolbar->addAction(delete_column_action);
 
     addToolBar(toolbar);
@@ -177,6 +178,13 @@ void DesignView::initialiseModel()
 
 void DesignView::updateDesigner(QModelIndex from, QModelIndex to)
 {
+    if(from.row()==0 || from.row()==1) {
+        if(from.data().toString().isEmpty())
+            design_model->setData(from, red_brush, Qt::BackgroundRole);
+        else
+            design_model->setData(from, QBrush(), Qt::BackgroundRole);
+    }
+
     if(design_model->columnCount() > 1) {
         save_action->setEnabled(true);
     }
@@ -206,14 +214,20 @@ void DesignView::updateDesigner(QModelIndex from, QModelIndex to)
 void DesignView::updateSelectionChanged()
 {
     if(design_view->selectionModel()) {
+        insert_column_left_action->setEnabled(true);
+
         QModelIndexList indices = design_view->selectionModel()->selectedColumns();
-        if(indices.isEmpty() || (indices.last().column() == design_model->columnCount()-1))
+        qSort(indices);
+        if(indices.isEmpty() || (indices.last().column() == design_model->columnCount()-1)) {
             delete_column_action->setEnabled(false);
+        }
         else
             delete_column_action->setEnabled(true);
     }
-    else
+    else {
+        insert_column_left_action->setEnabled(false);
         delete_column_action->setEnabled(false);
+    }
 }
 
 void DesignView::createBrushes()
@@ -242,6 +256,11 @@ void DesignView::createActions()
     properties_action = new QAction(QIcon(":/icons/properties.png"), MainWin::tr("&Properties"), this);
     properties_action->setStatusTip(MainWin::tr("Specify table properties"));
     connect(properties_action, SIGNAL(triggered()), this, SLOT(showTableProperties()));
+
+    insert_column_left_action = new QAction(QIcon(":/icons/insertleft.png"), MainWin::tr("Insert column left"), this);
+    insert_column_left_action->setStatusTip(MainWin::tr("Insert to the left of the selected column(s)"));
+    insert_column_left_action->setEnabled(false);
+    connect(insert_column_left_action, SIGNAL(triggered()), this, SLOT(insertLeftColumn()));
 
     delete_column_action = new QAction(QIcon(":/icons/removecolumn.png"), MainWin::tr("&Delete column(s)"), this);
     delete_column_action->setStatusTip(MainWin::tr("Delete selected column(s)"));
@@ -371,6 +390,7 @@ void DesignView::languageChanged(QEvent *event)
         design_model->setHeaderData(3, Qt::Vertical, tr("Not null"));
         design_model->setHeaderData(4, Qt::Vertical, tr("Default value"));
         design_model->setHeaderData(5, Qt::Vertical, tr("Comment"));
+
         emit changeLanguage(event);
     }
 }
@@ -396,14 +416,28 @@ void DesignView::closeEvent(QCloseEvent *event)
     QMainWindow::closeEvent(event);
 }
 
+void DesignView::insertLeftColumn()
+{
+    QModelIndexList indices = design_view->selectionModel()->selectedIndexes();
+    qSort(indices);
+    if(!indices.isEmpty())
+        design_model->insertColumn(indices.first().column());
+    QModelIndex idx = design_model->index(0, indices.first().column(), QModelIndex());
+    design_model->setData(idx, red_brush, Qt::BackgroundRole);
+    idx = design_model->index(1, indices.first().column(), QModelIndex());
+    design_model->setData(idx, red_brush, Qt::BackgroundRole);
+}
+
 void DesignView::deleteColumns()
 {
     QModelIndexList indices;
-    qSort(indices);
 
-    while(indices = design_view->selectionModel()->selectedColumns(), !indices.isEmpty())
+    while(indices = design_view->selectionModel()->selectedColumns(), !indices.isEmpty()) {
         design_model->removeColumn(indices.at(0).column());
+    }
 
     if(design_model->columnCount() == 1)
         save_action->setEnabled(false);
+
+    insert_column_left_action->setEnabled(false);
 }

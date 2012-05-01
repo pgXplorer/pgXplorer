@@ -246,6 +246,7 @@ void QueryView::busySlot()
 {
     thread_busy = true;
     setCursor(Qt::WaitCursor);
+    t.start();
     query_view->horizontalHeader()->setStretchLastSection(false);
     disableCopyActions();
 }
@@ -282,8 +283,7 @@ void QueryView::restore()
 void QueryView::fetchData(QString command)
 {
     emit busySignal();
-    QTime ts;
-    ts.start();
+
     QSqlDatabase::removeDatabase("queryview " + QString::number(thisQueryViewId));
     QSqlDatabase database_connection;
     database_connection = QSqlDatabase::addDatabase("QPSQL", "queryview " + QString::number(thisQueryViewId));
@@ -313,10 +313,12 @@ void QueryView::bringOnTop()
 
 void QueryView::updRowCntSlot(QString error)
 {
-    QString time_elapsed = QApplication::translate("QueryView", "Time elapsed:", 0, QApplication::UnicodeUTF8);
-    QString rows_string = QApplication::translate("QueryView", "Rows:", 0, QApplication::UnicodeUTF8);
-    QString colums_string = QApplication::translate("QueryView", "Columns:", 0, QApplication::UnicodeUTF8);
-    QString seconds_string = QApplication::translate("QueryView", "s", 0, QApplication::UnicodeUTF8);
+    time_elapsed_string = QApplication::translate("QueryView", "Time elapsed:", 0, QApplication::UnicodeUTF8);
+    rows_string = QApplication::translate("QueryView", "Rows:", 0, QApplication::UnicodeUTF8);
+    colums_string = QApplication::translate("QueryView", "Columns:", 0, QApplication::UnicodeUTF8);
+    seconds_string = QApplication::translate("QueryView", "s", 0, QApplication::UnicodeUTF8);
+
+    time_elapsed = (double)t.elapsed()/1000;
 
     if(!error.isEmpty()) {
         errors_model->clear();
@@ -334,7 +336,7 @@ void QueryView::updRowCntSlot(QString error)
         QStringList header;
         header << tr("Error messages");
         errors_model->setHorizontalHeaderLabels(header);
-        statusBar()->showMessage(time_elapsed + QString::number((double)t.elapsed()/1000) +
+        statusBar()->showMessage(time_elapsed_string + QString::number(time_elapsed) +
                                  " " + seconds_string + " \t " + rows_string + QString::number(errors_model->rowCount()) +
                                  " \t " + colums_string + "1");
     }
@@ -351,7 +353,7 @@ void QueryView::updRowCntSlot(QString error)
         model->setHorizontalHeaderLabels(header);
         query_view->resizeColumnToContents(0);
         query_view->setEditTriggers(QAbstractItemView::NoEditTriggers);
-        statusBar()->showMessage(time_elapsed + QString::number((double)t.elapsed()/1000) +
+        statusBar()->showMessage(time_elapsed_string + QString::number(time_elapsed) +
                                  " " + seconds_string + " \t " + rows_string + "1" +
                                  " \t " + colums_string + "1");
     }
@@ -361,11 +363,11 @@ void QueryView::updRowCntSlot(QString error)
 
         query_view->verticalScrollBar()->setValue(0);
         if(query_model->rowCount() == 0)
-            statusBar()->showMessage(time_elapsed + QString::number((double)t.elapsed()/1000) +
+            statusBar()->showMessage(time_elapsed_string + QString::number(time_elapsed) +
                                      " " + seconds_string + " \t " + rows_string + "0" +
                                      " \t " + colums_string + QString::number(query_model->columnCount()));
         else
-            statusBar()->showMessage(time_elapsed + QString::number((double)t.elapsed()/1000) +
+            statusBar()->showMessage(time_elapsed_string + QString::number(time_elapsed) +
                                      " " + seconds_string + " \t " + rows_string + QString::number(query_model->rowCount()) +
                                      " \t " + colums_string + QString::number(query_model->columnCount()));
     }
@@ -408,6 +410,39 @@ void QueryView::togglePlots()
         lineplot_action->setEnabled(false);
         barplot_action->setEnabled(false);
         areaplot_action->setEnabled(false);
+    }
+}
+
+void QueryView::languageChanged(QEvent *event)
+{
+    if (event->type() == QEvent::LanguageChange) {
+        time_elapsed_string = QApplication::translate("QueryView", "Time elapsed:", 0, QApplication::UnicodeUTF8);
+        rows_string = QApplication::translate("QueryView", "Rows:", 0, QApplication::UnicodeUTF8);
+        colums_string = QApplication::translate("QueryView", "Columns:", 0, QApplication::UnicodeUTF8);
+        seconds_string = QApplication::translate("QueryView", "s", 0, QApplication::UnicodeUTF8);
+
+        if(query_view->model()->rowCount() == 0)
+            statusBar()->showMessage(time_elapsed_string + QString::number(time_elapsed) +
+                                     " " + seconds_string + " \t " + rows_string + "0" +
+                                     " \t " + colums_string + QString::number(query_model->columnCount()));
+        else
+            statusBar()->showMessage(time_elapsed_string + QString::number(time_elapsed) +
+                                     " " + seconds_string + " \t " + rows_string + QString::number(query_model->rowCount()) +
+                                     " \t " + colums_string + QString::number(query_model->columnCount()));
+
+        copy_action->setText(tr("Copy"));
+        copy_action->setStatusTip(tr("Copy selected"));
+        copy_with_headers_action->setText(tr("Copy with headers"));
+        copy_with_headers_action->setStatusTip(tr("Copy selected with headers"));
+
+        scatterplot_action->setText(tr("Scatter plot"));
+        scatterplot_action->setStatusTip(tr("Plot the selected columns as a scatter plot"));
+        lineplot_action->setText(tr("Line plot"));
+        lineplot_action->setStatusTip(tr("Plot the selected columns as a line plot"));
+        barplot_action->setText(tr("Bar plot"));
+        barplot_action->setStatusTip(tr("Plot the selected columns as a bar plot"));
+        areaplot_action->setText(tr("Area plot"));
+        areaplot_action->setStatusTip(tr("Plot the selected columns as an area plot"));
     }
 }
 

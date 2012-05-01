@@ -71,6 +71,7 @@ private:
     QMessageBox *error_message_box;
     QAction *save_action;
     QAction *properties_action;
+    QAction *insert_column_left_action;
     QAction *delete_column_action;
 
     struct Properties2 {
@@ -110,6 +111,7 @@ private slots:
     void updateDesigner(QModelIndex, QModelIndex);
     void updateSelectionChanged();
     void saveTable();
+    void insertLeftColumn();
     void deleteColumns();
 
 signals:
