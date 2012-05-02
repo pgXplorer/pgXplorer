@@ -57,6 +57,5 @@
         <file>icons/zoom-in.png</file>
         <file>icons/zoom-out.png</file>
         <file>icons/insertleft.png</file>
-        <file>icons/insertright.png</file>
     </qresource>
 </RCC>
