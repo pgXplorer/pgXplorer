@@ -105,7 +105,8 @@ public slots:
     void bringOnTop();
     void languageChanged(QEvent*);
     void showTableProperties();
-    void setProperties2(bool, QString, QString, int);
+    void popPropertiesButton();
+    void setProperties(bool, QString, QString, int);
 
 private slots:
     void updateDesigner(QModelIndex, QModelIndex);

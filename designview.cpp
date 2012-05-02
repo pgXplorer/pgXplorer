@@ -216,11 +216,10 @@ void DesignView::updateSelectionChanged()
     if(design_view->selectionModel()) {
         insert_column_left_action->setEnabled(true);
 
-        QModelIndexList indices = design_view->selectionModel()->selectedColumns();
+        QModelIndexList indices = design_view->selectionModel()->selectedIndexes();
         qSort(indices);
-        if(indices.isEmpty() || (indices.last().column() == design_model->columnCount()-1)) {
+        if(indices.last().column() == design_model->columnCount()-1)
             delete_column_action->setEnabled(false);
-        }
         else
             delete_column_action->setEnabled(true);
     }
@@ -255,6 +254,7 @@ void DesignView::createActions()
 
     properties_action = new QAction(QIcon(":/icons/properties.png"), MainWin::tr("&Properties"), this);
     properties_action->setStatusTip(MainWin::tr("Specify table properties"));
+    properties_action->setCheckable(true);
     connect(properties_action, SIGNAL(triggered()), this, SLOT(showTableProperties()));
 
     insert_column_left_action = new QAction(QIcon(":/icons/insertleft.png"), MainWin::tr("Insert column left"), this);
@@ -315,7 +315,7 @@ void DesignView::saveTable()
         else {
             sql.append("CONSTRAINT \"");
             sql.append(QString(table_name).remove("\""));
-            sql.append("_key\" PRIMARY KEY");
+            sql.append("_pkey\" PRIMARY KEY");
             sql.append(new_primary_key.join(",").prepend("(").append(")"));
         }
         sql.append(QLatin1String(") "));
@@ -351,11 +351,18 @@ void DesignView::showTableProperties()
 
     TableProperties *table_props = new TableProperties(this, table_name, completer_list, properties2.oid, properties2.inherits, properties2.tablespace, properties2.fill_factor);
     connect(this, SIGNAL(changeLanguage(QEvent*)), table_props, SLOT(languageChanged(QEvent*)));
-    connect(table_props, SIGNAL(oksignal(bool, QString, QString, int)), this, SLOT(setProperties2(bool, QString, QString, int)));
+    connect(table_props, SIGNAL(oksignal(bool, QString, QString, int)), this, SLOT(setProperties(bool, QString, QString, int)));
+    connect(table_props, SIGNAL(accepted()), this, SLOT(popPropertiesButton()));
+    connect(table_props, SIGNAL(rejected()), this, SLOT(popPropertiesButton()));
     table_props->show();
 }
 
-void DesignView::setProperties2(bool oid, QString inherits, QString tablespace, int fill_factor)
+void DesignView::popPropertiesButton()
+{
+    properties_action->setChecked(false);
+}
+
+void DesignView::setProperties(bool oid, QString inherits, QString tablespace, int fill_factor)
 {
     properties2.oid = oid;
     properties2.inherits = inherits;

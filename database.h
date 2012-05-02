@@ -67,7 +67,6 @@ protected:
 
 public slots:
     bool setConnectionProperties(const QString, const qint32, const QString, const QString, const QString);
-    void showPropertyDialog();
 
 public:
     static ulong dbViewObjectId;
@@ -234,6 +233,7 @@ public:
 
 signals:
     void expandDatabase(Database*);
+    void summonPropertyDialog(Database*);
     void expandAll(Database*);
     void expandAllVertically(Database*);
     void collapseDatabase(Database*);

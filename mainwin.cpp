@@ -953,6 +953,7 @@ void MainWin::newDatabase()
 {
     // Add a database object to canvas
     database = new Database(this, 0);
+    connect(database, SIGNAL(summonPropertyDialog(Database*)), this, SLOT(showPropertyDialog(Database*)));
     scene.addItem(database);
 }
 
@@ -966,6 +967,7 @@ bool MainWin::newDatabase(QString host, qint32 port, QString dbname, QString use
 
     //Add a database object to canvas
     database = new Database(this, database_id);
+    connect(database, SIGNAL(summonPropertyDialog(Database*)), this, SLOT(showPropertyDialog(Database*)));
     scene.addItem(database);
     if(database->setConnectionProperties(host, port, dbname, username, password) == false)
         return false;
@@ -1040,7 +1042,27 @@ bool MainWin::quitApp()
 
 void MainWin::openDatabaseProperties()
 {
-    database->showPropertyDialog();
+    showPropertyDialog(database);
+}
+
+void MainWin::popPropertiesButton()
+{
+    connection_properties_action->setChecked(false);
+}
+
+void MainWin::showPropertyDialog(Database *database)
+{
+    connection_properties_action->setChecked(true);
+    if(!database->getDatabaseStatus()) {
+        database->setHost("127.0.0.1");
+        database->setPort("5432");
+        database->setUser("postgres");
+        database->setPassword("");
+    }
+    ConnectionProperties *connection_properties = new ConnectionProperties(database, this);
+    connect(connection_properties, SIGNAL(accepted()), this, SLOT(popPropertiesButton()));
+    connect(connection_properties, SIGNAL(rejected()), this, SLOT(popPropertiesButton()));
+    connection_properties->exec();
 }
 
 void MainWin::showPgxconsole()
@@ -1468,6 +1490,7 @@ void MainWin::createActions()
     connection_properties_action = new QAction(QIcon(":/icons/properties.png"), MainWin::tr("Connection properties"), this);
     connection_properties_action->setShortcut(QKeySequence(Qt::Key_P));
     connection_properties_action->setStatusTip(MainWin::tr("Set connection properties"));
+    connection_properties_action->setCheckable(true);
     connect(connection_properties_action, SIGNAL(triggered()), this, SLOT(openDatabaseProperties()));
 
     console_action = new QAction(QIcon(":/icons/console.png"), MainWin::tr("SQL Console"), this);

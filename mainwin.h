@@ -191,6 +191,7 @@ public slots:
     void about();
     void showHelp();
     void document_changed();
+    void showPropertyDialog(Database *);
     void tableViewClosed(TableView *);
     void designViewClosed(DesignView *);
     void viewViewClosed(ViewView *);
@@ -222,10 +223,11 @@ private slots:
     void saveFile();
     void save(QString);
     bool saveFileAs();
+    void popPropertiesButton();
+    void openDatabaseProperties();
     bool quitApp();
     bool newFile();
     void newPgxplorer();
-    void openDatabaseProperties();
     void showPgxconsole();
     void showPgxeditor();
     void showPgxeditor(QString);

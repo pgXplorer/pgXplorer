@@ -43,10 +43,11 @@ Database::Database(MainWin *mainwin, int database_id)
 
 void Database::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 {
-    if(!getDatabaseStatus()) {
-        showPropertyDialog();
-        return;
-    }/*
+    //if(!getDatabaseStatus()) {
+        emit summonPropertyDialog(this);
+        //return;
+    //}
+    /*
     if(getDatabaseStatus() && getDatabaseCollapsed()) {
         setDatabaseCollapsed(false);
         emit expandDatabase(this);
@@ -97,7 +98,7 @@ void Database::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
         update();
     }
     else if(a && QString::compare(a->text(), tr("Properties"))==0) {
-        showPropertyDialog();
+        emit summonPropertyDialog(this);
     }
     else if(a && QString::compare(a->text(), tr("Refresh"))==0) {
         populateDatabase();
@@ -138,18 +139,6 @@ void Database::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
             }
         }
     }
-}
-
-void Database::showPropertyDialog()
-{
-    if(!getDatabaseStatus()) {
-        setHost("127.0.0.1");
-        setPort("5432");
-        setUser("postgres");
-        setPassword("");
-    }
-    ConnectionProperties *connection_properties = new ConnectionProperties(this, mainwin);
-    connection_properties->exec();
 }
 
 void Database::delDatabase(Database *db)
