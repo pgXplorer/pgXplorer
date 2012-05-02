@@ -216,9 +216,9 @@ void DesignView::updateSelectionChanged()
     if(design_view->selectionModel()) {
         insert_column_left_action->setEnabled(true);
 
-        QModelIndexList indices = design_view->selectionModel()->selectedIndexes();
+        QModelIndexList indices = design_view->selectionModel()->selectedColumns();
         qSort(indices);
-        if(indices.last().column() == design_model->columnCount()-1)
+        if(indices.isEmpty() || indices.last().column() == design_model->columnCount()-1)
             delete_column_action->setEnabled(false);
         else
             delete_column_action->setEnabled(true);
@@ -391,6 +391,10 @@ void DesignView::languageChanged(QEvent *event)
         save_action->setStatusTip(tr("Save the table definition to database"));
         properties_action->setText(tr("&Properties"));
         properties_action->setStatusTip(tr("Specify table properties"));
+        insert_column_left_action->setText(tr("Insert column left"));
+        insert_column_left_action->setStatusTip(tr("Insert to the left of the selected column(s)"));
+        delete_column_action->setText(tr("&Delete column(s)"));
+        delete_column_action->setStatusTip(tr("Delete selected column(s)"));
         design_model->setHeaderData(0, Qt::Vertical, tr("Name"));
         design_model->setHeaderData(1, Qt::Vertical, tr("Type"));
         design_model->setHeaderData(2, Qt::Vertical, tr("Primary key"));

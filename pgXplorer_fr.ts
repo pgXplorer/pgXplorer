@@ -113,31 +113,31 @@ Check connection parameters.
     <name>DesignView</name>
     <message>
         <location filename="designview.cpp" line="172"/>
-        <location filename="designview.cpp" line="394"/>
+        <location filename="designview.cpp" line="398"/>
         <source>Name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="designview.cpp" line="173"/>
-        <location filename="designview.cpp" line="395"/>
+        <location filename="designview.cpp" line="399"/>
         <source>Type</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="designview.cpp" line="174"/>
-        <location filename="designview.cpp" line="396"/>
+        <location filename="designview.cpp" line="400"/>
         <source>Primary key</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="designview.cpp" line="175"/>
-        <location filename="designview.cpp" line="397"/>
+        <location filename="designview.cpp" line="401"/>
         <source>Not null</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="designview.cpp" line="176"/>
-        <location filename="designview.cpp" line="398"/>
+        <location filename="designview.cpp" line="402"/>
         <source>Default value</source>
         <translation type="unfinished"></translation>
     </message>
@@ -167,26 +167,30 @@ Check connection parameters.
     </message>
     <message>
         <location filename="designview.cpp" line="260"/>
+        <location filename="designview.cpp" line="394"/>
         <source>Insert column left</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="designview.cpp" line="261"/>
+        <location filename="designview.cpp" line="395"/>
         <source>Insert to the left of the selected column(s)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="designview.cpp" line="265"/>
+        <location filename="designview.cpp" line="396"/>
         <source>&amp;Delete column(s)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="designview.cpp" line="266"/>
+        <location filename="designview.cpp" line="397"/>
         <source>Delete selected column(s)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="designview.cpp" line="399"/>
+        <location filename="designview.cpp" line="403"/>
         <source>Comment</source>
         <translation type="unfinished"></translation>
     </message>
