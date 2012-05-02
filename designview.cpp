@@ -246,24 +246,24 @@ void DesignView::createBrushes()
 
 void DesignView::createActions()
 {
-    save_action = new QAction(QIcon(":/icons/save.png"), MainWin::tr("&Save"), this);
+    save_action = new QAction(QIcon(":/icons/save.png"), tr("&Save"), this);
     save_action->setShortcuts(QKeySequence::Save);
-    save_action->setStatusTip(MainWin::tr("Save the table definition to database"));
+    save_action->setStatusTip(tr("Save the table definition to database"));
     save_action->setEnabled(false);
     connect(save_action, SIGNAL(triggered()), this, SLOT(saveTable()));
 
-    properties_action = new QAction(QIcon(":/icons/properties.png"), MainWin::tr("&Properties"), this);
-    properties_action->setStatusTip(MainWin::tr("Specify table properties"));
+    properties_action = new QAction(QIcon(":/icons/properties.png"), tr("&Properties"), this);
+    properties_action->setStatusTip(tr("Specify table properties"));
     properties_action->setCheckable(true);
     connect(properties_action, SIGNAL(triggered()), this, SLOT(showTableProperties()));
 
-    insert_column_left_action = new QAction(QIcon(":/icons/insertleft.png"), MainWin::tr("Insert column left"), this);
-    insert_column_left_action->setStatusTip(MainWin::tr("Insert to the left of the selected column(s)"));
+    insert_column_left_action = new QAction(QIcon(":/icons/insertleft.png"), tr("Insert column left"), this);
+    insert_column_left_action->setStatusTip(tr("Insert to the left of the selected column(s)"));
     insert_column_left_action->setEnabled(false);
     connect(insert_column_left_action, SIGNAL(triggered()), this, SLOT(insertLeftColumn()));
 
-    delete_column_action = new QAction(QIcon(":/icons/removecolumn.png"), MainWin::tr("&Delete column(s)"), this);
-    delete_column_action->setStatusTip(MainWin::tr("Delete selected column(s)"));
+    delete_column_action = new QAction(QIcon(":/icons/removecolumn.png"), tr("&Delete column(s)"), this);
+    delete_column_action->setStatusTip(tr("Delete selected column(s)"));
     delete_column_action->setEnabled(false);
     connect(delete_column_action, SIGNAL(triggered()), this, SLOT(deleteColumns()));
 }
@@ -387,10 +387,10 @@ void DesignView::setProperties(bool oid, QString inherits, QString tablespace, i
 void DesignView::languageChanged(QEvent *event)
 {
     if (event->type() == QEvent::LanguageChange) {
-        save_action->setText(MainWin::tr("&Save"));
-        save_action->setStatusTip(MainWin::tr("Save the table definition to database"));
-        properties_action->setText(MainWin::tr("&Properties"));
-        properties_action->setStatusTip(MainWin::tr("Specify table properties"));
+        save_action->setText(tr("&Save"));
+        save_action->setStatusTip(tr("Save the table definition to database"));
+        properties_action->setText(tr("&Properties"));
+        properties_action->setStatusTip(tr("Specify table properties"));
         design_model->setHeaderData(0, Qt::Vertical, tr("Name"));
         design_model->setHeaderData(1, Qt::Vertical, tr("Type"));
         design_model->setHeaderData(2, Qt::Vertical, tr("Primary key"));
