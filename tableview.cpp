@@ -1534,7 +1534,7 @@ void TableView::truncateTable()
         statusBar()->showMessage(tr("All table rows deleted"));
     }
     QSqlDatabase::removeDatabase("clear " + objectName());
-    fetchDefaultData();
+    defaultView();
 }
 
 void TableView::deleteRows()
