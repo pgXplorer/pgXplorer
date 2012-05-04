@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Name=pgXplorer
+Comment=Explore PostgreSQL database
+Exec=/usr/bin/pgXplorer %U
+Terminal=false
+Type=Application
+Icon=database
+Categories=Utility;Network;WebBrowser;

@@ -73,11 +73,14 @@ ICON = database.icns
 
 CODECFORTR = UTF-8
 
+desktop.path = /usr/share/applications
+desktop.files += pgXplorer.desktop
+
 # install
 target.path = C:/QtSDK/Examples/4.7/graphicsview/pgXplorer
 sources.files = $$SOURCES $$HEADERS $$RESOURCES pgXplorer.pro
 sources.path = C:/QtSDK/Examples/4.7/graphicsview/pgXplorer
-INSTALLS += target sources
+INSTALLS += target sources desktop
 
 OTHER_FILES += \
     pgXplorer.rc
