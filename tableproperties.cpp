@@ -65,6 +65,10 @@ TableProperties::TableProperties(QMainWindow *parent, QString table_name, QStrin
     form_layout->labelForField(fill_factor)->setFont(font);
     form_layout->addRow(button_box);
     setLayout(form_layout);
+
+#ifdef Q_WS_X11
+    move(parent->x()+parent->width()/2-sizeHint().width()/2, parent->y()+parent->height()/2-sizeHint().height()/2);
+#endif
 }
 
 void TableProperties::languageChanged(QEvent *event)

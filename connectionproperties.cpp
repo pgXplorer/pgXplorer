@@ -92,5 +92,8 @@ ConnectionProperties::ConnectionProperties(Database *database, MainWin *mainwin)
         username->setText(database_connection.userName());
         password->setText(database_connection.password());
     }
-}
 
+#ifdef Q_WS_X11
+    move(mainwin->x()+mainwin->width()/2-sizeHint().width()/2, mainwin->y()+mainwin->height()/2-sizeHint().height()/2);
+#endif
+}
