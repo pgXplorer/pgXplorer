@@ -6,4 +6,4 @@ Exec=/usr/bin/pgXplorer %U
 Terminal=false
 Type=Application
 Icon=database
-Categories=Utility;Network;WebBrowser;
+Categories=Utility;
