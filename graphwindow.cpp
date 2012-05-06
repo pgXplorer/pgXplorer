@@ -168,7 +168,7 @@ void GraphWindow::addPlot(PlotType plot_type)
     case GraphWindow::Scatter : {
         setPlotType(plot_type);
         for(int i = 0; i < x.size(); i++) {
-            QGraphicsEllipseItem *circle = new QGraphicsEllipseItem(MARGIN + x.at(i)*XRANGE/xmax-5, YRANGE + MARGIN - y.at(i)*YRANGE/ymax-5, 10, 10, 0);
+            QGraphicsEllipseItem *circle = new QGraphicsEllipseItem(MARGIN - xmin*XRANGE/(xmax-xmin) + x.at(i)*XRANGE/(xmax-xmin)-5, YRANGE + MARGIN + ymin*YRANGE/(ymax-ymin) - y.at(i)*YRANGE/(ymax-ymin)-5, 10, 10, 0);
             circle->setBrush(QColor(150,150,187));
             //circle->setBrush(QColor(color_names.at(number_of_plots%color_names.size())));
             circle->setPen(QPen(Qt::white));
@@ -180,19 +180,19 @@ void GraphWindow::addPlot(PlotType plot_type)
     case GraphWindow::Line : {
         setPlotType(plot_type);
         for(int i = 1; i < x.size(); i++) {
-            QGraphicsLineItem *line = new QGraphicsLineItem(MARGIN + x.at(i-1)*XRANGE/xmax, YRANGE + MARGIN - y.at(i-1)*YRANGE/ymax, MARGIN + x.at(i)*XRANGE/xmax, YRANGE + MARGIN - y.at(i)*YRANGE/ymax, 0);
+            QGraphicsLineItem *line = new QGraphicsLineItem(MARGIN - xmin*XRANGE/(xmax-xmin) + x.at(i-1)*XRANGE/(xmax-xmin), YRANGE + MARGIN + ymin*YRANGE/(ymax-ymin) - y.at(i-1)*YRANGE/(ymax-ymin), MARGIN - xmin*XRANGE/(xmax-xmin) + x.at(i)*XRANGE/(xmax-xmin), YRANGE + MARGIN + ymin*YRANGE/(ymax-ymin) - y.at(i)*YRANGE/(ymax-ymin), 0);
             line->setPen(QPen(QColor(150,150,187)));
             //line->setPen(QPen(QColor(color_names.at(number_of_plots%color_names.size()))));
             scene.addItem(line);
 
-            QGraphicsEllipseItem *dot = new QGraphicsEllipseItem(MARGIN + x.at(i)*XRANGE/xmax-2, YRANGE + MARGIN - y.at(i)*YRANGE/ymax-2, 4, 4, 0);
+            QGraphicsEllipseItem *dot = new QGraphicsEllipseItem(MARGIN - xmin*XRANGE/(xmax-xmin) + x.at(i)*XRANGE/(xmax-xmin)-2, YRANGE + MARGIN + ymin*YRANGE/(ymax-ymin) - y.at(i)*YRANGE/(ymax-ymin)-2, 4, 4, 0);
             dot->setBrush(QColor(150,150,187));
             //dot->setBrush(QColor(color_names.at(number_of_plots%color_names.size())));
             dot->setPen(QPen(Qt::white));
             dot->setToolTip(QString::number(x.at(i)).append(", ").append(QString::number(y.at(i))));
             scene.addItem(dot);
         }
-        QGraphicsEllipseItem *dot = new QGraphicsEllipseItem(MARGIN + x.at(0)*XRANGE/xmax-2, YRANGE + MARGIN - y.at(0)*YRANGE/ymax-2, 4, 4, 0);
+        QGraphicsEllipseItem *dot = new QGraphicsEllipseItem(MARGIN - xmin*XRANGE/(xmax-xmin) + x.at(0)*XRANGE/(xmax-xmin)-2, YRANGE + MARGIN + ymin*YRANGE/(ymax-ymin) - y.at(0)*YRANGE/(ymax-ymin)-2, 4, 4, 0);
         dot->setBrush(QColor(150,150,187));
         //dot->setBrush(QColor(color_names.at(number_of_plots%color_names.size())));
         dot->setPen(QPen(Qt::white));
@@ -202,7 +202,7 @@ void GraphWindow::addPlot(PlotType plot_type)
     case GraphWindow::Bar : {
         setPlotType(plot_type);
         for(int i = 0; i < x.size(); i++) {
-            QGraphicsRectItem *rect = new QGraphicsRectItem(MARGIN + x.at(i)*XRANGE/xmax-5, YRANGE + MARGIN - y.at(i)*YRANGE/ymax, 10, y.at(i)*YRANGE/ymax, 0);
+            QGraphicsRectItem *rect = new QGraphicsRectItem(MARGIN - xmin*XRANGE/(xmax-xmin) + x.at(i)*XRANGE/(xmax-xmin)-5, YRANGE + MARGIN + ymin*YRANGE/(ymax-ymin) - y.at(i)*YRANGE/(ymax-ymin), 10, - ymin*YRANGE/(ymax-ymin) + y.at(i)*YRANGE/(ymax-ymin), 0);
             rect->setBrush(QColor(150,150,187));
             //rect->setBrush(QColor(color_names.at(number_of_plots%color_names.size())));
             rect->setPen(QPen(Qt::white));
@@ -212,12 +212,12 @@ void GraphWindow::addPlot(PlotType plot_type)
     } break;
     case GraphWindow::Area : {
         setPlotType(plot_type);
-        for(int i = 0; i < x.size(); i++) {
+        for(int i = 1; i < x.size(); i++) {
             QPolygonF polygon_points;
-            polygon_points << QPointF(MARGIN + x.at(i-1)*XRANGE/xmax, YRANGE + MARGIN)
-                           << QPointF(MARGIN + x.at(i-1)*XRANGE/xmax, YRANGE + MARGIN - y.at(i-1)*YRANGE/ymax)
-                           << QPointF(MARGIN + x.at(i)*XRANGE/xmax, YRANGE + MARGIN - y.at(i)*YRANGE/ymax)
-                           << QPointF(MARGIN + x.at(i)*XRANGE/xmax, YRANGE + MARGIN);
+            polygon_points << QPointF(MARGIN - xmin*XRANGE/(xmax-xmin) + x.at(i-1)*XRANGE/(xmax-xmin), YRANGE + MARGIN)
+                           << QPointF(MARGIN - xmin*XRANGE/(xmax-xmin) + x.at(i-1)*XRANGE/(xmax-xmin), YRANGE + MARGIN + ymin*YRANGE/(ymax-ymin) - y.at(i-1)*YRANGE/(ymax-ymin))
+                           << QPointF(MARGIN - xmin*XRANGE/(xmax-xmin) + x.at(i)*XRANGE/(xmax-xmin), YRANGE + MARGIN + ymin*YRANGE/(ymax-ymin) - y.at(i)*YRANGE/(ymax-ymin))
+                           << QPointF(MARGIN - xmin*XRANGE/(xmax-xmin) + x.at(i)*XRANGE/(xmax-xmin), YRANGE + MARGIN);
             QGraphicsPolygonItem *polygon = new QGraphicsPolygonItem(polygon_points);
             polygon->setBrush(QColor(150,150,187));
             //polygon->setBrush(QColor(color_names.at(number_of_plots%color_names.size())));
@@ -250,23 +250,23 @@ void GraphWindow::addYAxis()
 void GraphWindow::addGrid()
 {
     for(int i=1; i < XRANGE/MARGIN; i++)
-        scene.addLine(MARGIN+i*MARGIN, MARGIN, MARGIN+i*MARGIN, YRANGE + MARGIN)->setPen(QPen(Qt::lightGray));
+        scene.addLine(MARGIN+i*MARGIN, MARGIN, MARGIN+i*MARGIN, YRANGE+MARGIN)->setPen(QPen(Qt::lightGray));
     for(int i=2; i <= YRANGE/MARGIN; i++)
-        scene.addLine(MARGIN, i*MARGIN, XRANGE + MARGIN, i*MARGIN)->setPen(QPen(Qt::lightGray));
+        scene.addLine(MARGIN, i*MARGIN, XRANGE+MARGIN, i*MARGIN)->setPen(QPen(Qt::lightGray));
 }
 
 void GraphWindow::addXLables()
 {
-    origin_x = scene.addText("0", x_lable_font);
+    origin_x = scene.addText(QString::number(xmin), x_lable_font);
     origin_x->setPos(MARGIN - origin_x->boundingRect().width()/2, YRANGE + MARGIN);
 
     max_x = scene.addText(QString::number(xmax), x_lable_font);
-    max_x->setPos(XRANGE + MARGIN -max_x->boundingRect().width()/2, YRANGE + MARGIN);
+    max_x->setPos(XRANGE + MARGIN - max_x->boundingRect().width()/2, YRANGE + MARGIN);
 }
 
 void GraphWindow::addYLables()
 {
-    origin_y = scene.addText("0", y_lable_font);
+    origin_y = scene.addText(QString::number(ymin), y_lable_font);
     origin_y->setPos(-origin_y->boundingRect().width()+MARGIN, YRANGE+MARGIN-origin_y->boundingRect().height()/2);
 
     max_y = scene.addText(QString::number(ymax), y_lable_font);
