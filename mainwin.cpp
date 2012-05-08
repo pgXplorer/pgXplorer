@@ -725,7 +725,7 @@ void MainWin::createTable(QString schema_name, GraphicsTextItem *text_item)
             foreach(Table *table, schema->getTableList())
                 if(table->getName().compare(text_item->toPlainText()) == 0) {
                     int response = QMessageBox::critical(this, MainWin::tr("Database error"),
-                                    MainWin::tr("A table with this name \"<html><b>%1</b></html>\" already exists in schema \"<html><b>%2</b></html>\".\n"
+                                    MainWin::tr("A table with this name \"<html><b>%1</b></html>\" already exists in schema \"<html><b>%2</b></html>\".\n "
                                     "Please choose another name or discard.\n").arg(text_item->toPlainText(), schema_name), QMessageBox::Retry | QMessageBox::Discard);
                     if(response == QMessageBox::Discard)
                         database->populateDatabase();

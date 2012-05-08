@@ -56,7 +56,7 @@ void Database::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
         setDatabaseCollapsed(true);
         emit collapseDatabase(this);
     }*/
-    update();
+    //update();
 }
 
 void Database::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)

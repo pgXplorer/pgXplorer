@@ -492,8 +492,11 @@ Refer to the README document at the source code location for more details on bui
     <message>
         <location filename="mainwin.cpp" line="728"/>
         <source>A table with this name &quot;&lt;html&gt;&lt;b&gt;%1&lt;/b&gt;&lt;/html&gt;&quot; already exists in schema &quot;&lt;html&gt;&lt;b&gt;%2&lt;/b&gt;&lt;/html&gt;&quot;.
-Please choose another name or discard.
+ Please choose another name or discard.
 </source>
+        <oldsource>A table with this name &quot;&lt;html&gt;&lt;b&gt;%1&lt;/b&gt;&lt;/html&gt;&quot; already exists in schema &quot;&lt;html&gt;&lt;b&gt;%2&lt;/b&gt;&lt;/html&gt;&quot;.
+Please choose another name or discard.
+</oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1350,25 +1353,25 @@ No PostgreSQL support.
     <name>TableProperties</name>
     <message>
         <location filename="tableproperties.cpp" line="17"/>
-        <location filename="tableproperties.cpp" line="73"/>
+        <location filename="tableproperties.cpp" line="77"/>
         <source>Properties</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="tableproperties.cpp" line="58"/>
-        <location filename="tableproperties.cpp" line="74"/>
+        <location filename="tableproperties.cpp" line="78"/>
         <source>With oids</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="tableproperties.cpp" line="62"/>
-        <location filename="tableproperties.cpp" line="75"/>
+        <location filename="tableproperties.cpp" line="79"/>
         <source>Tablespace</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="tableproperties.cpp" line="64"/>
-        <location filename="tableproperties.cpp" line="76"/>
+        <location filename="tableproperties.cpp" line="80"/>
         <source>Fill factor</source>
         <translation type="unfinished"></translation>
     </message>
