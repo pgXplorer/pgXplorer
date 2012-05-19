@@ -191,6 +191,7 @@ public slots:
     void about();
     void showHelp();
     void document_changed();
+    void open(QString);
     void showPropertyDialog(Database *);
     void tableViewClosed(TableView *);
     void designViewClosed(DesignView *);
@@ -219,7 +220,6 @@ protected:
 private slots:
     void clear();
     void openFile();
-    void open(QString);
     void saveFile();
     void save(QString);
     bool saveFileAs();

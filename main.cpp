@@ -16,7 +16,7 @@
   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 
-#include <QApplication>
+#include <pgxplorerapplication.h>
 #include <QDesktopWidget>
 #include <QTimer>
 #include "mainwin.h"
@@ -25,13 +25,8 @@
 int main(int argc, char **argv)
 {
     Q_INIT_RESOURCE(pgXplorer);
-    QApplication pgXplorer(argc, argv);
+    PgxplorerApplication pgXplorer(argc, argv);
 
-    QString arg1;
-    if(argc > 1)
-        arg1.append(QString::fromLocal8Bit(argv[1]));
-
-    MainWin *mainwin = new MainWin(0, arg1, Qt::Widget);
     QCoreApplication::setOrganizationName("pgXplorer");
     QCoreApplication::setOrganizationDomain("pgXplorer.com");
     QCoreApplication::setApplicationName("pgXplorer");
@@ -78,6 +73,5 @@ int main(int argc, char **argv)
                         color: #0F0F0F; \
                         }");
 
-    mainwin->show();
     return pgXplorer.exec();
 }

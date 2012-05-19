@@ -32,7 +32,8 @@ HEADERS		= \
     designview.h \
     checkboxdelegate.h \
     tableproperties.h \
-    graphwindow.h
+    graphwindow.h \
+    pgxplorerapplication.h
 SOURCES		= main.cpp \
     database.cpp \
     table.cpp \
@@ -57,7 +58,8 @@ SOURCES		= main.cpp \
     designview.cpp \
     checkboxdelegate.cpp \
     tableproperties.cpp \
-    graphwindow.cpp
+    graphwindow.cpp \
+    pgxplorerapplication.cpp
 
 QT += sql translator network
 
