@@ -1159,10 +1159,10 @@ void TableView::ascend()
 
     QVariant header = table_view->model()->headerData(index.column(), Qt::Horizontal);
     QString header_string = header.toString();
-    if(order_clause.contains(header_string + " DESC"))
-        order_clause.removeOne(header_string + " DESC");
-    if(!order_clause.contains(header_string + " ASC")) {
-        order_clause.append(header_string + " ASC");
+    if(order_clause.contains("\"" + header_string + "\" DESC"))
+        order_clause.removeOne("\"" + header_string + "\ DESC");
+    if(!order_clause.contains("\"" + header_string + "\" ASC")) {
+        order_clause.append("\"" + header_string + "\" ASC");
         offset_list.clear();
         offset_list.append(" OFFSET 0");
 
@@ -1180,10 +1180,10 @@ void TableView::descend()
 
     QVariant header = table_view->model()->headerData(index.column(), Qt::Horizontal);
     QString header_string = header.toString();
-    if(order_clause.contains(header_string + " ASC"))
-        order_clause.removeOne(header_string + " ASC");
-    if(!order_clause.contains(header_string + " DESC")) {
-        order_clause.append(header_string + " DESC");
+    if(order_clause.contains("\"" + header_string + "\" ASC"))
+        order_clause.removeOne("\"" + header_string + "\" ASC");
+    if(!order_clause.contains("\"" + header_string + "\" DESC")) {
+        order_clause.append("\"" + header_string + "\" DESC");
         offset_list.clear();
         offset_list.append(" OFFSET 0");
 
