@@ -161,7 +161,7 @@ public:
     }
     QString getPassword()
     {
-        return user;
+        return password;
     }
     void setPassword(QString password)
     {
