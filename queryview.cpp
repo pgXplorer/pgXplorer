@@ -61,14 +61,6 @@ QueryView::QueryView(Database *database, QString command)
     query_view->setAlternatingRowColors(true);
     query_view->verticalHeader()->setDefaultAlignment(Qt::AlignRight | Qt::AlignVCenter);
 
-    //Create Ctrl+Shift+C key combo to copy selected table contents with headers.
-    QShortcut *shortcut_ctrl_c = new QShortcut(QKeySequence::Copy, this);
-    connect(shortcut_ctrl_c, SIGNAL(activated()), this, SLOT(copyToClipboard()));
-
-    //Create Ctrl+Shift+C key combo to copy selected table contents with headers.
-    QShortcut *shortcut_ctrl_shft_c = new QShortcut(QKeySequence("Ctrl+Shift+C"), this);
-    connect(shortcut_ctrl_shft_c, SIGNAL(activated()), this, SLOT(copyToClipboardWithHeaders()));
-
     //Create key-sequences for fullscreen and restore.
     shortcut_fullscreen = new QShortcut(QKeySequence(Qt::Key_F11), this);
     connect(shortcut_fullscreen, SIGNAL(activated()), this, SLOT(fullscreen()));
