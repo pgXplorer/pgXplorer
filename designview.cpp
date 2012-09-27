@@ -329,8 +329,6 @@ void DesignView::saveTable()
             QMessageBox::critical(this, MainWin::tr("Database error"),
             messages.join("\n"), QMessageBox::Close);
         }
-        else
-            table->getParent()->resetTablesVertically2();
     }
     QSqlDatabase::removeDatabase(QString("designview ").append(table_name));
     design_view->setDisabled(false);
