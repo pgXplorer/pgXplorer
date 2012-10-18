@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <davyjones@github>
+  Copyright (c) 2011-2012, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -61,6 +61,7 @@ private:
     QStringList table_names_list;
     QStringList view_names_list;
     QStringList function_names_list;
+    QStringList keywords_list;
 
 protected:
     QVariant itemChange(GraphicsItemChange change, const QVariant &value);
@@ -228,12 +229,20 @@ public:
         return function_names_list;
     }
 
+    void setKeywords();
+
+    QStringList keywords()
+    {
+        return keywords_list;
+    }
+
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent*);
     void contextMenuEvent(QGraphicsSceneContextMenuEvent*);
 
 signals:
     void expandDatabase(Database*);
     void summonPropertyDialog(Database*);
+    void summonStatusDialog(Database*);
     void expandAll(Database*);
     void expandAllVertically(Database*);
     void collapseDatabase(Database*);

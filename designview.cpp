@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <davyjones@github>
+  Copyright (c) 2011-2012, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -66,7 +66,7 @@ public:
 DesignView::DesignView(Database *database, Table *table, QString const table_name, QString const name, QStringList column_list, QStringList primary_key, QStringList column_types, QStringList column_lengths, QStringList column_nulls, bool read_only, Qt::WidgetAttribute f)
 {
     setAttribute(Qt::WA_DeleteOnClose);
-    setWindowIcon(QIcon(":/icons/design.png"));
+    //setWindowIcon(QIcon(":/icons/design.png"));
     menuBar()->setVisible(false);
     createBrushes();
     createActions();
@@ -77,7 +77,7 @@ DesignView::DesignView(Database *database, Table *table, QString const table_nam
 
     this->database = database;
     this->table = table;
-    this->table_name = table_name;
+    this->new_table_name = table_name;
     this->primary_key = primary_key;
     this->column_list = column_list;
     this->column_types = column_types;
@@ -87,7 +87,7 @@ DesignView::DesignView(Database *database, Table *table, QString const table_nam
     setWindowTitle(name);
     setObjectName(name);
 
-    toolbar = new QToolBar;
+    toolbar = new ToolBar;
     toolbar->setIconSize(QSize(36,36));
     toolbar->setObjectName("designview");
     toolbar->setMovable(false);
@@ -101,12 +101,12 @@ DesignView::DesignView(Database *database, Table *table, QString const table_nam
     addToolBar(toolbar);
     statusBar()->show();
 
-    //Identify this object with thisTableViewId for constructing database connection
+    //Identify this object with thisDesignViewId for constructing database connection
     //specific to this object and this object alone.
     thisDesignViewId = designViewObjectId++;
 
     //Thread busy indicator to avoid overlapping of threads.
-    //Initialise to false because obviously we don't have TableView
+    //Initialise to false because obviously we don't have DesignView
     //GUI artifacts to create overlapping threads yet.
     thread_busy = false;
 
@@ -116,6 +116,7 @@ DesignView::DesignView(Database *database, Table *table, QString const table_nam
     initialiseModel();
 
     design_view = new QTableView(this);
+    design_view->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     design_view->horizontalHeader()->setContextMenuPolicy(Qt::ActionsContextMenu);
     CheckBoxDelegate *check_delegate = new CheckBoxDelegate(design_view);
     design_view->setItemDelegateForRow(2, check_delegate);
@@ -127,8 +128,8 @@ DesignView::DesignView(Database *database, Table *table, QString const table_nam
     design_view->setAlternatingRowColors(true);
     design_view->verticalHeader()->setDefaultAlignment(Qt::AlignRight | Qt::AlignVCenter);
     design_view->setModel(design_model);
-    connect(design_model, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(updateDesigner(QModelIndex,QModelIndex)));
-    connect(design_view->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)), this, SLOT(updateSelectionChanged()));
+    connect(design_model, SIGNAL(dataChanged(QModelIndex,QModelIndex)), SLOT(updateDesigner(QModelIndex,QModelIndex)));
+    connect(design_view->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)), SLOT(updateSelectionChanged()));
 
     setCentralWidget(design_view);
 }
@@ -250,29 +251,29 @@ void DesignView::createActions()
     save_action->setShortcuts(QKeySequence::Save);
     save_action->setStatusTip(tr("Save the table definition to database"));
     save_action->setEnabled(false);
-    connect(save_action, SIGNAL(triggered()), this, SLOT(saveTable()));
+    connect(save_action, SIGNAL(triggered()), SLOT(saveTable()));
 
     properties_action = new QAction(QIcon(":/icons/properties.png"), tr("&Properties"), this);
     properties_action->setStatusTip(tr("Specify table properties"));
     properties_action->setCheckable(true);
-    connect(properties_action, SIGNAL(triggered()), this, SLOT(showTableProperties()));
+    connect(properties_action, SIGNAL(triggered()), SLOT(showTableProperties()));
 
     insert_column_left_action = new QAction(QIcon(":/icons/insertleft.png"), tr("Insert column left"), this);
     insert_column_left_action->setStatusTip(tr("Insert to the left of the selected column(s)"));
     insert_column_left_action->setEnabled(false);
-    connect(insert_column_left_action, SIGNAL(triggered()), this, SLOT(insertLeftColumn()));
+    connect(insert_column_left_action, SIGNAL(triggered()), SLOT(insertLeftColumn()));
 
     delete_column_action = new QAction(QIcon(":/icons/removecolumn.png"), tr("&Delete column(s)"), this);
     delete_column_action->setStatusTip(tr("Delete selected column(s)"));
     delete_column_action->setEnabled(false);
-    connect(delete_column_action, SIGNAL(triggered()), this, SLOT(deleteColumns()));
+    connect(delete_column_action, SIGNAL(triggered()), SLOT(deleteColumns()));
 }
 
 void DesignView::saveTable()
 {
     design_view->setDisabled(true);
     {
-        QSqlDatabase database_connection = QSqlDatabase::addDatabase("QPSQL", QString("designview ").append(table_name));
+        QSqlDatabase database_connection = QSqlDatabase::addDatabase("QPSQL", QString("designview ").append(new_table_name));
         database_connection.setHostName(database->getHost());
         database_connection.setPort(database->getPort().toInt());
         database_connection.setDatabaseName(database->getName());
@@ -285,9 +286,9 @@ void DesignView::saveTable()
             return;
         }
         sql = QLatin1String("DROP TABLE IF EXISTS ");
-        sql.append(table_name);
+        sql.append(new_table_name);
         sql.append(QLatin1String("; CREATE TABLE "));
-        sql.append(table_name);
+        sql.append(new_table_name);
         sql.append(QLatin1String(" ("));
         new_primary_key.clear();
         int column_count = design_model->columnCount();
@@ -314,25 +315,23 @@ void DesignView::saveTable()
         }
         else {
             sql.append("CONSTRAINT \"");
-            sql.append(QString(table_name).remove("\""));
+            sql.append(QString(new_table_name).remove("\""));
             sql.append("_pkey\" PRIMARY KEY");
             sql.append(new_primary_key.join(",").prepend("(").append(")"));
         }
         sql.append(QLatin1String(") "));
         sql.append(properties);
 
-        QSqlQueryModel query;
-        query.setQuery(sql, database_connection);
-        if(query.lastError().isValid()) {
-            QStringList messages = query.lastError().databaseText().split("\n");
+        QSqlQueryModel query_model;
+        query_model.setQuery(sql, database_connection);
+        if(query_model.lastError().isValid()) {
+            QStringList messages = query_model.lastError().databaseText().split("\n");
             messages.removeLast();
             QMessageBox::critical(this, MainWin::tr("Database error"),
             messages.join("\n"), QMessageBox::Close);
         }
-        else
-            table->getParent()->resetTablesVertically2();
     }
-    QSqlDatabase::removeDatabase(QString("designview ").append(table_name));
+    QSqlDatabase::removeDatabase(QString("designview ").append(new_table_name));
     design_view->setDisabled(false);
 }
 
@@ -349,11 +348,11 @@ void DesignView::showTableProperties()
         foreach (Table *table, schema->getTableList())
             completer_list.append(schema->getName().append(".\"" + table->getName() + "\""));
 
-    TableProperties *table_props = new TableProperties(this, table_name, completer_list, properties2.oid, properties2.inherits, properties2.tablespace, properties2.fill_factor);
+    TableProperties *table_props = new TableProperties(this, new_table_name, completer_list, properties2.oid, properties2.inherits, properties2.tablespace, properties2.fill_factor);
     connect(this, SIGNAL(changeLanguage(QEvent*)), table_props, SLOT(languageChanged(QEvent*)));
-    connect(table_props, SIGNAL(oksignal(bool, QString, QString, int)), this, SLOT(setProperties(bool, QString, QString, int)));
-    connect(table_props, SIGNAL(accepted()), this, SLOT(popPropertiesButton()));
-    connect(table_props, SIGNAL(rejected()), this, SLOT(popPropertiesButton()));
+    connect(table_props, SIGNAL(oksignal(bool, QString, QString, int)), SLOT(setProperties(bool, QString, QString, int)));
+    connect(table_props, SIGNAL(accepted()), SLOT(popPropertiesButton()));
+    connect(table_props, SIGNAL(rejected()), SLOT(popPropertiesButton()));
     table_props->show();
 }
 

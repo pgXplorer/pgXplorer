@@ -84,9 +84,11 @@ public:
     {
         return QRectF(-35, -30, 80, 50);
     }
-    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
-               QWidget *)
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
     {
+        Q_UNUSED (option);
+        Q_UNUSED (widget);
+
         if(this->isSelected())
             painter->setPen(QColor(100,100,100));
         else

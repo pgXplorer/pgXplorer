@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <davyjones@github>
+  Copyright (c) 2011-2012, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -35,7 +35,7 @@ PgxConsole::PgxConsole(Database *database)
     highlighter = new Highlighter(document());
     prompt = new Prompt(this);
 
-    toolbar = new QToolBar;
+    toolbar = new ToolBar;
     toolbar->setIconSize(QSize(36,36));
     toolbar->setObjectName("pgxeditor");
     toolbar->setMovable(false);
@@ -64,26 +64,26 @@ PgxConsole::PgxConsole(Database *database)
     pgxconsole_mainwin->statusBar()->addPermanentWidget(find_previous_button, 0);
     pgxconsole_mainwin->statusBar()->addPermanentWidget(find_next_button, 0);
 
-    connect(find_bar, SIGNAL(returnPressed()), this, SLOT(findText()));
+    connect(find_bar, SIGNAL(returnPressed()), SLOT(findText()));
 
     QShortcut *shortcut_paste = new QShortcut(QKeySequence::Paste, this);
-    connect(shortcut_paste, SIGNAL(activated()), this, SLOT(pasteFromClipboard()));
+    connect(shortcut_paste, SIGNAL(activated()), SLOT(pasteFromClipboard()));
 
     QShortcut *shortcut_single_paste = new QShortcut(QKeySequence("Ctrl+Shift+V"), this);
-    connect(shortcut_single_paste, SIGNAL(activated()), this, SLOT(pasteAsSingleFromClipboard()));
+    connect(shortcut_single_paste, SIGNAL(activated()), SLOT(pasteAsSingleFromClipboard()));
 
-    connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(makePreviousBlocksReadonly()));
+    connect(this, SIGNAL(cursorPositionChanged()), SLOT(makePreviousBlocksReadonly()));
 
     //Tie command with QueryView creation.
-    connect(this, SIGNAL(commandSignal(QString)), this, SLOT(showView(QString)));
+    connect(this, SIGNAL(commandSignal(QString)), SLOT(showView(QString)));
 
     //Tie up and down keys with command history scolling.
-    connect(this, SIGNAL(historyUp()), this, SLOT(historyUpCommand()));
-    connect(this, SIGNAL(historyDown()), this, SLOT(historyDownCommand()));
+    connect(this, SIGNAL(historyUp()), SLOT(historyUpCommand()));
+    connect(this, SIGNAL(historyDown()), SLOT(historyDownCommand()));
 
     //Console updates.
-    connect(this, SIGNAL(updateRequest(QRect,int)), this, SLOT(updatePrompt(QRect,int)));
-    connect(pgxconsole_mainwin, SIGNAL(pgxconsoleClosing()), this, SLOT(pgxconsoleClosing()));
+    connect(this, SIGNAL(updateRequest(QRect,int)), SLOT(updatePrompt(QRect,int)));
+    connect(pgxconsole_mainwin, SIGNAL(pgxconsoleClosing()), SLOT(pgxconsoleClosing()));
 }
 
 void PgxConsole::updatePrompt(const QRect &rect, int dy)
@@ -451,9 +451,8 @@ void PgxConsole::historyUpCommand()
             cursor.removeSelectedText();
             appendPlainText(history.at(--hit));
         }
-        else {
+        else
             insertPlainText(history.at(--hit));
-        }
     }
 }
 
@@ -468,9 +467,8 @@ void PgxConsole::historyDownCommand()
             cursor.removeSelectedText();
             appendPlainText(history.value(++hit));
         }
-        else {
+        else
             insertPlainText(history.value(++hit));
-        }
     }
     ensureCursorVisible();
 }
@@ -495,27 +493,27 @@ void PgxConsole::createActions()
     cut_action = new QAction(QIcon(":/icons/cut.png"), tr("Cut"), this);
     cut_action->setShortcuts(QKeySequence::Cut);
     cut_action->setStatusTip(tr("Cut selected text and copy to clipboard"));
-    connect(cut_action, SIGNAL(triggered()), this, SLOT(cut()));
+    connect(cut_action, SIGNAL(triggered()), SLOT(cut()));
 
     copy_action = new QAction(QIcon(":/icons/copy.png"), tr("Copy"), this);
     copy_action->setShortcuts(QKeySequence::Copy);
     copy_action->setStatusTip(tr("Copy selected text to clipboard"));
-    connect(copy_action, SIGNAL(triggered()), this, SLOT(copy()));
+    connect(copy_action, SIGNAL(triggered()), SLOT(copy()));
 
     paste_action = new QAction(QIcon(":/icons/paste.png"), tr("Paste"), this);
     paste_action->setShortcuts(QKeySequence::Paste);
     paste_action->setStatusTip(tr("Paste"));
-    connect(paste_action, SIGNAL(triggered()), this, SLOT(pasteAsSingleFromClipboard()));
+    connect(paste_action, SIGNAL(triggered()), SLOT(pasteAsSingleFromClipboard()));
 
     clear_action = new QAction(QIcon(":/icons/clear.png"), tr("&Clear"), this);
     clear_action->setStatusTip(tr("Clear the console"));
-    connect(clear_action, SIGNAL(triggered()), this, SLOT(clear()));
+    connect(clear_action, SIGNAL(triggered()), SLOT(clear()));
 
     find_action = new QAction(QIcon(":/icons/search.png"), tr("Find"), this);
     find_action->setShortcuts(QKeySequence::Find);
     find_action->setStatusTip(tr("Find text"));
     find_action->setCheckable(true);
-    connect(find_action, SIGNAL(triggered()), this, SLOT(toggleFindBar()));
+    connect(find_action, SIGNAL(triggered()), SLOT(toggleFindBar()));
 
     casesensitivity_action = new QAction(tr("Cs"), this);
     casesensitivity_action->setToolTip(tr("Case sensitive"));
@@ -540,7 +538,7 @@ void PgxConsole::createActions()
 
     find_previous_action = new QAction(QIcon(":/icons/find_previous.png"), "", this);
     find_previous_action->setToolTip(tr("Find previous"));
-    connect(find_previous_action, SIGNAL(triggered()), this, SLOT(findPrevious()));
+    connect(find_previous_action, SIGNAL(triggered()), SLOT(findPrevious()));
     find_previous_button = new QToolButton;
     find_previous_button->setAutoRaise(true);
     find_previous_button->setDefaultAction(find_previous_action);
@@ -548,17 +546,18 @@ void PgxConsole::createActions()
 
     find_next_action = new QAction(QIcon(":/icons/find_next.png"), "", this);
     find_next_action->setToolTip(tr("Find next"));
-    connect(find_next_action, SIGNAL(triggered()), this, SLOT(findNext()));
+    connect(find_next_action, SIGNAL(triggered()), SLOT(findNext()));
     find_next_button = new QToolButton;
     find_next_button->setAutoRaise(true);
     find_next_button->setDefaultAction(find_next_action);
     find_next_button->setVisible(false);
 }
 
-void PgxConsole::setResizePos(QSize size, QPoint pos)
+void PgxConsole::setResizePos(QSize size, QPoint pos, QSize icon_size)
 {
     pgxconsole_mainwin->resize(size);
     pgxconsole_mainwin->move(pos);
+    toolbar->setIconSize(icon_size);
     pgxconsole_mainwin->show();
 }
 

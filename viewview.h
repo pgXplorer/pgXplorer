@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <davyjones@github>
+  Copyright (c) 2011-2012, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -55,7 +55,7 @@ private:
     QMenu deselect_menu;
     QMenu disarrange_menu;
     QTime t;
-    QToolBar *toolbar;
+    ToolBar *toolbar;
     QueryModel *query_model;
     QTableView *view_view;
     QString sql;
@@ -112,6 +112,11 @@ public:
     QString viewName()
     {
         return view_name;
+    }
+
+    ToolBar* getToolbar()
+    {
+        return toolbar;
     }
 
 public slots:

@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <davyjones@github>
+  Copyright (c) 2011-2012, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -52,11 +52,15 @@ public:
     void setConnectionProperties(QString, int, QString, QString, QString);
     void insertFromMimeData(const QMimeData *);
     void createActions();
-    void setResizePos(QSize, QPoint);
+    void setResizePos(QSize, QPoint, QSize);
     void closeMain();
     PgxConsoleMainWindow* mainWin()
     {
         return pgxconsole_mainwin;
+    }
+    ToolBar* getToolbar()
+    {
+        return toolbar;
     }
 
 protected:
@@ -79,7 +83,7 @@ private slots:
     void pgxconsoleClosing();
 
 public slots:
-    void languageChanged(QEvent*);
+    void languageChanged(QEvent *);
 
 private:
     PgxConsoleMainWindow *pgxconsole_mainwin;
@@ -88,7 +92,7 @@ private:
     QLineEdit *find_bar;
     Highlighter *highlighter;
     QTextCursor find_cursor;
-    QToolBar *toolbar;
+    ToolBar *toolbar;
     QStringList history;
     qint32 hit;
     QCompleter *completer;

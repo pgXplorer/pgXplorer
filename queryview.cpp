@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <davyjones@github>
+  Copyright (c) 2011-2012, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -18,6 +18,7 @@
 
 #include "queryview.h"
 #include "graphwindow.h"
+#include "reportwindow.h"
 
 ulong QueryView::queryViewObjectId = 0;
 
@@ -39,7 +40,7 @@ QueryView::QueryView(Database *database, QString command)
 
     createActions();
 
-    toolbar = new QToolBar;
+    toolbar = new ToolBar;
     toolbar->setIconSize(QSize(36,36));
     toolbar->setObjectName("tableview");
     toolbar->setMovable(false);
@@ -50,36 +51,31 @@ QueryView::QueryView(Database *database, QString command)
     toolbar->addAction(lineplot_action);
     toolbar->addAction(barplot_action);
     toolbar->addAction(areaplot_action);
+    toolbar->addSeparator();
+    toolbar->addAction(report_action);
     addToolBar(toolbar);
 
     errors_model = new QStandardItemModel(0,1);
     query_model = new QueryModel;
     query_view = new QTableView(this);
+    query_view->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     query_view->resizeColumnsToContents();
     setCentralWidget(query_view);
     statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0, QApplication::UnicodeUTF8));
     query_view->setAlternatingRowColors(true);
     query_view->verticalHeader()->setDefaultAlignment(Qt::AlignRight | Qt::AlignVCenter);
 
-    //Create Ctrl+Shift+C key combo to copy selected table contents with headers.
-    QShortcut *shortcut_ctrl_c = new QShortcut(QKeySequence::Copy, this);
-    connect(shortcut_ctrl_c, SIGNAL(activated()), this, SLOT(copyToClipboard()));
-
-    //Create Ctrl+Shift+C key combo to copy selected table contents with headers.
-    QShortcut *shortcut_ctrl_shft_c = new QShortcut(QKeySequence("Ctrl+Shift+C"), this);
-    connect(shortcut_ctrl_shft_c, SIGNAL(activated()), this, SLOT(copyToClipboardWithHeaders()));
-
     //Create key-sequences for fullscreen and restore.
     shortcut_fullscreen = new QShortcut(QKeySequence(Qt::Key_F11), this);
-    connect(shortcut_fullscreen, SIGNAL(activated()), this, SLOT(fullscreen()));
+    connect(shortcut_fullscreen, SIGNAL(activated()), SLOT(fullscreen()));
     shortcut_restore = new QShortcut(QKeySequence(Qt::Key_Escape), this);
-    connect(shortcut_restore, SIGNAL(activated()), this, SLOT(restore()));
+    connect(shortcut_restore, SIGNAL(activated()), SLOT(restore()));
 
     //Tie thread finish to an update slot that refreshes meta-information.
-    connect(this, SIGNAL(updRowCntSignal(QString)), this, SLOT(updRowCntSlot(QString)));
+    connect(this, SIGNAL(updRowCntSignal(QString)), SLOT(updRowCntSlot(QString)));
 
     //Tie a busy signal to a slot that changes the cursor to wait cursor.
-    connect(this, SIGNAL(busySignal()), this, SLOT(busySlot()));
+    connect(this, SIGNAL(busySignal()), SLOT(busySlot()));
 
     QtConcurrent::run(this, &QueryView::fetchData, sql);
 }
@@ -124,6 +120,7 @@ void QueryView::closeEvent(QCloseEvent *event)
         settings.setValue("queryview_maximized", false);
     settings.setValue("queryview_pos", pos());
     settings.setValue("queryview_size", size());
+    settings.setValue("icon_size", toolbar->iconSize());
 
     if(!thread_busy) {
         delete query_view;
@@ -142,33 +139,38 @@ void QueryView::createActions()
     copy_action->setShortcuts(QKeySequence::Copy);
     copy_action->setStatusTip(tr("Copy selected"));
     copy_action->setEnabled(false);
-    connect(copy_action, SIGNAL(triggered()), this, SLOT(copyToClipboard()));
+    connect(copy_action, SIGNAL(triggered()), SLOT(copyToClipboard()));
 
     copy_with_headers_action = new QAction(QIcon(":/icons/copy_with_headers.png"), tr("Copy with headers"), this);
     copy_with_headers_action->setShortcut(QKeySequence("Ctrl+Shift+C"));
     copy_with_headers_action->setStatusTip(tr("Copy selected with headers"));
     copy_with_headers_action->setEnabled(false);
-    connect(copy_with_headers_action, SIGNAL(triggered()), this, SLOT(copyToClipboardWithHeaders()));
+    connect(copy_with_headers_action, SIGNAL(triggered()), SLOT(copyToClipboardWithHeaders()));
 
     scatterplot_action = new QAction(QIcon(":/icons/scatter.png"), tr("Scatter plot"), this);
     scatterplot_action->setEnabled(false);
     scatterplot_action->setStatusTip(tr("Plot the selected columns as a scatter plot"));
-    connect(scatterplot_action, SIGNAL(triggered()), this, SLOT(scatterPlot()));
+    connect(scatterplot_action, SIGNAL(triggered()), SLOT(scatterPlot()));
 
     lineplot_action = new QAction(QIcon(":/icons/line.png"), tr("Line plot"), this);
     lineplot_action->setEnabled(false);
     lineplot_action->setStatusTip(tr("Plot the selected columns as a line plot"));
-    connect(lineplot_action, SIGNAL(triggered()), this, SLOT(linePlot()));
+    connect(lineplot_action, SIGNAL(triggered()), SLOT(linePlot()));
 
     barplot_action = new QAction(QIcon(":/icons/bar.png"), tr("Bar plot"), this);
     barplot_action->setEnabled(false);
     barplot_action->setStatusTip(tr("Plot the selected columns as a bar plot"));
-    connect(barplot_action, SIGNAL(triggered()), this, SLOT(barPlot()));
+    connect(barplot_action, SIGNAL(triggered()), SLOT(barPlot()));
 
     areaplot_action = new QAction(QIcon(":/icons/area.png"), tr("Area plot"), this);
     areaplot_action->setEnabled(false);
     areaplot_action->setStatusTip(tr("Plot the selected columns as an area plot"));
-    connect(areaplot_action, SIGNAL(triggered()), this, SLOT(areaPlot()));
+    connect(areaplot_action, SIGNAL(triggered()), SLOT(areaPlot()));
+
+    report_action = new QAction(QIcon(":/icons/report.png"), tr("Report"), this);
+    report_action->setEnabled(false);
+    report_action->setStatusTip(tr("Create a report based on this data"));
+    connect(report_action, SIGNAL(triggered()), SLOT(createReport()));
 }
 
 void QueryView::copyToClipboard()
@@ -303,6 +305,9 @@ void QueryView::fetchData(QString command)
         else
             emit updRowCntSignal(QString());
     }
+
+    QSqlQueryModel rollback_query_model;
+    rollback_query_model.setQuery("; ROLLBACK; ", database_connection);
 }
 
 void QueryView::bringOnTop()
@@ -359,7 +364,7 @@ void QueryView::updRowCntSlot(QString error)
     }
     else {
         query_view->setModel(query_model);
-        connect(query_view->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)), this, SLOT(togglePlots()));
+        connect(query_view->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)), SLOT(togglePlots()));
 
         query_view->verticalScrollBar()->setValue(0);
         if(query_model->rowCount() == 0)
@@ -370,6 +375,7 @@ void QueryView::updRowCntSlot(QString error)
             statusBar()->showMessage(time_elapsed_string + QString::number(time_elapsed) +
                                      " " + seconds_string + " \t " + rows_string + QString::number(query_model->rowCount()) +
                                      " \t " + colums_string + QString::number(query_model->columnCount()));
+        report_action->setEnabled(true);
     }
     notBusy();
 }
@@ -492,4 +498,18 @@ void QueryView::areaPlot()
     qSort(list);
     GraphWindow *graph_win = new GraphWindow(list, GraphWindow::Area);
     graph_win->show();
+}
+
+void QueryView::createReport()
+{
+    ReportWindow *report_win = new ReportWindow(database, sql);
+    QSettings settings("pgXplorer", "pgXplorer");
+    QPoint pos = settings.value("reportwindow_pos", QPoint(100, 100)).toPoint();
+    QSize size = settings.value("reportwindow_size", QSize(1024, 768)).toSize();
+    QSize icon_size = settings.value("icon_size", QSize(36, 36)).toSize();
+
+    report_win->resize(size);
+    report_win->move(pos);
+    report_win->getToolbar()->setIconSize(icon_size);
+    report_win->show();
 }

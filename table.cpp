@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <davyjones@github>
+  Copyright (c) 2011-2012, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -24,6 +24,7 @@
 Table::Table(Database *database, Schema *schema, QString table_name, int table_index, QColor color)
 {
     this->database = database;
+    oid = false;
     setParent(schema);
     setParentItem(schema);
     this->table_index = table_index;
@@ -33,12 +34,16 @@ Table::Table(Database *database, Schema *schema, QString table_name, int table_i
     setStatus(false);
     setCollapsed(true);
     createBrush();
-    //setFlag(QGraphicsItem::ItemIsMovable);
-    setFlag(QGraphicsItem::ItemIsSelectable);
+    setFlags(QGraphicsItem::ItemIsSelectable);// | QGraphicsItem::ItemIsMovable);
     //setFlag(ItemSendsGeometryChanges);
     setCacheMode(DeviceCoordinateCache);
     setZValue(-10);
     setAcceptHoverEvents(true);
+}
+
+QString Table::getFullName()
+{
+    return "\"" + parent_schema->getName() + "\".\"" + table_name + "\"";
 }
 
 void Table::createBrush()
@@ -85,7 +90,7 @@ void Table::defaultPosition()
 void Table::setColumnData()
 {
     QSqlQuery column_query(database->getDatabaseConnection());
-    QString column_query_string = "SELECT a.attname, pg_catalog.format_type(a.atttypid, a.atttypmod), a.atttypmod-4, attnotnull FROM pg_catalog.pg_attribute a WHERE a.attrelid in (SELECT c.oid FROM pg_catalog.pg_class c LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname='" + parent_schema->getName() + "' and c.relname='" + table_name + "') AND a.attnum > 0 AND NOT a.attisdropped ORDER BY a.attnum";
+    QString column_query_string = "SELECT a.attnum, a.attname, pg_catalog.format_type(a.atttypid, a.atttypmod), a.atttypmod-4, attnotnull, (SELECT substring(pg_catalog.pg_get_expr(d.adbin, d.adrelid) for 128) FROM pg_catalog.pg_attrdef d WHERE d.adrelid = a.attrelid AND d.adnum = a.attnum AND a.atthasdef) FROM pg_catalog.pg_attribute a WHERE a.attrelid in (SELECT c.oid FROM pg_catalog.pg_class c LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname='" + parent_schema->getName() + "' and c.relname='" + table_name + "') AND (a.attnum = -2 OR a.attnum > 0) AND NOT a.attisdropped ORDER BY a.attnum";
     column_query.exec(column_query_string);
     if(column_query.lastError().isValid()) {
         QMessageBox *error_message = new QMessageBox(QMessageBox::Critical,
@@ -101,11 +106,17 @@ void Table::setColumnData()
     column_types.clear();
     column_lengths.clear();
     column_nulls.clear();
+    column_defaults.clear();
     while (column_query.next()) {
-        column_list.append("\"" + column_query.value(0).toString() + "\"");
-        column_types.append(column_query.value(1).toString());
-        column_lengths.append(column_query.value(2).toString());
-        column_nulls.append(column_query.value(3).toString());
+        if(column_query.value(0).toInt() < 0)
+             oid = true;
+        else {
+            column_list.append("\"" + column_query.value(1).toString() + "\"");
+            column_types.append(column_query.value(2).toString());
+            column_lengths.append(column_query.value(3).toString());
+            column_nulls.append(column_query.value(4).toString());
+            column_defaults.append(column_query.value(5).toString());
+        }
     }
 }
 
@@ -113,6 +124,7 @@ void Table::copyPrimaryKey()
 {
     QSqlQuery column_query(database->getDatabaseConnection());
     QString column_query_string = "select conname, unnest(conkey)::int-1 from pg_constraint p left join pg_namespace n on p.connamespace=n.oid left join pg_class c on c.oid=conrelid where n.nspname='" + parent_schema->getName() + "' and c.relname='" + table_name + "' and contype in ('p','u') and conrelid > 0";
+    //QString column_query_string = "select pg_get_constraintdef(where n.nspname='" + parent_schema->getName() + "' and c.relname='" + table_name + "', true);";
     column_query.exec(column_query_string);
     if(column_query.lastError().isValid()) {
         QMessageBox *error_message = new QMessageBox(QMessageBox::Critical,
@@ -123,9 +135,42 @@ void Table::copyPrimaryKey()
         error_message->show();
         return;
     }
+
     primary_key.clear();
-    while (column_query.next())
-        primary_key.append(column_list.at(column_query.value(1).toInt()));
+    primary_key_has_oid = false;
+
+    while (column_query.next()) {
+        primary_key_name = column_query.value(0).toString();
+        if(column_query.value(1).toInt() < 0)
+            primary_key_has_oid = true;
+        else
+            primary_key.append(column_list.at(column_query.value(1).toInt()));
+    }
+}
+
+void Table::copyConstraints()
+{
+    QSqlQuery constraint_query(database->getDatabaseConnection());
+    QString query_string = "SELECT r.conname, pg_catalog.pg_get_constraintdef(r.oid, true) FROM pg_catalog.pg_constraint r WHERE r.conrelid IN (SELECT c.oid FROM pg_catalog.pg_class c LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname='" + parent_schema->getName() + "' and c.relname='" + table_name + "') AND r.contype in ('c') ORDER BY r.oid";
+    constraint_query.exec(query_string);
+    if(constraint_query.lastError().isValid()) {
+        QMessageBox *error_message = new QMessageBox(QMessageBox::Critical,
+                                    tr("Database error"),
+                                    tr("Unable to retrieve constraint information.\n"
+                                    "Check your database connection or permissions.\n"), QMessageBox::Cancel,0,Qt::Dialog);
+        error_message->setWindowModality(Qt::NonModal);
+        error_message->show();
+        return;
+    }
+
+    table_constraint_names.clear();
+    table_constraints.clear();
+
+    while (constraint_query.next()) {
+        QString constraint("    CONSTRAINT \"");
+        constraint.append(constraint_query.value(0).toString() + "\" " + constraint_query.value(1).toString());
+        table_constraints.append(constraint);
+    }
 }
 
 void Table::verticalPosition()
@@ -170,22 +215,28 @@ void Table::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
     QMenu menu;
     if(column_list.isEmpty())
         menu.addAction(QIcon(":/icons/design.png"), tr("Designer"));
-    else
-        menu.addAction(QIcon(":/icons/table.png"), tr("View contents"));
-    menu.addSeparator();
-    //menu.addAction(tr("Rename"));
-    menu.addAction(tr("Clear contents"));
+    else {
+        menu.addAction(QIcon(":/icons/table.png"), tr("Contents"));
+        menu.addAction(tr("Definition"));
+        menu.addSeparator();
+        menu.addAction(tr("Rename"));
+        menu.addSeparator();
+        menu.addAction(tr("Clear"));
+    }
     menu.addSeparator();
     menu.addAction(tr("Delete"));
 
     QAction *a = menu.exec(event->screenPos());
-    if(a && QString::compare(a->text(),tr("View contents")) == 0) {
+    if(a && QString::compare(a->text(),tr("Contents")) == 0) {
         emit expandTable(database, parent_schema, this);
     }
     else if(a && QString::compare(a->text(),tr("Designer")) == 0) {
         emit designTable(database, parent_schema, this);
     }
-    else if(a && QString::compare(a->text(),tr("Clear contents")) == 0) {
+    else if(a && QString::compare(a->text(),tr("Definition")) == 0) {
+        emit expandTableDefinition(parent_schema, this);
+    }
+    else if(a && QString::compare(a->text(),tr("Clear")) == 0) {
         emit clearTable(database, parent_schema, this);
     }
     else if(a && QString::compare(a->text(),tr("Rename")) == 0) {

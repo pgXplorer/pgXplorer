@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <davyjones@github>
+  Copyright (c) 2011-2012, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -51,7 +51,7 @@ public:
     int lineNumberAreaWidth();
     void hightlightFirstBlock();
     void createActions();
-    void setResizePos(QSize, QPoint);
+    void setResizePos(QSize, QPoint, QSize);
     void appendCompleterList(QString);
     QStringList completerList();
     QString editorName()
@@ -61,6 +61,10 @@ public:
     PgxEditorMainWindow* mainWin()
     {
         return pgxeditor_mainwin;
+    }
+    ToolBar* getToolbar()
+    {
+        return toolbar;
     }
 
 protected:
@@ -80,6 +84,7 @@ private slots:
     void removeHighlighting();
     void saveFunction();
     void executeText();
+    void explainText();
     void executeFunction();
     void selectionChangedSlot();
     void textChangedSlot();
@@ -111,7 +116,7 @@ private:
     QLineEdit *replace_bar;
     QTextCursor find_cursor;
     Highlighter *highlighter;
-    QToolBar *toolbar;
+    ToolBar *toolbar;
     PgxEditorMainWindow *pgxeditor_mainwin;
     QAction *newpgxeditor_action;
     QAction *cut_action;
@@ -119,6 +124,7 @@ private:
     QAction *paste_action;
     QAction *save_action;
     QAction *execute_action;
+    QAction *explain_action;
     QAction *selected_execute_action;
     QAction *wrap_action;
     QAction *find_action;
@@ -210,25 +216,7 @@ protected:
 public:
     PgxEditorMainWindow(PgxEditor *editor) {
         pgxeditor = editor;
-        QStringList wordList;
-        wordList << "select" << "insert" << "update" << "delete"
-                 << "truncate" << "union" << "all" << "intersect"
-                 << "except"  << "from" << "in" << "into" << "with"
-                 << "where" << "join" << "on" << "and" << "group by"
-                 << "left" << "right" << "full" << "cross"
-                 << "inner" << "outer" << "natural" << "values"
-                 << "order by" << "limit" << "fetch" << "having"
-                 << "window" << "offset"
-                 << "SELECT" << "INSERT" << "UPDATE" << "DELETE"
-                 << "TRUNCATE" << "UNION" << "ALL" << "INTERSECT"
-                 << "EXCEPT"  << "FROM" << "IN" << "INTO" << "WITH"
-                 << "WHERE" << "JOIN" << "ON" << "AND" << "GROUP BY"
-                 << "LEFT" << "RIGHT" << "FULL" << "CROSS"
-                 << "INNER" << "OUTER" << "NATURLA" << "VALUES"
-                 << "ORDER BY" << "LIMIT" << "FETCH" << "HAVING"
-                 << "WINDOW" << "OFFSET";
-        wordList.append(pgxeditor->completerList());
-        completer = new QCompleter(wordList, this);
+        completer = new QCompleter(pgxeditor->completerList(), this);
         completer->setWrapAround(false);
         pgxeditor->setCompleter(completer);
     }

@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <davyjones@github>
+  Copyright (c) 2011-2012, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -39,6 +39,7 @@ PgxEditor::PgxEditor(Database *database, QString editor_name, QString function_a
                 completer_list.append(schema->getName().append(".\"" + function->getName() + "\"(" + function->getArgsToText() + ")"));
         }
     }
+    completer_list.append(database->keywords());
 
     next_icon = QIcon(":/icons/next.png");
     createActions();
@@ -54,7 +55,7 @@ PgxEditor::PgxEditor(Database *database, QString editor_name, QString function_a
     if(editor_name.isEmpty())
         setAcceptDrops(true);
 
-    toolbar = new QToolBar;
+    toolbar = new ToolBar;
     toolbar->setIconSize(QSize(36,36));
     toolbar->setObjectName("pgxeditor");
     toolbar->setMovable(false);
@@ -67,6 +68,7 @@ PgxEditor::PgxEditor(Database *database, QString editor_name, QString function_a
     toolbar->addAction(save_action);
     toolbar->addAction(execute_action);
     toolbar->addAction(selected_execute_action);
+    toolbar->addAction(explain_action);
     toolbar->addAction(wrap_action);
     toolbar->addAction(find_action);
     toolbar->addAction(complete_action);
@@ -94,19 +96,19 @@ PgxEditor::PgxEditor(Database *database, QString editor_name, QString function_a
     pgxeditor_mainwin->statusBar()->addPermanentWidget(replace_previous_button, 0);
     pgxeditor_mainwin->statusBar()->addPermanentWidget(replace_next_button, 0);
 
-    connect(find_bar, SIGNAL(returnPressed()), this, SLOT(findNext()));
-    connect(replace_bar, SIGNAL(returnPressed()), this, SLOT(replaceNext()));
-    connect(this, SIGNAL(blockCountChanged(int)), this, SLOT(updateLineNumberAreaWidth(int)));
-    connect(this, SIGNAL(updateRequest(QRect,int)), this, SLOT(updateLineNumberArea(QRect,int)));
-    connect(this, SIGNAL(selectionChanged()), this, SLOT(selectionChangedSlot()));
-    connect(this, SIGNAL(textChanged()), this, SLOT(textChangedSlot()));
+    connect(find_bar, SIGNAL(returnPressed()), SLOT(findNext()));
+    connect(replace_bar, SIGNAL(returnPressed()), SLOT(replaceNext()));
+    connect(this, SIGNAL(blockCountChanged(int)), SLOT(updateLineNumberAreaWidth(int)));
+    connect(this, SIGNAL(updateRequest(QRect,int)), SLOT(updateLineNumberArea(QRect,int)));
+    connect(this, SIGNAL(selectionChanged()), SLOT(selectionChangedSlot()));
+    connect(this, SIGNAL(textChanged()), SLOT(textChangedSlot()));
     connect(this, SIGNAL(cursorPositionChanged()), SLOT(makeFirstBlockReadonly()));
-    connect(pgxeditor_mainwin, SIGNAL(pgxeditorClosing()), this, SLOT(pgxeditorClosing()));
-    connect(pgxeditor_mainwin, SIGNAL(changeIcons(bool)), this, SLOT(changeIcons(bool)));
+    connect(pgxeditor_mainwin, SIGNAL(pgxeditorClosing()), SLOT(pgxeditorClosing()));
+    connect(pgxeditor_mainwin, SIGNAL(changeIcons(bool)), SLOT(changeIcons(bool)));
     updateLineNumberAreaWidth(0);
 
     QShortcut *shortcut_default_view = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_0), this);
-    connect(shortcut_default_view, SIGNAL(activated()), this, SLOT(noZoom()));
+    connect(shortcut_default_view, SIGNAL(activated()), SLOT(noZoom()));
 
     installEventFilter(this);
     pgxeditor_mainwin->installEventFilter(pgxeditor_mainwin);
@@ -267,35 +269,42 @@ void PgxEditor::createActions()
     cut_action = new QAction(QIcon(":/icons/cut.png"), tr("Cut"), this);
     cut_action->setShortcuts(QKeySequence::Cut);
     cut_action->setStatusTip(tr("Cut selected text and copy to clipboard"));
-    connect(cut_action, SIGNAL(triggered()), this, SLOT(cut()));
+    connect(cut_action, SIGNAL(triggered()), SLOT(cut()));
 
     copy_action = new QAction(QIcon(":/icons/copy.png"), tr("Copy"), this);
     copy_action->setShortcuts(QKeySequence::Copy);
     copy_action->setStatusTip(tr("Copy selected text to clipboard"));
-    connect(copy_action, SIGNAL(triggered()), this, SLOT(copy()));
+    connect(copy_action, SIGNAL(triggered()), SLOT(copy()));
 
     paste_action = new QAction(QIcon(":/icons/paste.png"), tr("Paste"), this);
     paste_action->setShortcuts(QKeySequence::Paste);
     paste_action->setStatusTip(tr("Paste text from clipboard"));
-    connect(paste_action, SIGNAL(triggered()), this, SLOT(paste()));
+    connect(paste_action, SIGNAL(triggered()), SLOT(paste()));
 
     save_action = new QAction(QIcon(":/icons/save.png"), tr("&Save"), this);
     save_action->setShortcuts(QKeySequence::Save);
     save_action->setStatusTip(tr("Save function"));
-    connect(save_action, SIGNAL(triggered()), this, SLOT(saveFunction()));
+    connect(save_action, SIGNAL(triggered()), SLOT(saveFunction()));
 
     execute_action = new QAction(QIcon(":/icons/execute.png"), tr("&Execute"), this);
     execute_action->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_R));
     execute_action->setStatusTip(tr("Execute function"));
-    connect(execute_action, SIGNAL(triggered()), this, SLOT(executeFunction()));
+    connect(execute_action, SIGNAL(triggered()), SLOT(executeFunction()));
+
+    explain_action = new QAction(QIcon(":/icons/explain.png"), tr("&Explain"), this);
+    explain_action->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_R));
+    explain_action->setStatusTip(tr("Explain (selected) text"));
+    connect(explain_action, SIGNAL(triggered()), SLOT(explainText()));
 
     if(editor_name.isEmpty()) {
         execute_action->setVisible(false);
         save_action->setVisible(false);
+        explain_action->setVisible(true);
     }
     else {
         execute_action->setEnabled(false);
         save_action->setEnabled(false);
+        explain_action->setVisible(false);
     }
 
     selected_execute_action = new QAction(QIcon(":/icons/selected_execute.png"), tr("&Run"), this);
@@ -303,20 +312,20 @@ void PgxEditor::createActions()
     selected_execute_action->setStatusTip(tr("Execute (selected) text"));
     if(!editor_name.isEmpty())
         selected_execute_action->setEnabled(false);
-    connect(selected_execute_action, SIGNAL(triggered()), this, SLOT(executeText()));
+    connect(selected_execute_action, SIGNAL(triggered()), SLOT(executeText()));
 
     wrap_action = new QAction(QIcon(":/icons/wrap.png"), tr("Wrap/Un-wrap lines"),this);
     wrap_action->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_W));
     wrap_action->setStatusTip(tr("Toggle line wrapping"));
     wrap_action->setCheckable(true);
     wrap_action->setChecked(true);
-    connect(wrap_action, SIGNAL(triggered()), this, SLOT(toggleWrap()));
+    connect(wrap_action, SIGNAL(triggered()), SLOT(toggleWrap()));
 
     find_action = new QAction(QIcon(":/icons/find.png"), tr("Find"), this);
     find_action->setShortcuts(QKeySequence::Find);
     find_action->setCheckable(true);
     find_action->setStatusTip(tr("Find/replace text"));
-    connect(find_action, SIGNAL(triggered()), this, SLOT(toggleFindBar()));
+    connect(find_action, SIGNAL(triggered()), SLOT(toggleFindBar()));
 
     complete_action = new QAction(QIcon(":/icons/completer.png"), tr("Complete"), this);
     complete_action->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_L));
@@ -347,7 +356,7 @@ void PgxEditor::createActions()
 
     find_previous_action = new QAction(QIcon(":/icons/find_previous.png"), "", this);
     find_previous_action->setToolTip(tr("Find previous"));
-    connect(find_previous_action, SIGNAL(triggered()), this, SLOT(findPrevious()));
+    connect(find_previous_action, SIGNAL(triggered()), SLOT(findPrevious()));
     find_previous_button = new QToolButton;
     find_previous_button->setAutoRaise(true);
     find_previous_button->setDefaultAction(find_previous_action);
@@ -355,7 +364,7 @@ void PgxEditor::createActions()
 
     find_next_action = new QAction(QIcon(":/icons/find_next.png"), "", this);
     find_next_action->setToolTip(tr("Find next"));
-    connect(find_next_action, SIGNAL(triggered()), this, SLOT(findNext()));
+    connect(find_next_action, SIGNAL(triggered()), SLOT(findNext()));
     find_next_button = new QToolButton;
     find_next_button->setAutoRaise(true);
     find_next_button->setDefaultAction(find_next_action);
@@ -363,7 +372,7 @@ void PgxEditor::createActions()
 
     replace_previous_action = new QAction(QIcon(":/icons/replace_previous.png"), "", this);
     replace_previous_action->setToolTip(tr("Replace previous"));
-    connect(replace_previous_action, SIGNAL(triggered()), this, SLOT(replacePrevious()));
+    connect(replace_previous_action, SIGNAL(triggered()), SLOT(replacePrevious()));
     replace_previous_button = new QToolButton;
     replace_previous_button->setAutoRaise(true);
     replace_previous_button->setDefaultAction(replace_previous_action);
@@ -371,7 +380,7 @@ void PgxEditor::createActions()
 
     replace_next_action = new QAction(QIcon(":/icons/replace_next.png"), "", this);
     replace_next_action->setToolTip(tr("Replace next"));
-    connect(replace_next_action, SIGNAL(triggered()), this, SLOT(replaceNext()));
+    connect(replace_next_action, SIGNAL(triggered()), SLOT(replaceNext()));
     replace_next_button = new QToolButton;
     replace_next_button->setAutoRaise(true);
     replace_next_button->setDefaultAction(replace_next_action);
@@ -429,6 +438,20 @@ void PgxEditor::executeFunction()
     query.append(function_args.split(" ").join(","));
     query.append(QLatin1Char(')'));
     emit newPgxeditor(query);
+}
+
+void PgxEditor::explainText()
+{
+    QString sql;
+
+    if(toPlainText().simplified().isEmpty())
+        return;
+    if(textCursor().selectedText().isEmpty())
+        sql = QLatin1String("BEGIN; EXPLAIN ANALYZE VERBOSE ") + toPlainText().replace(QChar::ParagraphSeparator,"\n");
+    else
+        sql = QLatin1String("BEGIN; EXPLAIN ANALYZE VERBOSE ") + textCursor().selectedText().replace(QChar::ParagraphSeparator,"\n");
+
+    emit showQueryView(database, sql);
 }
 
 void PgxEditor::selectionChangedSlot()
@@ -908,10 +931,11 @@ void PgxEditor::setText(QString editor_text, bool save_state)
         save_action->setEnabled(save_state);
 }
 
-void PgxEditor::setResizePos(QSize size, QPoint pos)
+void PgxEditor::setResizePos(QSize size, QPoint pos, QSize icon_size)
 {
     pgxeditor_mainwin->resize(size);
     pgxeditor_mainwin->move(pos);
+    toolbar->setIconSize(icon_size);
     pgxeditor_mainwin->show();
 }
 
@@ -1097,7 +1121,7 @@ void PgxEditor::keyPressEvent(QKeyEvent *e)
     bool hasModifier = (e->modifiers() != Qt::NoModifier) && !ctrlOrShift;
     QString completionPrefix = textUnderCursor();
 
-    if (!isShortcut && (hasModifier || e->text().isEmpty()|| completionPrefix.length() < 3)) {
+    if (!isShortcut && (hasModifier || e->text().isEmpty()|| completionPrefix.length() < 2)) {
         c->popup()->hide();
         return;
     }
@@ -1141,6 +1165,7 @@ void PgxEditorMainWindow::closeEvent(QCloseEvent *event)
         settings.setValue("pgxeditor_maximized", false);
     settings.setValue("pgxeditor_pos", pos());
     settings.setValue("pgxeditor_size", size());
+    //settings.setValue("icon_size", toolbar->iconSize());
 
     QMainWindow::closeEvent(event);
 }

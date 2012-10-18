@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <davyjones@github>
+  Copyright (c) 2011-2012, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -41,12 +41,37 @@ class Table;
 class View;
 class TableView;
 class DesignView;
+class StatusView;
 class ViewView;
 class PgxConsole;
 class PgxEditor;
 class Function;
 class QueryView;
 class Help;
+
+class ToolBar : public QToolBar
+{
+protected:
+    void wheelEvent(QWheelEvent *wheelEvent)
+    {
+        wheelEvent->accept();
+        int ht = iconSize().height();
+        if (wheelEvent->delta()>0) {
+            ht++;
+            if(ht<42) {
+                setIconSize(QSize(ht,ht));
+                emit iconSizeChanged(QSize(ht,ht));
+            }
+        }
+        else {
+            ht--;
+            if(ht>24) {
+                setIconSize(QSize(ht,ht));
+                emit iconSizeChanged(QSize(ht,ht));
+            }
+        }
+    }
+};
 
 class GraphicsView : public QGraphicsView
 {
@@ -68,6 +93,10 @@ public:
     {
         this->mainwin = mainwin;
     }
+    void setDatabase(Database *database)
+    {
+        this->database = database;
+    }
 
 protected:
     void wheelEvent(QWheelEvent *event);
@@ -86,6 +115,7 @@ signals:
 private:
     bool zoom;
     MainWin *mainwin;
+    Database *database;
     QCursor zoom_cursor;
     QPoint origin;
 };
@@ -96,6 +126,7 @@ class GraphicsTextItem : public QGraphicsTextItem
 
 private:
     QString schema_name; //if applicable
+    QString old_table_name; //if applicable
 
 protected:
      void keyPressEvent(QKeyEvent *event)
@@ -104,7 +135,7 @@ protected:
          case Qt::Key_Return:
          case Qt::Key_Enter:
              event->accept();
-             emit enterPressed(schema_name, this);
+             emit enterPressed(schema_name, old_table_name, this);
              break;
          default:
              QGraphicsTextItem::keyPressEvent(event);
@@ -115,8 +146,11 @@ protected:
      {
          if(event->reason() == Qt::PopupFocusReason)
              QGraphicsTextItem::focusOutEvent(event);
-         else
-            emit enterPressed(schema_name, this);
+         else if(event->reason() == Qt::ActiveWindowFocusReason)
+             QGraphicsTextItem::focusOutEvent(event);
+         else {
+             emit enterPressed(schema_name, old_table_name, this);
+         }
      }
 
 public:
@@ -124,9 +158,13 @@ public:
      {
          this->schema_name = schema_name;
      }
+     void setOldTableName(QString old_table_name)
+     {
+         this->old_table_name = old_table_name;
+     }
 
 signals:
-     void enterPressed(QString, GraphicsTextItem*);
+     void enterPressed(QString, QString, GraphicsTextItem*);
 };
 
 class MainWin : public QMainWindow {
@@ -137,6 +175,10 @@ class MainWin : public QMainWindow {
     Q_ENUMS(DisplayMode)
 
 public:
+    static inline bool qFuzzyComp(float p1, float p2)
+    {
+        return (qAbs(p1 - p2) <= 0.001f * qMin(qAbs(p1), qAbs(p2)));
+    }
     static bool session_unsaved;
 
     enum Language {English, Japanese, French};
@@ -184,8 +226,13 @@ public:
     void clearQueryViewList();
     void newSchema();
     void clearSchemas();
+    void clearStatus();
     void clearChildWindows();
     void checkForUpdates();
+    QList<QGraphicsItem *>  selectedItems()
+    {
+        return scene.selectedItems();
+    }
 
 public slots:
     void about();
@@ -193,6 +240,7 @@ public slots:
     void document_changed();
     void open(QString);
     void showPropertyDialog(Database *);
+    void showStatusView(Database *);
     void tableViewClosed(TableView *);
     void designViewClosed(DesignView *);
     void viewViewClosed(ViewView *);
@@ -203,11 +251,14 @@ public slots:
     bool newDatabase(QString, qint32, QString, QString, QString);
     void newPgxplorer(QString);
     void createSchema(QString, QString);
-    void createTable(QString, GraphicsTextItem*);
+    void createTable(QString, QString, GraphicsTextItem*);
+    void renameTable(QString, QString, GraphicsTextItem*);
     void showAllTables();
     void showAllViews();
     void showAllFunctions();
     void populateWindowMenu();
+    void adjustSearchBoxPosition();
+    void resizeToolbarIcons(QSize);
 
 protected:
      void resizeEvent(QResizeEvent *);
@@ -234,6 +285,8 @@ private slots:
     void showPgxeditor(QString, QString);
     void showFunctionEditor(Schema *, Function *);
     void showViewEditor(Schema *, View *);
+    void showTableEditor(Schema *, Table *);
+    void editTableName(Database *, Schema *, Table *);
     void toggleFullscreen();
     void showTreeview();
     void search();
@@ -271,6 +324,7 @@ private slots:
     void zoomIn(const QPointF);
     void zoomOut(const QPointF);
     void noZoom();
+    void focusOnHightlightedItem(QString);
 
 signals:
     void changeLanguage(QEvent *);
@@ -279,6 +333,7 @@ signals:
     void showColumnView();
 
 private:
+    QSize icon_size;
     QTranslator translator;
     QTranslator qt_translator;
 
@@ -291,7 +346,8 @@ private:
     GraphicsView *graphics_view;
     QLineEdit *search_box;
     QCompleter *completer;
-    QPrinter *printer;
+    StatusView *status_view;
+    bool status_view_flag;
 
     Database *database;
     QList<TableView *> table_view_list;
@@ -310,7 +366,7 @@ private:
     QMenu *display_menu;
     QMenu *language_menu;
 
-    QToolBar *toolbar;
+    ToolBar *toolbar;
     Help *help;
 
     QAction *new_file_action;
@@ -340,7 +396,6 @@ private:
     void createMenus();
     void readSettings();
     void writeSettings();
-    void adjustSearchBoxPosition();
 
     void wheelEvent(QWheelEvent *);
 };

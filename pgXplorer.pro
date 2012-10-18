@@ -33,7 +33,9 @@ HEADERS		= \
     checkboxdelegate.h \
     tableproperties.h \
     graphwindow.h \
-    pgxplorerapplication.h
+    pgxplorerapplication.h \
+    reportwindow.h \
+    statusview.h
 SOURCES		= main.cpp \
     database.cpp \
     table.cpp \
@@ -59,9 +61,13 @@ SOURCES		= main.cpp \
     checkboxdelegate.cpp \
     tableproperties.cpp \
     graphwindow.cpp \
-    pgxplorerapplication.cpp
+    pgxplorerapplication.cpp \
+    reportwindow.cpp \
+    statusview.cpp
 
 QT += sql translator network
+
+LIBS += /home/cirrus/libharu/src/libhpdfs.a -lz -lpoppler-qt4
 
 RESOURCES += pgXplorer.qrc
 

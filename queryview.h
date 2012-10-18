@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <davyjones@github>
+  Copyright (c) 2011-2012, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -42,7 +42,7 @@ private:
     double time_elapsed;
     QTableView *query_view;
     QueryModel *query_model;
-    QToolBar *toolbar;
+    ToolBar *toolbar;
     QStandardItemModel *errors_model;
     QShortcut *shortcut_fullscreen;
     QShortcut *shortcut_restore;
@@ -56,6 +56,7 @@ private:
     QAction *lineplot_action;
     QAction *barplot_action;
     QAction *areaplot_action;
+    QAction *report_action;
     bool thread_busy;
 
 protected:
@@ -72,10 +73,17 @@ public:
     {
         return this->thisQueryViewId;
     }
+
     QString query()
     {
         return sql;
     }
+
+    ToolBar* getToolbar()
+    {
+        return toolbar;
+    }
+
     void notBusy();
     void enableCopyActions();
     void disableCopyActions();
@@ -97,6 +105,7 @@ private slots:
     void linePlot();
     void barPlot();
     void areaPlot();
+    void createReport();
 
 signals:
     void busySignal();

@@ -57,5 +57,19 @@
         <file>icons/zoom-in.png</file>
         <file>icons/zoom-out.png</file>
         <file>icons/insertleft.png</file>
+        <file>icons/insertright.png</file>
+        <file>icons/label.png</file>
+        <file>icons/hline.png</file>
+        <file>icons/report_table.png</file>
+        <file>icons/databox.png</file>
+        <file>icons/report.png</file>
+        <file>icons/explain.png</file>
+        <file>icons/terminate.png</file>
+        <file>icons/stop.png</file>
+        <file>icons/timer.png</file>
+        <file>icons/processes.png</file>
+        <file>icons/print.png</file>
+        <file>icons/html.png</file>
+        <file>icons/odt.png</file>
     </qresource>
 </RCC>

@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <davyjones@github>
+  Copyright (c) 2011-2012, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -37,7 +37,7 @@ class DesignView : public QMainWindow
 private:
     Database *database;
     Table *table;
-    QString table_name;
+    QString new_table_name;
     QStringList primary_key;
     QStringList new_primary_key;
     QStringList column_list;
@@ -53,7 +53,7 @@ private:
     QMenu deselect_menu;
     QMenu disarrange_menu;
     QTime t;
-    QToolBar *toolbar;
+    ToolBar *toolbar;
     QTableView *design_view;
     QStandardItemModel *design_model;
     QString sql;
@@ -94,8 +94,14 @@ public:
     void createActions();
     QString tableName()
     {
-        return table_name;
+        return new_table_name;
     }
+
+    ToolBar* getToolbar()
+    {
+        return toolbar;
+    }
+
     void initialiseModel();
 
 protected:

@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <davyjones@github>
+  Copyright (c) 2011-2012, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -37,14 +37,20 @@ class Table : public QObject, public QGraphicsItem
 private:
     bool hidden;
     Database *database;
-    QSqlQueryModel *model;
+    QSqlQueryModel *query_model;
     Schema *parent_schema;
     QString table_name;
     QStringList column_list;
     QStringList column_types;
     QStringList column_lengths;
     QStringList column_nulls;
+    QStringList column_defaults;
     QStringList primary_key;
+    QStringList table_constraint_names;
+    QStringList table_constraints;
+    bool oid;
+    bool primary_key_has_oid;
+    QString primary_key_name;
     QBrush pink_brush;
     bool status;
     bool collapsed;
@@ -60,6 +66,9 @@ protected:
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *);
     void hoverEnterEvent(QGraphicsSceneHoverEvent *event);
     void contextMenuEvent(QGraphicsSceneContextMenuEvent *);
+    //void dragEnterEvent(QGraphicsSceneDragDropEvent *event);
+    //void dragMoveEvent(QGraphicsSceneDragDropEvent *event);
+    //void dropEvent(QGraphicsSceneDragDropEvent *event);
 
 public:
     enum { Typet = UserType + 3000 };
@@ -79,6 +88,7 @@ public:
     {
         return QRectF(-40,-20,85,30);
     }
+
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
                QWidget *)
     {
@@ -178,13 +188,18 @@ public:
         }
         painter->setRenderHint(QPainter::Antialiasing, true);
     }
+
     QString getName()
     {
         return table_name;
     }
+
+    QString getFullName();
+
     void setName(QString name)
     {
         this->table_name = name;
+        update();
     }
     bool getCollapsed()
     {
@@ -198,6 +213,12 @@ public:
     {
         return is_view;
     }
+
+    bool hasOid()
+    {
+        return oid;
+    }
+
     void setView(bool view)
     {
         this->is_view = view;
@@ -228,11 +249,11 @@ public:
     }
     QSqlQueryModel *getModel()
     {
-        return model;
+        return query_model;
     }
-    void setModel(QSqlQueryModel *model)
+    void setModel(QSqlQueryModel *query_model)
     {
-        this->model = model;
+        this->query_model = query_model;
     }
     void setColumnData();
     void setColumnData(QStringList column_list, QStringList column_types, QStringList column_lengths, QStringList column_nulls)
@@ -258,7 +279,12 @@ public:
     {
         return column_nulls;
     }
+    QStringList getColumnDefaults()
+    {
+        return column_defaults;
+    }
     void copyPrimaryKey();
+    void copyConstraints();
     void setPrimaryKey(QStringList primary_key)
     {
         this->primary_key = primary_key;
@@ -267,6 +293,24 @@ public:
     {
         return primary_key;
     }
+    QString getPrimaryKeyName()
+    {
+        return primary_key_name;
+    }
+    QStringList getConstraintNames()
+    {
+        return table_constraint_names;
+    }
+    QStringList getConstraints()
+    {
+        return table_constraints;
+    }
+
+    //bool isOidInPrimaryKey()
+    //{
+    //    return oid_in_primary_key;
+    //}
+
     void showView2(Table*);
 
 public slots:
@@ -276,6 +320,7 @@ public slots:
 signals:
     void expandTable(Database *, Schema *, Table*);
     void designTable(Database *, Schema *, Table*);
+    void expandTableDefinition(Schema *, Table*);
     void rename(Database *, Schema *, Table*);
     void clearTable(Database *, Schema *, Table*);
     void dropTable(Database *, Schema *, Table*);

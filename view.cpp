@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <davyjones@github>
+  Copyright (c) 2011-2012, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -38,6 +38,11 @@ View::View(Database *database, Schema *schema, QString view_name, int view_index
     setCacheMode(DeviceCoordinateCache);
     setZValue(-10);
     setAcceptHoverEvents(true);
+}
+
+QString View::getFullName()
+{
+    return "\"" + parent_schema->getName() + "\".\"" + view_name + "\"";
 }
 
 void View::defaultPosition()
@@ -136,19 +141,19 @@ void View::setColumnData()
 void View::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 {
     QMenu menu;
-    menu.addAction(QIcon(":/icons/view2.png"), tr("View contents"));
-    menu.addAction(tr("View definition"));
+    menu.addAction(QIcon(":/icons/view2.png"), tr("Contents"));
+    menu.addAction(tr("Definition"));
     menu.addSeparator();
-    menu.addAction(tr("Drop view"));
+    menu.addAction(tr("Delete"));
 
     QAction *a = menu.exec(event->screenPos());
-    if(a && QString::compare(a->text(),tr("View contents")) == 0) {
+    if(a && QString::compare(a->text(),tr("Contents")) == 0) {
         emit expandView(database, parent_schema, this);
     }
-    else if(a && QString::compare(a->text(),tr("View definition")) == 0) {
+    else if(a && QString::compare(a->text(),tr("Definition")) == 0) {
         emit expandViewDefinition(parent_schema, this);
     }
-    else if(a && QString::compare(a->text(),tr("Drop view")) == 0) {
+    else if(a && QString::compare(a->text(),tr("Delete")) == 0) {
         emit dropView(database, parent_schema, this);
     }
 }

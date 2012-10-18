@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <davyjones@github>
+  Copyright (c) 2011-2012, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -35,7 +35,7 @@ class View : public QObject, public QGraphicsItem
 
 private:
     Database *database;
-    QSqlQueryModel *model;
+    QSqlQueryModel *query_model;
     Schema *parent_schema;
     QString view_name;
     QStringList column_list;
@@ -145,6 +145,9 @@ public:
     {
         return this->view_name;
     }
+
+    QString getFullName();
+
     void setName(QString name)
     {
         this->view_name = name;
@@ -183,11 +186,11 @@ public:
     }
     QSqlQueryModel *getModel()
     {
-        return this->model;
+        return this->query_model;
     }
-    void setModel(QSqlQueryModel *model)
+    void setModel(QSqlQueryModel *query_model)
     {
-        this->model = model;
+        this->query_model = query_model;
     }
     void setColumnData();
     void setColumnData(QStringList column_list, QStringList column_types, QStringList column_lengths)

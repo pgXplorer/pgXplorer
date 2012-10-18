@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <davyjones@github>
+  Copyright (c) 2011-2012, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -39,7 +39,7 @@ ViewView::ViewView(Database *database, QString const view_name, QString const na
     createIcons();
     createActions();
 
-    toolbar = new QToolBar;
+    toolbar = new ToolBar;
     toolbar->setIconSize(QSize(36,36));
     toolbar->setObjectName("viewview");
     toolbar->setMovable(false);
@@ -106,6 +106,7 @@ ViewView::ViewView(Database *database, QString const view_name, QString const na
     setObjectName(name);
 
     view_view = new QTableView(this);
+    view_view->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     view_view->viewport()->installEventFilter(this);
     view_view->installEventFilter(this);
     view_view->verticalHeader()->setDefaultAlignment(Qt::AlignRight | Qt::AlignVCenter);    
@@ -114,21 +115,21 @@ ViewView::ViewView(Database *database, QString const view_name, QString const na
 
     //Create key-sequences for fullscreen and restore.
     QShortcut *shortcut_fs_win = new QShortcut(QKeySequence(Qt::Key_F11), this);
-    connect(shortcut_fs_win, SIGNAL(activated()), this, SLOT(fullscreen()));
+    connect(shortcut_fs_win, SIGNAL(activated()), SLOT(fullscreen()));
     QShortcut *shortcut_restore_win = new QShortcut(QKeySequence(Qt::Key_Escape), this);
-    connect(shortcut_restore_win, SIGNAL(activated()), this, SLOT(restore()));
+    connect(shortcut_restore_win, SIGNAL(activated()), SLOT(restore()));
 
     //Tie vertical scrollbar of QTableView to fetch more data
     connect(view_view->verticalScrollBar(), SIGNAL(valueChanged(int)),
             this, SLOT(fetchDataSlot()));
 
     //Tie thread finish to an update slot that refreshes meta-information.
-    connect(this, SIGNAL(updRowCntSignal(QString)), this, SLOT(updRowCntSlot(QString)));
+    connect(this, SIGNAL(updRowCntSignal(QString)), SLOT(updRowCntSlot(QString)));
 
     //Tie a busy signal to a slot that changes the cursor to wait cursor.
-    connect(this, SIGNAL(busySignal()), this, SLOT(busySlot()));
+    connect(this, SIGNAL(busySignal()), SLOT(busySlot()));
 
-    connect(view_view->verticalHeader(), SIGNAL(customContextMenuRequested(const QPoint)), this, SLOT(customContextMenuHeader()));
+    connect(view_view->verticalHeader(), SIGNAL(customContextMenuRequested(const QPoint)), SLOT(customContextMenuHeader()));
 
     setCentralWidget(view_view);
 
@@ -663,6 +664,7 @@ void ViewView::closeEvent(QCloseEvent *event)
         settings.setValue("viewview_maximized", false);
     settings.setValue("viewview_pos", pos());
     settings.setValue("viewview_size", size());
+    settings.setValue("icon_size", toolbar->iconSize());
 
     if(!thread_busy)
     {
@@ -1209,77 +1211,77 @@ void ViewView::createActions()
     default_action = new QAction(QIcon(":/icons/table.png"), tr("Default"), this);
     default_action->setShortcut(QKeySequence("Ctrl+D"));
     default_action->setStatusTip(tr("Default"));
-    connect(default_action, SIGNAL(triggered()), this, SLOT(defaultView()));
+    connect(default_action, SIGNAL(triggered()), SLOT(defaultView()));
 
     refresh_action = new QAction(QIcon(":/icons/refresh.png"), tr("Refresh"), this);
     refresh_action->setShortcut(QKeySequence::Refresh);
     refresh_action->setStatusTip(tr("Refresh"));
-    connect(refresh_action, SIGNAL(triggered()), this, SLOT(refreshView()));
+    connect(refresh_action, SIGNAL(triggered()), SLOT(refreshView()));
 
     copy_action = new QAction(QIcon(":/icons/copy_without_headers.png"), tr("Copy"), this);
     copy_action->setShortcuts(QKeySequence::Copy);
     copy_action->setStatusTip(tr("Copy selected"));
     //copy_action->setEnabled(false);
-    connect(copy_action, SIGNAL(triggered()), this, SLOT(copyToClipboard()));
+    connect(copy_action, SIGNAL(triggered()), SLOT(copyToClipboard()));
 
     copy_with_headers_action = new QAction(QIcon(":/icons/copy_with_headers.png"), tr("Copy with headers"), this);
     copy_with_headers_action->setShortcut(QKeySequence("Ctrl+Shift+C"));
     copy_with_headers_action->setStatusTip(tr("Copy selected with headers"));
     //copy_with_headers_action->setEnabled(false);
-    connect(copy_with_headers_action, SIGNAL(triggered()), this, SLOT(copyToClipboardWithHeaders()));
+    connect(copy_with_headers_action, SIGNAL(triggered()), SLOT(copyToClipboardWithHeaders()));
 
     remove_columns_action = new QAction(QIcon(":/icons/removecolumn.png"), tr("Remove column(s)"), this);
     remove_columns_action->setStatusTip(tr("Removes the column from this display."));
-    connect(remove_columns_action, SIGNAL(triggered()), this, SLOT(removeColumns()));
+    connect(remove_columns_action, SIGNAL(triggered()), SLOT(removeColumns()));
 
     filter_action = new QAction(filter_icon, tr("Filter"), this);
     filter_action->setStatusTip(tr("Filter table with selected cell value on column"));
     filter_action->setEnabled(false);
-    connect(filter_action, SIGNAL(triggered()), this, SLOT(filter()));
+    connect(filter_action, SIGNAL(triggered()), SLOT(filter()));
 
     exclude_action = new QAction(QIcon(":/icons/exclude.png"), tr("Exclude"), this);
     exclude_action->setStatusTip(tr("Filter table exclusive of selected cell value on column"));
     exclude_action->setEnabled(false);
-    connect(exclude_action, SIGNAL(triggered()), this, SLOT(exclude()));
+    connect(exclude_action, SIGNAL(triggered()), SLOT(exclude()));
 
     ascend_action = new QAction(ascend_icon, tr("Ascending order"), this);
     ascend_action->setStatusTip(tr("Ascending order"));
     ascend_action->setEnabled(false);
-    connect(ascend_action, SIGNAL(triggered()), this, SLOT(ascend()));
+    connect(ascend_action, SIGNAL(triggered()), SLOT(ascend()));
 
     descend_action = new QAction(descend_icon, tr("Descending order"), this);
     descend_action->setStatusTip(tr("Descending order"));
     descend_action->setEnabled(false);
-    connect(descend_action, SIGNAL(triggered()), this, SLOT(descend()));
+    connect(descend_action, SIGNAL(triggered()), SLOT(descend()));
 
     remove_all_filters_action = new QAction(tr("All filters"), this);
     remove_all_filters_action->setStatusTip(tr("Remove all filters"));
-    connect(remove_all_filters_action, SIGNAL(triggered()), this, SLOT(removeAllFilters()));
+    connect(remove_all_filters_action, SIGNAL(triggered()), SLOT(removeAllFilters()));
 
     remove_all_ordering_action = new QAction(tr("All ordering"), this);
     remove_all_ordering_action->setStatusTip(tr("Remove all ordering"));
-    connect(remove_all_ordering_action, SIGNAL(triggered()), this, SLOT(removeAllOrdering()));
+    connect(remove_all_ordering_action, SIGNAL(triggered()), SLOT(removeAllOrdering()));
 
     custom_filter_action = new QWidgetAction(this);
     custom_filter_action->setStatusTip(tr("Custom filter"));
     custom_filter_action->setIcon(filter_icon);
     custom_filter_action->setDefaultWidget(filter_text);
-    connect(filter_text, SIGNAL(returnPressed()), this, SLOT(customFilterReturnPressed()));
+    connect(filter_text, SIGNAL(returnPressed()), SLOT(customFilterReturnPressed()));
 
     copy_query_action = new QAction(QIcon(":/icons/copy_sql.png"), tr("Copy query"), this);
     copy_query_action->setStatusTip(tr("Copy the query to clipboard"));
-    connect(copy_query_action, SIGNAL(triggered()), this, SLOT(copyQuery()));
+    connect(copy_query_action, SIGNAL(triggered()), SLOT(copyQuery()));
 
     previous_set_action = new QAction(QIcon(":/icons/previous.png"), "", this);
     previous_set_action->setToolTip(tr("Fetch previous set"));
-    connect(previous_set_action, SIGNAL(triggered()), this, SLOT(fetchPreviousData()));
+    connect(previous_set_action, SIGNAL(triggered()), SLOT(fetchPreviousData()));
     previous_set_button = new QToolButton;
     previous_set_button->setDefaultAction(previous_set_action);
     previous_set_button->setEnabled(false);
 
     next_set_action = new QAction(QIcon(":/icons/next.png"), "", this);
     next_set_action->setToolTip(tr("Fetch next set"));
-    connect(next_set_action, SIGNAL(triggered()), this, SLOT(fetchNextData()));
+    connect(next_set_action, SIGNAL(triggered()), SLOT(fetchNextData()));
     next_set_button = new QToolButton;
     next_set_button->setDefaultAction(next_set_action);
     next_set_button->setEnabled(false);

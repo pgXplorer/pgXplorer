@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <davyjones@github>
+  Copyright (c) 2011-2012, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -70,11 +70,12 @@ void Database::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
         //menu.addAction("Explode all");
         //menu.addAction("Explode all vertically");
         menu.addSeparator();
-    }
-    if(getDatabaseStatus())
         menu.addAction(tr("Refresh"));
-    menu.addSeparator();
+        menu.addSeparator();
+    }
     menu.addAction(QIcon(":/icons/properties.png"), tr("Properties"));
+    if(getDatabaseStatus())
+        menu.addAction(QIcon(":/icons/processes.png"), tr("Status"));
 
     QAction *a = menu.exec(event->screenPos());
     if(a && QString::compare(a->text(), tr("Explode")) == 0) {
@@ -99,6 +100,9 @@ void Database::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
     }
     else if(a && QString::compare(a->text(), tr("Properties"))==0) {
         emit summonPropertyDialog(this);
+    }
+    else if(a && QString::compare(a->text(), tr("Status"))==0) {
+        emit summonStatusDialog(this);
     }
     else if(a && QString::compare(a->text(), tr("Refresh"))==0) {
         populateDatabase();
@@ -152,6 +156,7 @@ bool Database::populateDatabase()
     table_names_list.clear();
     view_names_list.clear();
     function_names_list.clear();
+    keywords_list.clear();
 
     QList<Schema*> schema_list;
     {
@@ -206,8 +211,7 @@ bool Database::populateDatabase()
         }
 
         query->exec("SELECT oid, * FROM pg_type;");
-        if(query->lastError().isValid())
-        {
+        if(query->lastError().isValid()) {
             QMessageBox *error_message = new QMessageBox(QMessageBox::Critical,
                                         tr("Database error"),
                                         tr("Unable to retrieve data types.\n"
@@ -217,11 +221,27 @@ bool Database::populateDatabase()
             error_message->show();
             return false;
         }
-        while (query->next())
-        {
+        while (query->next()) {
             types_hash.insert(query->value(0).toInt(),query->value(1).toString());
         }
+
+        query->exec("select word, upper(word) from pg_get_keywords()");
+        if(query->lastError().isValid()) {
+            QMessageBox *error_message = new QMessageBox(QMessageBox::Critical,
+                                        tr("Database error"),
+                                        tr("Unable to retrieve data types.\n"
+                                           "Check your database connection or permissions.\n"),
+                                        QMessageBox::Cancel,0,Qt::Dialog);
+            error_message->setWindowModality(Qt::NonModal);
+            error_message->show();
+            return false;
+        }
+        while (query->next()) {
+            keywords_list.append(query->value(0).toString());
+            keywords_list.append(query->value(1).toString());
+        }
     }
+
     setSchemaList(schema_list);
     setDatabaseStatus(true);
     if(mainwin->displayMode() == MainWin::Tables)

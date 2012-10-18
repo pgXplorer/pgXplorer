@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <davyjones@github>
+  Copyright (c) 2011-2012, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -16,7 +16,7 @@
   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 
-#include <pgxplorerapplication.h>
+#include "pgxplorerapplication.h"
 #include <QDesktopWidget>
 #include <QTimer>
 #include "mainwin.h"
@@ -27,11 +27,15 @@ int main(int argc, char **argv)
     Q_INIT_RESOURCE(pgXplorer);
     PgxplorerApplication pgXplorer(argc, argv);
 
+    QString arg1;
+    if(argc > 1)
+        arg1.append(QString::fromLocal8Bit(argv[1]));
+
     QCoreApplication::setOrganizationName("pgXplorer");
     QCoreApplication::setOrganizationDomain("pgXplorer.com");
     QCoreApplication::setApplicationName("pgXplorer");
 
-    QSettings settings("pgXplorer","pgXplorer");
+    QSettings settings("pgXplorer", "pgXplorer");
     settings.remove("license");
     /*
     Disabling license nag dialog for now.

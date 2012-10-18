@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <davyjones@github>
+  Copyright (c) 2011-2012, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -33,7 +33,6 @@
 
 class TableView;
 class NewRowTableView;
-class MainTableView;
 
 class TableView : public QMainWindow
 {
@@ -51,6 +50,7 @@ private:
     Database *database;
     QString table_name;
     QStringList primary_key;
+    //bool primary_key_with_oid;
     QStringList column_list;
     QStringList column_types;
     QStringList column_lengths;
@@ -61,7 +61,7 @@ private:
     QMenu deselect_menu;
     QMenu disarrange_menu;
     QTime t;
-    QToolBar *toolbar;
+    ToolBar *toolbar;
     TableModel *table_model;
     QTableView *table_view;
     QStandardItemModel *new_row_model;
@@ -130,6 +130,11 @@ public:
     QString tableName()
     {
         return table_name;
+    }
+
+    ToolBar* getToolbar()
+    {
+        return toolbar;
     }
 
 public slots:
