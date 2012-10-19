@@ -2,7 +2,7 @@ pgXplorer
 ---------
 pgXplorer is a freely downloadable, ISC licensed administation client for PostgreSQL versions 8.4 and above.
 
-Key features are per-database instances, multithreaded queries and an intuitive UI and an SQL console that supports syntax highlighting and much more.
+Key features are per-database instances, multithreaded queries, an intuitive UI and an SQL editor/console that supports syntax highlighting and much more.
 
 pgXplorer is built using Qt. Minimum version of Qt required is 4.7.
 
