@@ -9,3 +9,5 @@ pgXplorer is built using Qt. Minimum version of Qt required is 4.7.
 Additionally, for Windows and Mac, you need to build the Qt postgres drivers yourself. Refer to the Qt documentation for this.
 
 For Linux, Qt postgres drivers are usually available as a convenience package. For example, in Ubuntu, it can be installed through 'apt-get install libqt4-sql-psql' at the console.
+
+Also, you will need libHaru for PDF support. Specifically, the one built from github.com/davyjones/libHaru because that has some enhancements used in pgXplorer's code.
