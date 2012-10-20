@@ -392,6 +392,7 @@ void TableView::fetchRefreshData(QString mode)
 
 void TableView::busySlot()
 {
+    toolbar->setEnabled(false);
     thread_busy = true;
     new_row_view->setEnabled(false);
     t.start();
@@ -480,6 +481,7 @@ void TableView::updRowCntSlot(QString dataset)
     thread_busy = false;
     status_message = statusBar()->currentMessage();
     setCursor(Qt::ArrowCursor);
+    toolbar->setEnabled(true);
 }
 
 void TableView::notBusySlot()
@@ -510,6 +512,7 @@ void TableView::notBusySlot()
     }
     status_message = statusBar()->currentMessage();
     setCursor(Qt::ArrowCursor);
+    toolbar->setEnabled(true);
 }
 
 void TableView::displayErrorMessage(QString error_text)
@@ -1520,19 +1523,21 @@ void TableView::restore()
 
 void TableView::toggleActions()
 {
-    //Only enable filter, exclude and ordering actions
-    //when a single cell is selected.
-    if(table_view->selectionModel()->selectedIndexes().isEmpty()) {
-        copy_action->setEnabled(false);
-        copy_with_headers_action->setEnabled(false);
-    }
-    else {
-        copy_action->setEnabled(true);
-        copy_with_headers_action->setEnabled(true);
-        if(table_view->selectionModel()->selectedIndexes().size() == 1)
-            enableActions();
-        else
-            disableActions();
+    if(table_view->selectionModel()) {
+        //Only enable filter, exclude and ordering actions
+        //when a single cell is selected.
+        if(table_view->selectionModel()->selectedIndexes().isEmpty()) {
+            copy_action->setEnabled(false);
+            copy_with_headers_action->setEnabled(false);
+        }
+        else {
+            copy_action->setEnabled(true);
+            copy_with_headers_action->setEnabled(true);
+            if(table_view->selectionModel()->selectedIndexes().size() == 1)
+                enableActions();
+            else
+                disableActions();
+        }
     }
 }
 
