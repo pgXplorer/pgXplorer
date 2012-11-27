@@ -2030,7 +2030,7 @@ void MainWin::dropTable(Database *database, Schema *schema, Table *table)
         //    QMessageBox::critical(0, MainWin::tr("Database error"),
         //    query.lastError().databaseText(), QMessageBox::Close);
     }
-    QSqlDatabase::removeDatabase("DROP " + table_name);
+    QSqlDatabase::removeDatabase("drop " + table_name);
     schema->resetTablesVertically2();
 }
 
