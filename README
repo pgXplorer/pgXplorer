@@ -4,7 +4,7 @@ pgXplorer is a freely downloadable, ISC licensed administation client for Postgr
 
 Key features are per-database instances, multithreaded queries, an intuitive UI and an SQL editor/console that supports syntax highlighting and much more.
 
-pgXplorer is built using Qt. Minimum version of Qt required is 4.7.
+pgXplorer is built using Qt. Minimum version of Qt required is 5.0.
 
 Additionally, for Windows and Mac, you need to build the Qt postgres drivers yourself. Refer to the Qt documentation for this.
 
