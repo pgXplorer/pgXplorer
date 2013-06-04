@@ -61,7 +61,7 @@ QueryView::QueryView(Database *database, QString command)
     query_view->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     query_view->resizeColumnsToContents();
     setCentralWidget(query_view);
-    statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0, QApplication::UnicodeUTF8));
+    statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0));
     query_view->setAlternatingRowColors(true);
     query_view->verticalHeader()->setDefaultAlignment(Qt::AlignRight | Qt::AlignVCenter);
 
@@ -318,10 +318,10 @@ void QueryView::bringOnTop()
 
 void QueryView::updRowCntSlot(QString error)
 {
-    time_elapsed_string = QApplication::translate("QueryView", "Time elapsed:", 0, QApplication::UnicodeUTF8);
-    rows_string = QApplication::translate("QueryView", "Rows:", 0, QApplication::UnicodeUTF8);
-    colums_string = QApplication::translate("QueryView", "Columns:", 0, QApplication::UnicodeUTF8);
-    seconds_string = QApplication::translate("QueryView", "s", 0, QApplication::UnicodeUTF8);
+    time_elapsed_string = QApplication::translate("QueryView", "Time elapsed:", 0);
+    rows_string = QApplication::translate("QueryView", "Rows:", 0);
+    colums_string = QApplication::translate("QueryView", "Columns:", 0);
+    seconds_string = QApplication::translate("QueryView", "s", 0);
 
     time_elapsed = (double)t.elapsed()/1000;
 
@@ -422,10 +422,10 @@ void QueryView::togglePlots()
 void QueryView::languageChanged(QEvent *event)
 {
     if (event->type() == QEvent::LanguageChange) {
-        time_elapsed_string = QApplication::translate("QueryView", "Time elapsed:", 0, QApplication::UnicodeUTF8);
-        rows_string = QApplication::translate("QueryView", "Rows:", 0, QApplication::UnicodeUTF8);
-        colums_string = QApplication::translate("QueryView", "Columns:", 0, QApplication::UnicodeUTF8);
-        seconds_string = QApplication::translate("QueryView", "s", 0, QApplication::UnicodeUTF8);
+        time_elapsed_string = QApplication::translate("QueryView", "Time elapsed:", 0);
+        rows_string = QApplication::translate("QueryView", "Rows:", 0);
+        colums_string = QApplication::translate("QueryView", "Columns:", 0);
+        seconds_string = QApplication::translate("QueryView", "s", 0);
 
         if(query_view->model()->rowCount() == 0)
             statusBar()->showMessage(time_elapsed_string + QString::number(time_elapsed) +

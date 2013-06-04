@@ -2,6 +2,7 @@
 #define TABLEPROPERTIES_H
 
 #include <QtGui>
+#include <QtWidgets>
 
 class TableProperties : public QDialog
 {

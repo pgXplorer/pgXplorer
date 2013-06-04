@@ -28,7 +28,7 @@ Function::Function(Database *database, Schema *schema, QString function_name, QS
     setParentItem(schema);
     this->function_index = function_index;
     setName(function_name);
-    ascii_length = function_name.toAscii().length();
+    ascii_length = function_name.toLatin1().length();
     utf8_length = function_name.toUtf8().length();
     setArgs(function_args);
     setArgTypes(function_arg_types);

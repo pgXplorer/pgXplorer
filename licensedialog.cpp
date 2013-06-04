@@ -25,9 +25,9 @@ bool LicenseDialog::validLicense(QString user, bool site_wide, QByteArray key)
     key.toLower();
     QCryptographicHash hash(QCryptographicHash::Md5);
     if(site_wide)
-        hash.addData((user.append("yes")).toAscii());
+        hash.addData((user.append("yes")).toLatin1());
     else
-        hash.addData(user.toAscii());
+        hash.addData(user.toLatin1());
     QByteArray hash_result = hash.result();
 
     //Reduce hash to 4 bytes by choosing only
@@ -125,16 +125,16 @@ LicenseDialog::LicenseDialog(MainWin *mainwin)
     QObject::connect(ok_button, SIGNAL(clicked()), this, SLOT(okslot()));
     QObject::connect(trial_button, SIGNAL(clicked()), this, SLOT(launchBuyLink()));
 
-    setWindowTitle(QApplication::translate("License", "License", 0, QApplication::UnicodeUTF8));
-    ok_button->setText(QApplication::translate("License", "OK", 0, QApplication::UnicodeUTF8));
-    cancel_button->setText(QApplication::translate("License", "Cancel", 0, QApplication::UnicodeUTF8));
+    setWindowTitle(QApplication::translate("License", "License", 0));
+    ok_button->setText(QApplication::translate("License", "OK", 0));
+    cancel_button->setText(QApplication::translate("License", "Cancel", 0));
     trial_button->setFont(title_font);
-    trial_button->setText(QApplication::translate("License", "Buy\nkey", 0, QApplication::UnicodeUTF8));
+    trial_button->setText(QApplication::translate("License", "Buy\nkey", 0));
 
-    title_label->setText(QApplication::translate("License", "pgXplorer License Key", 0, QApplication::UnicodeUTF8));
-    user_label->setText(QApplication::translate("License", "Registration name:", 0, QApplication::UnicodeUTF8));
-    site_wide_label->setText(QApplication::translate("License", "    This is a site-wide license key.", 0, QApplication::UnicodeUTF8));
-    key_label->setText(QApplication::translate("License", "Registration key:", 0, QApplication::UnicodeUTF8));
+    title_label->setText(QApplication::translate("License", "pgXplorer License Key", 0));
+    user_label->setText(QApplication::translate("License", "Registration name:", 0));
+    site_wide_label->setText(QApplication::translate("License", "    This is a site-wide license key.", 0));
+    key_label->setText(QApplication::translate("License", "Registration key:", 0));
 
     QLabel *display_text = new QLabel(this);
     display_text->setTextFormat(Qt::RichText);
@@ -161,7 +161,7 @@ LicenseDialog::LicenseDialog(MainWin *mainwin)
         this->site_wide->setChecked(site_wide);
         this->key->setText(key);
         if(!this->site_wide) {
-            trial_button->setText(QApplication::translate("License", "Buy site-wide key", 0, QApplication::UnicodeUTF8));
+            trial_button->setText(QApplication::translate("License", "Buy site-wide key", 0));
             trial_button->show();
         }
     }
@@ -172,7 +172,7 @@ LicenseDialog::LicenseDialog(MainWin *mainwin)
 
 void LicenseDialog::okslot()
 {
-    if(!validLicense(user->text(), site_wide->isChecked(), key->text().toAscii())) {
+    if(!validLicense(user->text(), site_wide->isChecked(), key->text().toLatin1())) {
         QMessageBox invalid_license(this);
         invalid_license.setIcon(QMessageBox::Critical);
         invalid_license.setText(tr("The license information provided is invalid."));

@@ -65,9 +65,9 @@ SOURCES		= main.cpp \
     reportwindow.cpp \
     statusview.cpp
 
-QT += sql translator network
+QT += core gui widgets sql network
 
-LIBS += /home/cirrus/libharu/src/libhpdfs.a -lz -lpoppler-qt4
+LIBS += /home/nimbus/libharu/src/libhpdfs.a -lz -lpoppler-qt4
 
 RESOURCES += pgXplorer.qrc
 

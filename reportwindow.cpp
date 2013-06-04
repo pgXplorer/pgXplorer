@@ -948,7 +948,7 @@ void ReportWindow::pdfPrint(QString file_name)
             drawPDFLine(page, 70, hline->y());
         }
 
-        QByteArray fba = file_name.toAscii();
+        QByteArray fba = file_name.toLatin1();
         const char *f = fba.data();
         HPDF_SaveToFile(pdf, f);
     } catch (...) {

@@ -23,6 +23,7 @@
 #include <QSqlError>
 #include <QtGui>
 #include <QObject>
+#include <QtConcurrent/QtConcurrent>
 #include "pgxconsole.h"
 #include "querymodel.h"
 

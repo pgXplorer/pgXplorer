@@ -26,6 +26,7 @@
 #include <QSqlIndex>
 #include <QSqlError>
 #include <QtGui>
+#include <QtConcurrent/QtConcurrent>
 #include "database.h"
 #include "tablemodel.h"
 

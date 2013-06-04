@@ -134,7 +134,7 @@ ViewView::ViewView(Database *database, QString const view_name, QString const na
     setCentralWidget(view_view);
 
     //Initialise the status bar.
-    statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0, QApplication::UnicodeUTF8));
+    statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0));
     statusBar()->addPermanentWidget(previous_set_button, 0);
     statusBar()->addPermanentWidget(next_set_button, 0);
 
@@ -276,7 +276,7 @@ void ViewView::contextMenuEvent(QContextMenuEvent *event)
 
     for(int i=0; i<where_clause.size(); i++) {
         if(a && QString::compare(a->text(),where_clause.at(i))==0) {
-            statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0, QApplication::UnicodeUTF8));
+            statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0));
             where_clause.removeAt(i);
             if(query_model->rowCount() == 0)
                 can_fetch_more = false;
@@ -299,7 +299,7 @@ void ViewView::contextMenuEvent(QContextMenuEvent *event)
         else if(a->icon().cacheKey() == descend_icon.cacheKey())
             order.append(" DESC");
         if(QString::compare(order, order_clause.at(i))==0) {
-            statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0, QApplication::UnicodeUTF8));
+            statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0));
 
             order_clause.removeAt(i);
             order_clause_size--;
@@ -412,11 +412,11 @@ void ViewView::busySlot()
 
 void ViewView::updRowCntSlot(QString dataset)
 {
-    time_elapsed_string = QApplication::translate("QueryView", "Time elapsed:", 0, QApplication::UnicodeUTF8);
-    rows_string = QApplication::translate("QueryView", "Rows:", 0, QApplication::UnicodeUTF8);
-    rows_string_2 = QApplication::translate("QueryView", " of whole set", 0, QApplication::UnicodeUTF8);
-    colums_string = QApplication::translate("QueryView", "Columns:", 0, QApplication::UnicodeUTF8);
-    seconds_string = QApplication::translate("QueryView", "s", 0, QApplication::UnicodeUTF8);
+    time_elapsed_string = QApplication::translate("QueryView", "Time elapsed:", 0);
+    rows_string = QApplication::translate("QueryView", "Rows:", 0);
+    rows_string_2 = QApplication::translate("QueryView", " of whole set", 0);
+    colums_string = QApplication::translate("QueryView", "Columns:", 0);
+    seconds_string = QApplication::translate("QueryView", "s", 0);
 
     if(query_model->lastError().isValid()) {
         updateFailedSlot(query_model->lastError().text());
@@ -630,7 +630,7 @@ void ViewView::fetchDataSlot()
     if(query_model->rowCount() >= FETCHSIZ &&
         view_view->verticalScrollBar()->value() == view_view->verticalScrollBar()->maximum()) {
         if(can_fetch_more) {
-            statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0, QApplication::UnicodeUTF8));
+            statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0));
             QtConcurrent::run(this, &ViewView::fetchNextData);
         }
     }
@@ -639,7 +639,7 @@ void ViewView::fetchDataSlot()
     //future object (separate thread).
     else if(rows_from > 1 &&
             view_view->verticalScrollBar()->value() == view_view->verticalScrollBar()->minimum()) {
-        statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0, QApplication::UnicodeUTF8));
+        statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0));
         QtConcurrent::run(this, &ViewView::fetchPreviousData);
     }
 }
@@ -781,7 +781,7 @@ void ViewView::customFilterReturnPressed()
 
 void ViewView::defaultView()
 {
-    statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0, QApplication::UnicodeUTF8));
+    statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0));
     where_clause.clear();
 
     offset_list.clear();
@@ -792,7 +792,7 @@ void ViewView::defaultView()
 
 void ViewView::refreshView()
 {
-    statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0, QApplication::UnicodeUTF8));
+    statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0));
 
     QtConcurrent::run(this, &ViewView::fetchRefreshData, QLatin1String("next"));
     disableActions();
@@ -800,7 +800,7 @@ void ViewView::refreshView()
 
 void ViewView::addRowRefreshView()
 {
-    statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0, QApplication::UnicodeUTF8));
+    statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0));
 
     QtConcurrent::run(this, &ViewView::fetchRefreshData, QLatin1String("previous"));
     disableActions();
@@ -812,7 +812,7 @@ void ViewView::filter()
     if(indices.size() != 1)
         return;
     QModelIndex index = indices.first();
-    statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0, QApplication::UnicodeUTF8));
+    statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0));
 
     QVariant header = view_view->model()->headerData(index.column(), Qt::Horizontal);
     QString header_string = header.toString();
@@ -842,7 +842,7 @@ void ViewView::filter(QString filter)
     if(indices.size() != 1)
         return;
     QModelIndex index = indices.first();
-    statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0, QApplication::UnicodeUTF8));
+    statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0));
 
     QVariant header = view_view->model()->headerData(index.column(), Qt::Horizontal);
     QString header_string = header.toString();
@@ -860,7 +860,7 @@ void ViewView::exclude()
     if(indices.size() != 1)
         return;
     QModelIndex index = indices.first();
-    statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0, QApplication::UnicodeUTF8));
+    statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0));
 
     QVariant header = view_view->model()->headerData(index.column(), Qt::Horizontal);
     QString header_string = header.toString();
@@ -888,7 +888,7 @@ void ViewView::ascend()
     if(indices.size() != 1)
         return;
     QModelIndex index = indices.first();
-    statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0, QApplication::UnicodeUTF8));
+    statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0));
 
     QVariant header = view_view->model()->headerData(index.column(), Qt::Horizontal);
     QString header_string = header.toString();
@@ -909,7 +909,7 @@ void ViewView::descend()
     if(indices.size() != 1)
         return;
     QModelIndex index = indices.first();
-    statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0, QApplication::UnicodeUTF8));
+    statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0));
 
     QVariant header = view_view->model()->headerData(index.column(), Qt::Horizontal);
     QString header_string = header.toString();
@@ -927,11 +927,11 @@ void ViewView::descend()
 void ViewView::languageChanged(QEvent *event)
 {
     if (event->type() == QEvent::LanguageChange) {
-        time_elapsed_string = QApplication::translate("QueryView", "Time elapsed:", 0, QApplication::UnicodeUTF8);
-        rows_string = QApplication::translate("QueryView", "Rows:", 0, QApplication::UnicodeUTF8);
-        rows_string_2 = QApplication::translate("QueryView", " of whole set", 0, QApplication::UnicodeUTF8);
-        colums_string = QApplication::translate("QueryView", "Columns:", 0, QApplication::UnicodeUTF8);
-        seconds_string = QApplication::translate("QueryView", "s", 0, QApplication::UnicodeUTF8);
+        time_elapsed_string = QApplication::translate("QueryView", "Time elapsed:", 0);
+        rows_string = QApplication::translate("QueryView", "Rows:", 0);
+        rows_string_2 = QApplication::translate("QueryView", " of whole set", 0);
+        colums_string = QApplication::translate("QueryView", "Columns:", 0);
+        seconds_string = QApplication::translate("QueryView", "s", 0);
 
         if(can_fetch_more) {
             statusBar()->showMessage(time_elapsed_string + QString::number(time_elapsed) +
@@ -1061,7 +1061,7 @@ void ViewView::customContextMenuViewport()
 
     for(int i=0; i<where_clause.size(); i++) {
         if(a && QString::compare(a->text(),where_clause.at(i))==0) {
-            statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0, QApplication::UnicodeUTF8));
+            statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0));
             where_clause.removeAt(i);
             if(query_model->rowCount() == 0)
                 can_fetch_more = false;
@@ -1084,7 +1084,7 @@ void ViewView::customContextMenuViewport()
         else if(a->icon().cacheKey() == descend_icon.cacheKey())
             order.append(" DESC");
         if(QString::compare(order, order_clause.at(i))==0) {
-            statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0, QApplication::UnicodeUTF8));
+            statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0));
 
             order_clause.removeAt(i);
             if(query_model->rowCount() == 0)
@@ -1117,7 +1117,7 @@ void ViewView::customContextMenuHeader()
 
 void ViewView::removeAllFilters()
 {
-    statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0, QApplication::UnicodeUTF8));
+    statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0));
     where_clause.clear();
 
     offset_list.clear();
@@ -1128,7 +1128,7 @@ void ViewView::removeAllFilters()
 
 void ViewView::removeAllOrdering()
 {
-    statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0, QApplication::UnicodeUTF8));
+    statusBar()->showMessage(QApplication::translate("QueryView", "Fetching data...", 0));
 
     order_clause.clear();
     offset_list.clear();

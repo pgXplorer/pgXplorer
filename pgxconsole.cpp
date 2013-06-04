@@ -26,7 +26,7 @@ PgxConsole::PgxConsole(Database *database)
     setViewportMargins(10, 0, 0, 0);
     setTabStopWidth(40);
     setUndoRedoEnabled(false);
-    setWindowTitle(QApplication::translate("PgxConsole", "SQL console", 0, QApplication::UnicodeUTF8));
+    setWindowTitle(QApplication::translate("PgxConsole", "SQL console", 0));
     setStyleSheet("QPlainTextEdit{background-color: white; font: bold 14px 'Courier New';}");
 
     createActions();

@@ -29,7 +29,7 @@ Table::Table(Database *database, Schema *schema, QString table_name, int table_i
     setParentItem(schema);
     this->table_index = table_index;
     setName(table_name);
-    ascii_length = table_name.toAscii().length();
+    ascii_length = table_name.toLatin1().length();
     utf8_length = table_name.toUtf8().length();
     setStatus(false);
     setCollapsed(true);

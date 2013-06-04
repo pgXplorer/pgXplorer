@@ -19,7 +19,7 @@
 #ifndef PGXPLORER
 #define PGXPLORER
 
-#include <QMouseEvent>
+#include <QtWidgets>
 #include <QtGui>
 
 /*!

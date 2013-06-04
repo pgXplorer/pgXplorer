@@ -20,6 +20,7 @@
 #define GRAPHWINDOW_H
 
 #include <QtGui>
+#include <QtWidgets>
 
 #define XRANGE 640.0
 #define YRANGE 480.0

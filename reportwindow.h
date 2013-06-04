@@ -20,8 +20,10 @@
 #define REPORTWINDOW_H
 
 #include <QtGui>
+#include <QtConcurrent/QtConcurrent>
+
 #include "database.h"
-#include "/home/cirrus/libharu/include/hpdf.h"
+#include "/home/nimbus/libharu/include/hpdf.h"
 
 class ReportView;
 class ReportWindow;

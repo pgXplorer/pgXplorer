@@ -386,7 +386,7 @@ void MainWin::open(QString file_name)
     database_file_stream >> magic_from_file;
     if(magic != magic_from_file) {
         QMessageBox *fileErr = new QMessageBox("pgXplorer", MainWin::tr("Not a database file."),
-                                               QMessageBox::Critical, 1, 0, 0, this, FALSE );
+                                               QMessageBox::Critical, 1, 0, 0, this, false );
         fileErr->setButtonText(1, "Close");
         fileErr->show();
         return;
@@ -395,7 +395,7 @@ void MainWin::open(QString file_name)
     database_file_stream >> version;
     if(version > 010) {
         QMessageBox *fileVerErr = new QMessageBox("pgXplorer", MainWin::tr("Database file version not supported."),
-                                               QMessageBox::Critical, 1, 0, 0, this, FALSE );
+                                               QMessageBox::Critical, 1, 0, 0, this, false );
         fileVerErr->setButtonText(1, "Close");
         fileVerErr->show();
         return;

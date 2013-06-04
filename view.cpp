@@ -28,7 +28,7 @@ View::View(Database *database, Schema *schema, QString view_name, int view_index
     setParentItem(schema);
     this->view_index = view_index;
     setName(view_name);
-    ascii_length = view_name.toAscii().length();
+    ascii_length = view_name.toLatin1().length();
     utf8_length = view_name.toUtf8().length();
     setStatus(false);
     setCollapsed(true);
