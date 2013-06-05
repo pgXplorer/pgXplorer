@@ -176,7 +176,7 @@ void Schema::populateSchemaTables()
         QObject::connect(table, SIGNAL(expandTable(Database *, Schema *, Table*)), mainwin, SLOT(showTableView(Database *, Schema *, Table*)));
         QObject::connect(table, SIGNAL(designTable(Database *, Schema *, Table*)), mainwin, SLOT(showDesignView(Database *, Schema *, Table*)));
         QObject::connect(table, SIGNAL(expandTableDefinition(Schema *, Table*)), mainwin, SLOT(showTableEditor(Schema *, Table*)));
-        //QObject::connect(table, SIGNAL(rename(Database *, Schema *, Table*)), mainwin, SLOT(renameTable(Database *, Schema *, Table*)));
+        QObject::connect(table, SIGNAL(rename(Database *, Schema *, Table*)), mainwin, SLOT(editTableName(Database *, Schema *, Table*)));
         QObject::connect(table, SIGNAL(clearTable(Database *, Schema *, Table*)), mainwin, SLOT(clearTableView(Database *, Schema *, Table*)));
         QObject::connect(table, SIGNAL(dropTable(Database *, Schema *, Table*)), mainwin, SLOT(dropTable(Database *, Schema *, Table*)));
 
