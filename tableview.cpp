@@ -76,6 +76,8 @@ TableView::TableView(Database *database, QString const table_name, QString const
     this->column_list = column_list;
     this->column_types = column_types;
     this->column_lengths = column_lengths;
+    foreach(const QString &str, column_list)
+        this->column_functions << QString("");
 
     filter_text = new QLineEdit;
     filter_text->setPlaceholderText(tr("custom filter"));
@@ -85,7 +87,6 @@ TableView::TableView(Database *database, QString const table_name, QString const
 
     table_model = new TableModel(database, this->primary_key, this->table_name);
 
-    createIcons();
     createBrushes();
     createActions();
     setWindowTitle(name);
@@ -103,6 +104,7 @@ TableView::TableView(Database *database, QString const table_name, QString const
     toolbar->addSeparator();
     toolbar->addAction(filter_action);
     toolbar->addAction(exclude_action);
+    toolbar->addAction(group_action);
     toolbar->addAction(ascend_action);
     toolbar->addAction(descend_action);
     toolbar->addSeparator();
@@ -117,6 +119,8 @@ TableView::TableView(Database *database, QString const table_name, QString const
     deselect_menu.setStatusTip(tr("Remove filter"));
     disarrange_menu.setTitle(tr("Remove order"));
     disarrange_menu.setStatusTip(tr("Remove order"));
+    ungroup_menu.setTitle(tr("Remove group"));
+    ungroup_menu.setStatusTip(tr("Remove group"));
 
     addToolBar(toolbar);
     //Identify this object with thisTableViewId for constructing database connection
@@ -132,39 +136,6 @@ TableView::TableView(Database *database, QString const table_name, QString const
     //number of rows of a large table to populate the view.
     //For now, we will always enable Quick fetch.
     quick_fetch = true;
-
-    //Construct the SQL query needed to populate the view.
-    //Cycle through the column list and cast PostgreSQL
-    //time related data types to text. Otherwise, updates
-    //don't work too well.
-    sql = QLatin1String("SELECT ");
-    if(column_list.isEmpty())
-        sql.append(QLatin1String("*"));
-    else {
-        //if(primary_key_with_oid)
-        //    sql.append("oid, ");
-        column_count = column_list.count();
-        for(int column = 0; column < column_count; column++) {
-            if(column == column_count-1) {
-                if(column_types.value(column).startsWith("time"))
-                    sql.append(column_list.value(column) + "::text");
-                else if(column_types.value(column).compare("double precision") == 0)
-                    sql.append(column_list.value(column) + "::text");
-                else
-                    sql.append(column_list.value(column));
-            }
-            else {
-                if(column_types.value(column).startsWith("time"))
-                    sql.append(column_list.value(column) + "::text, ");
-                else if(column_types.value(column).compare("double precision") == 0)
-                    sql.append(column_list.value(column) + "::text, ");
-                else
-                    sql.append(column_list.value(column) + ", ");
-            }
-        }
-    }
-    sql.append(QLatin1String(" FROM "));
-    sql.append(table_name);
 
     setContextMenuPolicy(Qt::NoContextMenu);
 
@@ -246,6 +217,67 @@ TableView::TableView(Database *database, QString const table_name, QString const
     defaultView();
 }
 
+void TableView::buildTableQuery()
+{
+    //Construct the SQL query needed to populate the view.
+    //Cycle through the column list and cast PostgreSQL
+    //time related data types to text. Otherwise, updates
+    //don't work too well.
+    sql = QLatin1String("SELECT ");
+    if(column_list.isEmpty())
+        sql.append(QLatin1String("*"));
+    else {
+        //if(primary_key_with_oid)
+        //    sql.append("oid, ");
+        column_count = column_list.count();
+        for(int column = 0; column < column_count; column++) {
+            if(column == column_count-1) {
+                if(column_types.value(column).startsWith("time")) {
+                    sql.append(column_functions.value(column)).append("(")
+                        .append(column_list.value(column) + ")::text ");
+                }
+                else if(column_types.value(column).compare("double precision") == 0) {
+                    sql.append(column_functions.value(column)).append("(")
+                       .append(column_list.value(column) + ")::text ");
+                }
+                else {
+                    sql.append(column_functions.value(column)).append("(")
+                       .append(column_list.value(column)).append(") ");
+                }
+
+                if(!column_functions.value(column).isEmpty()) {
+                    sql.append("\"" + column_functions.value(column) + "("
+                       + column_list.value(column).remove("\"") + ")\"");
+                }
+            }
+            else {
+                if(column_types.value(column).startsWith("time")) {
+                    sql.append(column_functions.value(column)).append("(")
+                       .append(column_list.value(column) + ")::text");
+                }
+                else if(column_types.value(column).compare("double precision") == 0) {
+                    sql.append(column_functions.value(column)).append("(")
+                       .append(column_list.value(column) + ")::text");
+                }
+                else {
+                    sql.append(column_functions.value(column)).append("(")
+                       .append(column_list.value(column) + ")");
+                }
+
+                if(!column_functions.value(column).isEmpty()) {
+                    sql.append(" \"" + column_functions.value(column) + "("
+                       + column_list.value(column).remove("\"") + ")\", ");
+                }
+                else {
+                    sql.append(", ");
+                }
+            }
+        }
+    }
+    sql.append(QLatin1String(" FROM "));
+    sql.append(table_name);
+}
+
 //Mouse release event should enable/disable actions.
 bool TableView::eventFilter(QObject *obj, QEvent *event)
 {
@@ -312,6 +344,12 @@ void TableView::fetchDefaultData()
 
         //Indicate that we are going to be retrieving data and busy.
         emit busySignal();
+
+        for(int i=0; i<column_functions.length(); i++)
+            column_functions.replace(i, "");
+
+        buildTableQuery();
+
         QSqlDatabase::removeDatabase("tableview" + sql + QString::number(thisTableViewId));
         QSqlDatabase database_connection;
         database_connection = QSqlDatabase::addDatabase("QPSQL", "tableview" + sql + QString::number(thisTableViewId));
@@ -342,7 +380,10 @@ void TableView::fetchDefaultData()
             else
                 can_fetch_more = true;
             offset_list.append(" OFFSET 0");
-            table_model->setQuery(sql + limit + offset_list.last(), database_connection);
+            if(table_model)
+                table_model->setQuery(sql + limit + offset_list.last(), database_connection);
+            else
+                close();
         }
         else {
             table_model->setQuery(sql, database_connection);
@@ -367,6 +408,8 @@ void TableView::fetchRefreshData(QString mode)
 
         //Indicate that we are going to be retrieving data and busy.
         emit busySignal();
+
+        buildTableQuery();
 
         QSqlDatabase::removeDatabase("tableview" + sql + QString::number(thisTableViewId));
         QSqlDatabase database_connection;
@@ -573,6 +616,8 @@ void TableView::fetchNextData()
         //Indicate that we are going to be retrieving data and busy.
         emit busySignal();
 
+        buildTableQuery();
+
         QSqlDatabase::removeDatabase("tableview " + sql + QString::number(thisTableViewId));
         QSqlDatabase database_connection;
         database_connection = QSqlDatabase::addDatabase("QPSQL", "tableview " + sql + QString::number(thisTableViewId));
@@ -593,9 +638,13 @@ void TableView::fetchNextData()
         QSqlQueryModel temp_query_model;
         QString offset = " OFFSET " + QString::number((offset_list.size()+1)*FETCHSIZ);
         if(where_clause.isEmpty())
-            temp_query_model.setQuery(sql + (order_clause.size() > 0 ? " ORDER BY " + order_clause.join(","):"") + limit + offset, database_connection);
+            temp_query_model.setQuery(sql
+                                      + (group_clause.size() > 0 ? QString(" GROUP BY " + group_clause.join(",")) : QString(""))
+                                      + (order_clause.size() > 0 ? QString(" ORDER BY " + order_clause.join(",")) : QString("")) + limit + offset, database_connection);
         else
-            temp_query_model.setQuery(sql + " WHERE " + where_clause.join(" AND ") + (order_clause.size() > 0 ? " ORDER BY " + order_clause.join(","):"") + limit + offset, database_connection);
+            temp_query_model.setQuery(sql + " WHERE " + where_clause.join(" AND ")
+                                      + (group_clause.size() > 0 ? QString(" GROUP BY " + group_clause.join(",")) : QString(""))
+                                      + (order_clause.size() > 0 ? QString(" ORDER BY " + order_clause.join(",")) : QString("")) + limit + offset, database_connection);
         if(temp_query_model.rowCount() == 0)
             can_fetch_more = false;
         else
@@ -603,9 +652,13 @@ void TableView::fetchNextData()
         rows_from = offset_list.size()*FETCHSIZ + 1;
         offset_list.append(" OFFSET " + QString::number(rows_from - 1));
         if(where_clause.isEmpty())
-            table_model->setQuery(sql + (order_clause.size() > 0 ? " ORDER BY " + order_clause.join(","):"") + limit + offset_list.last(), database_connection);
+            table_model->setQuery(sql
+                                  + (group_clause.size() > 0 ? QString(" GROUP BY " + group_clause.join(",")) : QString(""))
+                                  + (order_clause.size() > 0 ? QString(" ORDER BY " + order_clause.join(",")) : QString("")) + limit + offset_list.last(), database_connection);
         else
-            table_model->setQuery(sql + " WHERE " + where_clause.join(" AND ") + (order_clause.size() > 0 ? " ORDER BY " + order_clause.join(","):"") + limit + offset_list.last(), database_connection);
+            table_model->setQuery(sql + " WHERE " + where_clause.join(" AND ")
+                                  + (group_clause.size() > 0 ? QString(" GROUP BY " + group_clause.join(",")) : QString(""))
+                                  + (order_clause.size() > 0 ? QString(" ORDER BY " + order_clause.join(",")) : QString("")) + limit + offset_list.last(), database_connection);
 
         rows_to = rows_from + table_model->rowCount() - 1;
         column_count = table_model->columnCount();
@@ -622,6 +675,8 @@ void TableView::fetchPreviousData()
             return;
         //Indicate that we are going to be retrieving data and busy.
         emit busySignal();
+
+        buildTableQuery();
 
         QSqlDatabase::removeDatabase("tableview" + sql + QString::number(thisTableViewId));
         QSqlDatabase database_connection;
@@ -640,9 +695,13 @@ void TableView::fetchPreviousData()
         offset_list.removeLast();
         rows_from = (offset_list.size()-1)*FETCHSIZ + 1;
         if(where_clause.isEmpty())
-            table_model->setQuery(sql + (order_clause.size() > 0 ? " ORDER BY " + order_clause.join(","):"") + limit + offset_list.last(), database_connection);
+            table_model->setQuery(sql
+                                  + (group_clause.size() > 0 ? QString(" GROUP BY " + group_clause.join(",")) : "")
+                                  + (order_clause.size() > 0 ? QString(" ORDER BY " + order_clause.join(",")) : "") + limit + offset_list.last(), database_connection);
         else
-            table_model->setQuery(sql + " WHERE " + where_clause.join(" AND ") + (order_clause.size() > 0 ? " ORDER BY " + order_clause.join(","):"") + limit + offset_list.last(), database_connection);
+            table_model->setQuery(sql + " WHERE " + where_clause.join(" AND ")
+                                  + (group_clause.size() > 0 ? QString(" GROUP BY " + group_clause.join(",")) : "")
+                                  + (order_clause.size() > 0 ? QString(" ORDER BY " + order_clause.join(",")) : "") + limit + offset_list.last(), database_connection);
 
         rows_to = rows_from + table_model->rowCount() - 1;
         column_count = table_model->columnCount();
@@ -660,6 +719,8 @@ void TableView::fetchConditionDataInitial()
             return;
         //Indicate that we are going to be retrieving data and busy.
         emit busySignal();
+
+        buildTableQuery();
 
         QSqlDatabase temp_database_connection;
         temp_database_connection = QSqlDatabase::addDatabase("QPSQL", "temp tableview" + sql + QString::number(thisTableViewId));
@@ -680,9 +741,13 @@ void TableView::fetchConditionDataInitial()
         QSqlQueryModel temp_query_model;
         QString offset = " OFFSET " + QString::number(offset_list.size()*FETCHSIZ);
         if(where_clause.isEmpty())
-            temp_query_model.setQuery(sql + (order_clause.size() > 0 ? " ORDER BY " + order_clause.join(","):"") + limit + offset, temp_database_connection);
+            temp_query_model.setQuery(sql
+                                      + (group_clause.size() > 0 ? QString(" GROUP BY " + group_clause.join(",")) : QString(""))
+                                      + (order_clause.size() > 0 ? QString(" ORDER BY " + order_clause.join(",")) : "") + limit + offset, temp_database_connection);
         else
-            temp_query_model.setQuery(sql + " WHERE " + where_clause.join(" AND ") + (order_clause.size() > 0 ? " ORDER BY " + order_clause.join(","):"") + limit + offset, temp_database_connection);
+            temp_query_model.setQuery(sql + " WHERE " + where_clause.join(" AND ")
+                                      + (group_clause.size() > 0 ? QString(" GROUP BY " + group_clause.join(",")) : QString(""))
+                                      + (order_clause.size() > 0 ? QString(" ORDER BY " + order_clause.join(",")) : "") + limit + offset, temp_database_connection);
         if(temp_query_model.lastError().isValid()) {
             queryFailed(temp_query_model.lastError().databaseText());
             if(where_clause.count() > 0)
@@ -710,9 +775,13 @@ void TableView::fetchConditionDataInitial()
                 can_fetch_more = true;
             rows_from = (offset_list.size()-1)*FETCHSIZ + 1;
             if(where_clause.isEmpty())
-                table_model->setQuery(sql + (order_clause.size() > 0 ? " ORDER BY " + order_clause.join(","):"") + limit + offset_list.last(), database_connection);
+                table_model->setQuery(sql
+                                      + (group_clause.size() > 0 ? QString(" GROUP BY " + group_clause.join(",")) : QString(""))
+                                      + (order_clause.size() > 0 ? QString(" ORDER BY " + order_clause.join(",")) : "") + limit + offset_list.last(), database_connection);
             else
-                table_model->setQuery(sql + " WHERE " + where_clause.join(" AND ") + (order_clause.size() > 0 ? " ORDER BY " + order_clause.join(","):"") + limit + offset_list.last(), database_connection);
+                table_model->setQuery(sql + " WHERE " + where_clause.join(" AND ")
+                                      + (group_clause.size() > 0 ? QString(" GROUP BY " + group_clause.join(",")) : QString(""))
+                                      + (order_clause.size() > 0 ? QString(" ORDER BY " + order_clause.join(",")) : "") + limit + offset_list.last(), database_connection);
             if(table_model->lastError().isValid()) {
 
             }
@@ -947,6 +1016,7 @@ void TableView::defaultView()
     status_message = statusBar()->currentMessage();
     where_clause.clear();
     offset_list.clear();
+    group_clause.clear();
     order_clause.clear();
     error_status = false;
 
@@ -981,17 +1051,18 @@ void TableView::filter()
     status_message = statusBar()->currentMessage();
     QVariant header = table_view->model()->headerData(index.column(), Qt::Horizontal);
     QString header_string = header.toString();
+    header_string = column_list.at(index.column());
     QVariant data = table_view->model()->data(index);
     if(data.isNull()) {
-        if(!where_clause.contains("\"" + header_string + "\" IS NULL",
+        if(!where_clause.contains(header_string + " IS NULL",
                             Qt::CaseInsensitive))
-            where_clause.append("\"" + header_string + "\" IS NULL");
+            where_clause.append(header_string + " IS NULL");
     }
     else
         if(data.type() == QMetaType::Int || data.type() == QMetaType::Long)
-            where_clause.append("\"" + header_string + "\"=" + data.toString());
+            where_clause.append(header_string + "=" + data.toString());
         else
-            where_clause.append("\"" + header_string + "\"='" + data.toString().replace("'","\\'") + "'");
+            where_clause.append(header_string + "='" + data.toString().replace("'","\\'") + "'");
     offset_list.clear();
     offset_list.append(" OFFSET 0");
 
@@ -1007,8 +1078,10 @@ void TableView::filter(QString filter)
     statusBar()->showMessage(tr("Fetching data..."));
     status_message = statusBar()->currentMessage();
     QVariant header = table_view->model()->headerData(index.column(), Qt::Horizontal);
-    QString header_string = header.toString();
-    where_clause.append("\"" + header_string + "\" " + filter);
+    //QString header_string = header.toString();
+    //where_clause.append("\"" + header_string + "\" " + filter);
+    QString item = column_list.at(index.column());
+    where_clause.append(item + " " + filter);
     offset_list.clear();
     offset_list.append(" OFFSET 0");
 
@@ -1083,6 +1156,47 @@ void TableView::descend()
     }
 }
 
+void TableView::group()
+{
+    QModelIndexList indices = table_view->selectionModel()->selectedIndexes();
+    if(indices.size() != 1)
+        return;
+    QModelIndex index = indices.first();
+    statusBar()->showMessage(tr("Fetching data..."));
+
+    QVariant header = table_view->model()->headerData(index.column(), Qt::Horizontal);
+    QString header_string = header.toString();
+    header_string = column_list.at(index.column());
+    if(!group_clause.contains(header_string)) {
+        group_clause.append(header_string);
+        offset_list.clear();
+        offset_list.append(" OFFSET 0");
+
+        for(int i=0; i < column_types.length(); i++) {
+            if(group_clause.indexOf(column_list.at(i)) != -1) {
+                column_functions.replace(i, "");
+                continue;
+            }
+
+            if(column_types.at(i).startsWith("bool")) {
+                column_functions.replace(i, "every");
+            }
+            else if(column_types.at(i).startsWith("char") ||
+                    column_types.at(i).startsWith("text") ||
+                    column_types.at(i).contains("time")) {
+                column_functions.replace(i, "min");
+            }
+            else if(column_types.at(i).contains("int") ||
+                    column_types.at(i).startsWith("real") ||
+                    column_types.at(i).startsWith("numeric")) {
+                column_functions.replace(i, "sum");
+            }
+        }
+
+        QtConcurrent::run(this, &TableView::fetchConditionDataInitial);
+    }
+}
+
 void TableView::languageChanged(QEvent *event)
 {
     if (event->type() == QEvent::LanguageChange) {
@@ -1110,6 +1224,8 @@ void TableView::languageChanged(QEvent *event)
         deselect_menu.setStatusTip(tr("Remove filter"));
         disarrange_menu.setTitle(tr("Remove order"));
         disarrange_menu.setStatusTip(tr("Remove order"));
+        ungroup_menu.setTitle(tr("Remove group"));
+        ungroup_menu.setStatusTip(tr("Remove group"));
 
         default_action->setText(tr("Default"));
         default_action->setStatusTip(tr("Default"));
@@ -1125,12 +1241,16 @@ void TableView::languageChanged(QEvent *event)
         filter_action->setStatusTip(tr("Filter table with selected cell value on column"));
         exclude_action->setText(tr("Exclude"));
         exclude_action->setStatusTip(tr("Filter table exclusive of selected cell value on column"));
+        group_action->setText(tr("Group"));
+        group_action->setStatusTip(tr("Group this column by this item value"));
         ascend_action->setText(tr("Ascending order"));
-        ascend_action->setStatusTip(tr("Ascending order"));
+        ascend_action->setStatusTip(tr("Arrange items of this column in ascending order"));
         descend_action->setText(tr("Descending order"));
-        descend_action->setStatusTip(tr("Descending order"));
+        descend_action->setStatusTip(tr("Arrange items of this column in descending order"));
         remove_all_filters_action->setText(tr("All filters"));
         remove_all_filters_action->setStatusTip(tr("Remove all filters"));
+        remove_all_grouping_action->setText(tr("All grouping"));
+        remove_all_grouping_action->setStatusTip(tr("Remove all grouping"));
         remove_all_ordering_action->setText(tr("All ordering"));
         remove_all_ordering_action->setStatusTip(tr("Remove all ordering"));
         truncate_action->setText(tr("Clear table"));
@@ -1166,6 +1286,7 @@ void TableView::customContextMenuViewport()
     QModelIndex index;
     QVariant data;
     int order_clause_size = order_clause.size();
+    int group_clause_size = group_clause.size();
 
     if(indices.size() > 1) {
         if((indices.first().column() == indices.last().column()) &&
@@ -1195,9 +1316,22 @@ void TableView::customContextMenuViewport()
     }
     context_menu.addMenu(&deselect_menu);
     context_menu.addSeparator();
+
+    context_menu.addAction(group_action);
+    ungroup_menu.clear();
+    for(int i=0; i<group_clause_size; i++) {
+        QString group = group_clause.at(i);
+        ungroup_menu.addAction(group_icon, group);
+    }
+    if(group_clause_size > 1) {
+        ungroup_menu.addSeparator();
+        ungroup_menu.addAction(remove_all_grouping_action);
+    }
+    context_menu.addMenu(&ungroup_menu);
+    context_menu.addSeparator();
+
     context_menu.addAction(ascend_action);
     context_menu.addAction(descend_action);
-
     disarrange_menu.clear();
     for(int i=0; i<order_clause_size; i++) {
         QString order = order_clause.at(i);
@@ -1216,6 +1350,7 @@ void TableView::customContextMenuViewport()
     }
     context_menu.addMenu(&disarrange_menu);
     context_menu.addSeparator();
+
     context_menu.addAction(copy_action);
     context_menu.addAction(copy_with_headers_action);
     context_menu.addSeparator();
@@ -1227,17 +1362,22 @@ void TableView::customContextMenuViewport()
         if(data.canConvert<QString>()) {
             filter_action->setEnabled(true);
             exclude_action->setEnabled(true);
+            group_action->setEnabled(true);
             ascend_action->setEnabled(true);
             descend_action->setEnabled(true);
         }
     }
 
     QAction *a = context_menu.exec(QCursor::pos());
+    if(!a)
+        return;
+    int status;
 
-    for(int i=0; i<where_clause.size(); i++) {
-        if(a && QString::compare(a->text(),where_clause.at(i))==0) {
+    if(a->icon().cacheKey() == filter_icon.cacheKey() ||
+            a->icon().cacheKey() == exclude_icon.cacheKey()) {
+        if((status = where_clause.indexOf(a->text())) != -1) {
             statusBar()->showMessage(tr("Fetching data..."));
-            where_clause.removeAt(i);
+            where_clause.removeAt(status);
             if(table_model->rowCount() == 0)
                 can_fetch_more = false;
             else
@@ -1250,18 +1390,74 @@ void TableView::customContextMenuViewport()
         }
     }
 
-    for(int i=0; i<order_clause.size(); i++) {
-        if(!a)
-            return;
-        QString order = a->text();
-        if(a->icon().cacheKey() == ascend_icon.cacheKey())
-            order.append(" ASC");
-        else if(a->icon().cacheKey() == descend_icon.cacheKey())
-            order.append(" DESC");
-        if(QString::compare(order, order_clause.at(i))==0) {
+    else if(a->icon().cacheKey() == group_icon.cacheKey()) {
+        if((status = group_clause.indexOf(a->text())) != -1) {
             statusBar()->showMessage(tr("Fetching data..."));
 
-            order_clause.removeAt(i);
+            group_clause.removeAt(status);
+            if(table_model->rowCount() == 0)
+                can_fetch_more = false;
+            else
+                can_fetch_more = true;
+            offset_list.clear();
+            offset_list.append(" OFFSET 0");
+
+            if(group_clause.size() == 0) {
+                for(int i=0; i < column_functions.length(); i++)
+                        column_functions.replace(i, "");
+            }
+            else {
+                for(int i=0; i < column_types.length(); i++) {
+                    if(group_clause.indexOf(column_list.at(i)) != -1) {
+                        column_functions.replace(i, "");
+                        continue;
+                    }
+
+                    if(column_types.at(i).startsWith("bool")) {
+                        column_functions.replace(i, "every");
+                    }
+                    else if(column_types.at(i).startsWith("char") ||
+                            column_types.at(i).startsWith("text") ||
+                            column_types.at(i).contains("time")) {
+                        column_functions.replace(i, "min");
+                    }
+                    else if(column_types.at(i).contains("int") ||
+                            column_types.at(i).startsWith("real") ||
+                            column_types.at(i).startsWith("numeric")) {
+                        column_functions.replace(i, "sum");
+                    }
+                }
+            }
+
+            QtConcurrent::run(this, &TableView::fetchConditionDataInitial);
+            return;
+        }
+    }
+    else if(a->icon().cacheKey() == ascend_icon.cacheKey()) {
+        QString order = a->text();
+        order.append(" ASC");
+        if((status = order_clause.indexOf(order)) != -1) {
+            statusBar()->showMessage(tr("Fetching data..."));
+
+            order_clause.removeAt(status);
+            if(table_model->rowCount() == 0)
+                can_fetch_more = false;
+            else
+                can_fetch_more = true;
+            offset_list.clear();
+            offset_list.append(" OFFSET 0");
+
+            QtConcurrent::run(this, &TableView::fetchConditionDataInitial);
+            return;
+        }
+    }
+    else if(a->icon().cacheKey() == descend_icon.cacheKey()) {
+        QString order = a->text();
+        order.append(" DESC");
+        if((status = order_clause.indexOf(order)) != -1) {
+            statusBar()->showMessage(tr("Fetching data..."));
+
+            order_clause.removeAt(status);
             if(table_model->rowCount() == 0)
                 can_fetch_more = false;
             else
@@ -1302,6 +1498,20 @@ void TableView::removeAllFilters()
     QtConcurrent::run(this, &TableView::fetchConditionDataInitial);
 }
 
+void TableView::removeAllGrouping()
+{
+    for(int i=0; i < column_functions.length(); i++)
+            column_functions.replace(i, "");
+
+    statusBar()->showMessage(tr("Fetching data..."));
+
+    group_clause.clear();
+    offset_list.clear();
+    offset_list.append(" OFFSET 0");
+
+    QtConcurrent::run(this, &TableView::fetchConditionDataInitial);
+}
+
 void TableView::removeAllOrdering()
 {
     statusBar()->showMessage(tr("Fetching data..."));
@@ -1318,9 +1528,13 @@ void TableView::copyQuery()
     QString copy_sql;
 
     if(where_clause.isEmpty())
-        copy_sql = sql.remove("::text") + (order_clause.size() > 0 ? " ORDER BY " + order_clause.join(","):"");
+        copy_sql = sql.remove("::text")
+                 + (group_clause.size() > 0 ? QString(" GROUP BY " + group_clause.join(",")) : "")
+                 + (order_clause.size() > 0 ? QString(" ORDER BY " + order_clause.join(",")) : "");
     else
-        copy_sql = sql.remove("::text") + " WHERE " + where_clause.join(" AND ") + (order_clause.size() > 0 ? " ORDER BY " + order_clause.join(","):"");
+        copy_sql = sql.remove("::text") + " WHERE " + where_clause.join(" AND ")
+                 + (group_clause.size() > 0 ? QString(" GROUP BY " + group_clause.join(",")) : "")
+                 + (order_clause.size() > 0 ? QString(" ORDER BY " + order_clause.join(",")) : "");
 
     qApp->clipboard()->setText(copy_sql);
 }
@@ -1487,7 +1701,7 @@ void TableView::deleteRow(int row)
         //Indicate that we are going to be deleting data and busy.
         emit busySignal();
 
-        QSqlDatabase database_connection = QSqlDatabase::addDatabase("QPSQL", "delete " + objectName() + thisTableViewId);
+        QSqlDatabase database_connection = QSqlDatabase::addDatabase("QPSQL", QString("delete ") + objectName() + QString::number(thisTableViewId));
         database_connection.setHostName(database->getHost());
         database_connection.setPort(database->getPort().toInt());
         database_connection.setDatabaseName(database->getName());
@@ -1508,7 +1722,7 @@ void TableView::deleteRow(int row)
             //qDebug() << query.lastError().databaseText();
         }
     }
-    QSqlDatabase::removeDatabase("delete " + objectName() + thisTableViewId);
+    QSqlDatabase::removeDatabase("delete " + objectName() + QString::number(thisTableViewId));
 }
 
 void TableView::fullscreen()
@@ -1546,6 +1760,7 @@ void TableView::enableActions()
     if(!thread_busy) {
         filter_action->setEnabled(true);
         exclude_action->setEnabled(true);
+        group_action->setEnabled(true);
         ascend_action->setEnabled(true);
         descend_action->setEnabled(true);
     }
@@ -1562,14 +1777,6 @@ void TableView::disableActions()
     ascend_action->setEnabled(false);
     descend_action->setEnabled(false);
     delete_rows_action->setEnabled(false);
-}
-
-void TableView::createIcons()
-{
-    key_icon = QIcon(":/icons/key.png");
-    filter_icon = QIcon(":/icons/filter.png");
-    ascend_icon = QIcon(":/icons/ascending.png");
-    descend_icon = QIcon(":/icons/descending.png");
 }
 
 void TableView::createBrushes()
@@ -1620,10 +1827,15 @@ void TableView::createActions()
     filter_action->setEnabled(false);
     connect(filter_action, SIGNAL(triggered()), SLOT(filter()));
 
-    exclude_action = new QAction(QIcon(":/icons/exclude.png"), tr("Exclude"), this);
+    exclude_action = new QAction(exclude_icon, tr("Exclude"), this);
     exclude_action->setStatusTip(tr("Filter table exclusive of selected cell value on column"));
     exclude_action->setEnabled(false);
     connect(exclude_action, SIGNAL(triggered()), SLOT(exclude()));
+
+    group_action = new QAction(group_icon, tr("Group"), this);
+    group_action->setStatusTip(tr("Group"));
+    group_action->setEnabled(false);
+    connect(group_action, SIGNAL(triggered()), SLOT(group()));
 
     ascend_action = new QAction(ascend_icon, tr("Ascending order"), this);
     ascend_action->setStatusTip(tr("Ascending order"));
@@ -1638,6 +1850,10 @@ void TableView::createActions()
     remove_all_filters_action = new QAction(tr("All filters"), this);
     remove_all_filters_action->setStatusTip(tr("Remove all filters"));
     connect(remove_all_filters_action, SIGNAL(triggered()), SLOT(removeAllFilters()));
+
+    remove_all_grouping_action = new QAction(tr("All grouping"), this);
+    remove_all_grouping_action->setStatusTip(tr("Remove all grouping"));
+    connect(remove_all_grouping_action, SIGNAL(triggered()), SLOT(removeAllGrouping()));
 
     remove_all_ordering_action = new QAction(tr("All ordering"), this);
     remove_all_ordering_action->setStatusTip(tr("Remove all ordering"));

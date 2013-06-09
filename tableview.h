@@ -19,14 +19,14 @@
 #ifndef TABLEVIEW_H
 #define TABLEVIEW_H
 
-#include <QTableView>
+#include <QtWidgets/QtWidgets>
+#include <QtConcurrent/QtConcurrent>
 #include <QSqlTableModel>
 #include <QSqlQuery>
 #include <QSqlRecord>
 #include <QSqlIndex>
 #include <QSqlError>
 #include <QtGui>
-#include <QtConcurrent/QtConcurrent>
 #include "database.h"
 #include "tablemodel.h"
 
@@ -55,12 +55,14 @@ private:
     QStringList column_list;
     QStringList column_types;
     QStringList column_lengths;
+    QStringList column_functions;
     QMenuBar *menubar;
     QDockWidget *dock_widget;
     QString status_message;
     QMenu context_menu;
     QMenu deselect_menu;
     QMenu disarrange_menu;
+    QMenu ungroup_menu;
     QTime t;
     ToolBar *toolbar;
     TableModel *table_model;
@@ -80,10 +82,12 @@ private:
     qint32 column_count;
     bool thread_busy;
     ulong thisTableViewId;
-    QIcon key_icon;
-    QIcon filter_icon;
-    QIcon ascend_icon;
-    QIcon descend_icon;
+    const QIcon key_icon = QIcon(":/icons/key.png");
+    const QIcon filter_icon = QIcon(":/icons/filter.png");
+    const QIcon exclude_icon = QIcon(":/icons/exclude.png");
+    const QIcon group_icon = QIcon(":/icons/group.png");
+    const QIcon ascend_icon = QIcon(":/icons/ascending.png");
+    const QIcon descend_icon = QIcon(":/icons/descending.png");
     QAction *default_action;
     QAction *refresh_action;
     QAction *copy_action;
@@ -96,6 +100,7 @@ private:
     QAction *descend_action;
     QAction *remove_all_filters_action;
     QAction *remove_all_ordering_action;
+    QAction *remove_all_grouping_action;
     QAction *truncate_action;
     QAction *delete_rows_action;
     QAction *previous_set_action;
@@ -123,7 +128,7 @@ public:
     void keyReleaseEvent(QKeyEvent*);
     //void contextMenuEvent(QContextMenuEvent*);
     void closeEvent(QCloseEvent*);
-    void createIcons();
+
     void createBrushes();
     void createActions();
     void fetchConditionDataInitial();
@@ -146,6 +151,7 @@ public slots:
     void bringOnTop();
 
 private slots:
+    void buildTableQuery();
     void fetchDefaultData();
     void fetchRefreshData(QString);
     void fetchDataSlot();
@@ -160,9 +166,11 @@ private slots:
     void filter();
     void filter(QString);
     void exclude();
+    void group();
     void ascend();
     void descend();
     void removeAllFilters();
+    void removeAllGrouping();
     void removeAllOrdering();
     void removeColumns();
     void customFilterReturnPressed();

@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <davyjones@github>
+  Copyright (c) 2011-2012, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -22,6 +22,7 @@ TableModel::TableModel(Database *database, QStringList primary_key, QString tabl
 {
     this->database = database;
     this->primary_key = primary_key;
+    this->primary_key_with_oid = primary_key_with_oid;
     this->table_name = table_name;
     this->rows_from = 1;
 }
@@ -46,6 +47,9 @@ bool TableModel::setData(const QModelIndex &index, const QVariant &value, int /*
     //Make sure tables without primary key don't propagate changes.
     if(primary_key.isEmpty())
         return false;
+
+    //if(!primary_key.isEmpty() && primary_key_with_oid && index.column()==0)
+    //    return false;
 
     //Make sure that only changed values are UPDATEd.
     if(value.toString().compare(data(index).toString()) == 0)
