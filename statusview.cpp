@@ -114,8 +114,13 @@ void StatusView::getStatus()
                          "Check connection parameters.\n");
             return;
         }
-        QString sql("SELECT procpid AS \"PID\", usename AS \"User\", client_addr AS \"Client\", query_start AS \"Started\", current_query AS \"Query\" FROM pg_stat_activity where current_query not like '%pg_stat_activity%' and datname='");
-        sql = ("SELECT pid AS \"PID\", usename AS \"User\", client_addr AS \"Client\", query_start AS \"Started\", query AS \"Query\" FROM pg_stat_activity where query not like '%pg_stat_activity%' and state<>'idle' and datname='");
+        QString sql;
+        if(database->settings("server_version_num").compare("90200") <0) {
+          sql = ("SELECT procpid AS \"PID\", usename AS \"User\", client_addr AS \"Client\", query_start AS \"Started\", current_query AS \"Query\" FROM pg_stat_activity where current_query not like '%pg_stat_activity%' and datname='");
+        }
+        else {
+          sql = ("SELECT pid AS \"PID\", usename AS \"User\", client_addr AS \"Client\", query_start AS \"Started\", query AS \"Query\" FROM pg_stat_activity where query not like '%pg_stat_activity%' and state<>'idle' and datname='");
+        }
         sql.append(database->getName() + "'");
         status_query_model->setQuery(sql, database_connection);
     }
