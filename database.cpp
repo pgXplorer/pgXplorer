@@ -240,6 +240,21 @@ bool Database::populateDatabase()
             keywords_list.append(query->value(0).toString());
             keywords_list.append(query->value(1).toString());
         }
+        
+        query->exec("show all");
+        if(query->lastError().isValid()) {
+            QMessageBox *error_message = new QMessageBox(QMessageBox::Critical,
+                                        tr("Database error"),
+                                        tr("Unable to retrieve database settings.\n"
+                                           "Check your database connection or permissions.\n"),
+                                        QMessageBox::Cancel,0,Qt::Dialog);
+            error_message->setWindowModality(Qt::NonModal);
+            error_message->show();
+            return false;
+        }
+        while (query->next()) {
+          settings_list.insert(query->value(0).toString(), query->value(1).toString());
+        }
     }
 
     setSchemaList(schema_list);
