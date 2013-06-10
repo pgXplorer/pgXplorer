@@ -62,6 +62,7 @@ private:
     QStringList view_names_list;
     QStringList function_names_list;
     QStringList keywords_list;
+    QStringList settings_list;
 
 protected:
     QVariant itemChange(GraphicsItemChange change, const QVariant &value);
@@ -236,6 +237,11 @@ public:
         return keywords_list;
     }
 
+    QString setting(QString key)
+    {
+        return settings_list.value(key);
+    }
+    
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent*);
     void contextMenuEvent(QGraphicsSceneContextMenuEvent*);
 
