@@ -952,8 +952,10 @@ void MainWin::clearSchemas()
 
 void MainWin::clearStatus()
 {
-    if(status_view_flag)
+    if(status_view_flag) {
+        status_view_flag = false;
         delete status_view;
+    }
 }
 
 void MainWin::clearTableViewList()
