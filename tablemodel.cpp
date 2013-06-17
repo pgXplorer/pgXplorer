@@ -22,7 +22,7 @@ TableModel::TableModel(Database *database, QStringList primary_key, QString tabl
 {
     this->database = database;
     this->primary_key = primary_key;
-    this->primary_key_with_oid = primary_key_with_oid;
+    //this->primary_key_with_oid = primary_key_with_oid;
     this->table_name = table_name;
     this->rows_from = 1;
 }
