@@ -35,7 +35,8 @@ HEADERS		= \
     graphwindow.h \
     pgxplorerapplication.h \
     reportwindow.h \
-    statusview.h
+    statusview.h \
+    comboheader.h
 SOURCES		= main.cpp \
     database.cpp \
     table.cpp \
@@ -63,7 +64,8 @@ SOURCES		= main.cpp \
     graphwindow.cpp \
     pgxplorerapplication.cpp \
     reportwindow.cpp \
-    statusview.cpp
+    statusview.cpp \
+    comboheader.cpp
 
 QT += core gui widgets sql network
 

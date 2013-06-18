@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <dj@pgxplorer.com>
+  Copyright (c) 2010-2013, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -77,7 +77,7 @@ TableView::TableView(Database *database, QString const table_name, QString const
     this->column_types = column_types;
     this->column_lengths = column_lengths;
     foreach(const QString &str, column_list)
-        this->column_functions << QString("");
+        this->current_column_functions << QString("");
 
     filter_text = new QLineEdit;
     filter_text->setPlaceholderText(tr("custom filter"));
@@ -91,6 +91,7 @@ TableView::TableView(Database *database, QString const table_name, QString const
     createActions();
     setWindowTitle(name);
     setObjectName(name);
+    buildTableQuery();
 
     toolbar = new ToolBar;
     toolbar->setIconSize(QSize(36,36));
@@ -233,45 +234,48 @@ void TableView::buildTableQuery()
         for(int column = 0; column < column_count; column++) {
             if(column == column_count-1) {
                 if(column_types.value(column).startsWith("time")) {
-                    sql.append(column_functions.value(column)).append("(")
+                    sql.append(current_column_functions.value(column)).append("(")
                         .append(column_list.value(column) + ")::text ");
                 }
                 else if(column_types.value(column).compare("double precision") == 0) {
-                    sql.append(column_functions.value(column)).append("(")
+                    sql.append(current_column_functions.value(column)).append("(")
                        .append(column_list.value(column) + ")::text ");
                 }
                 else {
-                    sql.append(column_functions.value(column)).append("(")
+                    sql.append(current_column_functions.value(column)).append("(")
                        .append(column_list.value(column)).append(") ");
                 }
 
-                if(!column_functions.value(column).isEmpty()) {
-                    sql.append("\"" + column_functions.value(column) + "("
+                if(!current_column_functions.value(column).isEmpty()) {
+                    sql.append("\"" + current_column_functions.value(column) + "("
                        + column_list.value(column).remove("\"") + ")\"");
                 }
             }
             else {
                 if(column_types.value(column).startsWith("time")) {
-                    sql.append(column_functions.value(column)).append("(")
+                    sql.append(current_column_functions.value(column)).append("(")
                        .append(column_list.value(column) + ")::text");
                 }
                 else if(column_types.value(column).compare("double precision") == 0) {
-                    sql.append(column_functions.value(column)).append("(")
+                    sql.append(current_column_functions.value(column)).append("(")
                        .append(column_list.value(column) + ")::text");
                 }
                 else {
-                    sql.append(column_functions.value(column)).append("(")
+                    sql.append(current_column_functions.value(column)).append("(")
                        .append(column_list.value(column) + ")");
                 }
 
-                if(!column_functions.value(column).isEmpty()) {
-                    sql.append(" \"" + column_functions.value(column) + "("
+                if(!current_column_functions.value(column).isEmpty()) {
+                    sql.append(" \"" + current_column_functions.value(column) + "("
                        + column_list.value(column).remove("\"") + ")\", ");
                 }
                 else {
                     sql.append(", ");
                 }
             }
+            QStringList funcs;
+            funcs << "";// << "max" << "sum" << "avg";
+            column_functions.append(funcs);
         }
     }
     sql.append(QLatin1String(" FROM "));
@@ -345,8 +349,9 @@ void TableView::fetchDefaultData()
         //Indicate that we are going to be retrieving data and busy.
         emit busySignal();
 
-        for(int i=0; i<column_functions.length(); i++)
-            column_functions.replace(i, "");
+        for(int i=0; i<current_column_functions.length(); i++) {
+            current_column_functions.replace(i, "");
+        }
 
         buildTableQuery();
 
@@ -457,6 +462,17 @@ void TableView::updRowCntSlot(QString dataset)
     else {
         table_model->setRowsFrom(rows_from);
         table_view->setModel(table_model);
+        if(table_view->horizontalHeader() != combo_header) {
+            combo_header = new ComboHeader(this, column_list, current_column_functions, column_functions);
+
+            connect(table_view->horizontalScrollBar(), SIGNAL(valueChanged(int)), combo_header, SLOT(fixComboPositions()));
+            connect(this, SIGNAL(functionsUpdated(QList<QStringList>)), combo_header, SLOT(refreshCombos(QList<QStringList>)));
+
+            table_view->horizontalHeader()->setVisible(false);
+            table_view->setHorizontalHeader(combo_header);
+            table_view->horizontalHeader()->setVisible(true);
+        }
+
         int column_count = table_model->columnCount();
         for(int column = 0; column < column_count; column++) {
             table_view->showColumn(column);
@@ -1172,29 +1188,48 @@ void TableView::group()
         offset_list.clear();
         offset_list.append(" OFFSET 0");
 
+        column_functions.clear();
         for(int i=0; i < column_types.length(); i++) {
             if(group_clause.indexOf(column_list.at(i)) != -1) {
-                column_functions.replace(i, "");
+                current_column_functions.replace(i, "");
+                QStringList fs;
+                fs << column_list.at(i);
+                column_functions.append(fs);
                 continue;
             }
 
             if(column_types.at(i).startsWith("bool")) {
-                column_functions.replace(i, "every");
+                current_column_functions.replace(i, "count");
+                QStringList fs;
+                fs << "count" << "every";
+                column_functions.append(fs);
             }
             else if(column_types.at(i).startsWith("char") ||
                     column_types.at(i).startsWith("text") ||
                     column_types.at(i).contains("time")) {
-                column_functions.replace(i, "min");
+                current_column_functions.replace(i, "count");
+                QStringList fs;
+                fs << "count" << "min" << "max";
+                column_functions.append(fs);
             }
             else if(column_types.at(i).contains("int") ||
                     column_types.at(i).startsWith("real") ||
                     column_types.at(i).startsWith("numeric")) {
-                column_functions.replace(i, "sum");
+                current_column_functions.replace(i, "sum");
+                QStringList fs;
+                fs << "sum" << "count" << "min" << "max" << "avg";
+                column_functions.append(fs);
             }
         }
 
         QtConcurrent::run(this, &TableView::fetchConditionDataInitial);
     }
+    emit functionsUpdated(column_functions);
+}
+
+void TableView::window()
+{
+
 }
 
 void TableView::languageChanged(QEvent *event)
@@ -1403,28 +1438,28 @@ void TableView::customContextMenuViewport()
             offset_list.append(" OFFSET 0");
 
             if(group_clause.size() == 0) {
-                for(int i=0; i < column_functions.length(); i++)
-                        column_functions.replace(i, "");
+                for(int i=0; i < current_column_functions.length(); i++)
+                        current_column_functions.replace(i, "");
             }
             else {
                 for(int i=0; i < column_types.length(); i++) {
                     if(group_clause.indexOf(column_list.at(i)) != -1) {
-                        column_functions.replace(i, "");
+                        current_column_functions.replace(i, "");
                         continue;
                     }
 
                     if(column_types.at(i).startsWith("bool")) {
-                        column_functions.replace(i, "every");
+                        current_column_functions.replace(i, "every");
                     }
                     else if(column_types.at(i).startsWith("char") ||
                             column_types.at(i).startsWith("text") ||
                             column_types.at(i).contains("time")) {
-                        column_functions.replace(i, "min");
+                        current_column_functions.replace(i, "min");
                     }
                     else if(column_types.at(i).contains("int") ||
                             column_types.at(i).startsWith("real") ||
                             column_types.at(i).startsWith("numeric")) {
-                        column_functions.replace(i, "sum");
+                        current_column_functions.replace(i, "sum");
                     }
                 }
             }
@@ -1500,8 +1535,8 @@ void TableView::removeAllFilters()
 
 void TableView::removeAllGrouping()
 {
-    for(int i=0; i < column_functions.length(); i++)
-            column_functions.replace(i, "");
+    for(int i=0; i < current_column_functions.length(); i++)
+            current_column_functions.replace(i, "");
 
     statusBar()->showMessage(tr("Fetching data..."));
 
@@ -1836,6 +1871,11 @@ void TableView::createActions()
     group_action->setStatusTip(tr("Group"));
     group_action->setEnabled(false);
     connect(group_action, SIGNAL(triggered()), SLOT(group()));
+
+    window_action = new QAction(group_icon, tr("Window"), this);
+    window_action->setStatusTip(tr("Window function"));
+    window_action->setEnabled(false);
+    connect(window_action, SIGNAL(triggered()), SLOT(window()));
 
     ascend_action = new QAction(ascend_icon, tr("Ascending order"), this);
     ascend_action->setStatusTip(tr("Ascending order"));

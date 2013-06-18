@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <dj@pgxplorer.com>
+  Copyright (c) 2010-2013, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -29,10 +29,12 @@
 #include <QtGui>
 #include "database.h"
 #include "tablemodel.h"
+#include "comboheader.h"
 
 #define FETCHSIZ 10000
 
 class TableView;
+class ComboHeader;
 class NewRowTableView;
 
 class TableView : public QMainWindow
@@ -55,7 +57,8 @@ private:
     QStringList column_list;
     QStringList column_types;
     QStringList column_lengths;
-    QStringList column_functions;
+    QStringList current_column_functions;
+    QList<QStringList> column_functions;
     QMenuBar *menubar;
     QDockWidget *dock_widget;
     QString status_message;
@@ -73,6 +76,7 @@ private:
     QStringList where_clause;
     QStringList order_clause;
     QStringList group_clause;
+    QStringList window_clause;
     QString limit;
     QStringList offset_list;
     bool quick_fetch;
@@ -86,6 +90,7 @@ private:
     const QIcon filter_icon = QIcon(":/icons/filter.png");
     const QIcon exclude_icon = QIcon(":/icons/exclude.png");
     const QIcon group_icon = QIcon(":/icons/group.png");
+    const QIcon window_icon = QIcon(":/icons/window.png");
     const QIcon ascend_icon = QIcon(":/icons/ascending.png");
     const QIcon descend_icon = QIcon(":/icons/descending.png");
     QAction *default_action;
@@ -96,6 +101,7 @@ private:
     QAction *filter_action;
     QAction *exclude_action;
     QAction *group_action;
+    QAction *window_action;
     QAction *ascend_action;
     QAction *descend_action;
     QAction *remove_all_filters_action;
@@ -116,6 +122,7 @@ private:
     QToolButton *next_set_button;
     bool error_status;
     QMessageBox *error_message_box;
+    ComboHeader *combo_header;
 
 public:
     static ulong tableViewObjectId;
@@ -149,6 +156,10 @@ public slots:
     void customContextMenuHeader();
     void displayErrorMessage(QString);
     void bringOnTop();
+    void selectColumn(int col)
+    {
+        table_view->selectColumn(col);
+    }
 
 private slots:
     void buildTableQuery();
@@ -167,6 +178,7 @@ private slots:
     void filter(QString);
     void exclude();
     void group();
+    void window();
     void ascend();
     void descend();
     void removeAllFilters();
@@ -196,6 +208,7 @@ signals:
     void notBusySignal();
     void updRowCntSignal(QString);
     void queryFailed(QString);
+    void functionsUpdated(QList<QStringList>);
     void tableViewClosing(TableView*);
 };
 
