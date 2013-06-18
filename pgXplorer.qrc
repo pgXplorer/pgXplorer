@@ -71,5 +71,7 @@
         <file>icons/print.png</file>
         <file>icons/html.png</file>
         <file>icons/odt.png</file>
+        <file>icons/group.png</file>
+        <file>icons/window.png</file>
     </qresource>
 </RCC>
