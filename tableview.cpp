@@ -77,7 +77,7 @@ TableView::TableView(Database *database, QString const table_name, QString const
     this->column_types = column_types;
     this->column_lengths = column_lengths;
     foreach(const QString &str, column_list)
-        this->current_column_functions << QString("");
+        this->current_column_aggregates << QString("");
 
     filter_text = new QLineEdit;
     filter_text->setPlaceholderText(tr("custom filter"));
@@ -234,39 +234,39 @@ void TableView::buildTableQuery()
         for(int column = 0; column < column_count; column++) {
             if(column == column_count-1) {
                 if(column_types.value(column).startsWith("time")) {
-                    sql.append(current_column_functions.value(column)).append("(")
+                    sql.append(current_column_aggregates.value(column)).append("(")
                         .append(column_list.value(column) + ")::text ");
                 }
                 else if(column_types.value(column).compare("double precision") == 0) {
-                    sql.append(current_column_functions.value(column)).append("(")
+                    sql.append(current_column_aggregates.value(column)).append("(")
                        .append(column_list.value(column) + ")::text ");
                 }
                 else {
-                    sql.append(current_column_functions.value(column)).append("(")
+                    sql.append(current_column_aggregates.value(column)).append("(")
                        .append(column_list.value(column)).append(") ");
                 }
 
-                if(!current_column_functions.value(column).isEmpty()) {
-                    sql.append("\"" + current_column_functions.value(column) + "("
+                if(!current_column_aggregates.value(column).isEmpty()) {
+                    sql.append("\"" + current_column_aggregates.value(column) + "("
                        + column_list.value(column).remove("\"") + ")\"");
                 }
             }
             else {
                 if(column_types.value(column).startsWith("time")) {
-                    sql.append(current_column_functions.value(column)).append("(")
+                    sql.append(current_column_aggregates.value(column)).append("(")
                        .append(column_list.value(column) + ")::text");
                 }
                 else if(column_types.value(column).compare("double precision") == 0) {
-                    sql.append(current_column_functions.value(column)).append("(")
+                    sql.append(current_column_aggregates.value(column)).append("(")
                        .append(column_list.value(column) + ")::text");
                 }
                 else {
-                    sql.append(current_column_functions.value(column)).append("(")
+                    sql.append(current_column_aggregates.value(column)).append("(")
                        .append(column_list.value(column) + ")");
                 }
 
-                if(!current_column_functions.value(column).isEmpty()) {
-                    sql.append(" \"" + current_column_functions.value(column) + "("
+                if(!current_column_aggregates.value(column).isEmpty()) {
+                    sql.append(" \"" + current_column_aggregates.value(column) + "("
                        + column_list.value(column).remove("\"") + ")\", ");
                 }
                 else {
@@ -275,7 +275,7 @@ void TableView::buildTableQuery()
             }
             QStringList funcs;
             funcs << "";// << "max" << "sum" << "avg";
-            column_functions.append(funcs);
+            column_aggregates.append(funcs);
         }
     }
     sql.append(QLatin1String(" FROM "));
@@ -348,10 +348,6 @@ void TableView::fetchDefaultData()
 
         //Indicate that we are going to be retrieving data and busy.
         emit busySignal();
-
-        for(int i=0; i<current_column_functions.length(); i++) {
-            current_column_functions.replace(i, "");
-        }
 
         buildTableQuery();
 
@@ -462,11 +458,12 @@ void TableView::updRowCntSlot(QString dataset)
     else {
         table_model->setRowsFrom(rows_from);
         table_view->setModel(table_model);
+
         if(table_view->horizontalHeader() != combo_header) {
-            combo_header = new ComboHeader(this, column_list, current_column_functions, column_functions);
+            combo_header = new ComboHeader(this);
 
             connect(table_view->horizontalScrollBar(), SIGNAL(valueChanged(int)), combo_header, SLOT(fixComboPositions()));
-            connect(this, SIGNAL(functionsUpdated(QList<QStringList>)), combo_header, SLOT(refreshCombos(QList<QStringList>)));
+            connect(this, SIGNAL(functionsUpdated()), combo_header, SLOT(refreshCombos()));
 
             table_view->horizontalHeader()->setVisible(false);
             table_view->setHorizontalHeader(combo_header);
@@ -1036,7 +1033,17 @@ void TableView::defaultView()
     order_clause.clear();
     error_status = false;
 
+    current_column_aggregates.clear();
+    column_aggregates.clear();
+    for(int i=0; i<column_list.length(); i++) {
+        current_column_aggregates << QString("");
+        column_aggregates.append(QStringList() << "");
+    }
+
     QtConcurrent::run(this, &TableView::fetchDefaultData);
+
+    emit functionsUpdated();
+
     disableActions();
 }
 
@@ -1180,51 +1187,72 @@ void TableView::group()
     QModelIndex index = indices.first();
     statusBar()->showMessage(tr("Fetching data..."));
 
-    QVariant header = table_view->model()->headerData(index.column(), Qt::Horizontal);
-    QString header_string = header.toString();
-    header_string = column_list.at(index.column());
+    QString header_string = column_list.at(index.column());
+
     if(!group_clause.contains(header_string)) {
         group_clause.append(header_string);
         offset_list.clear();
         offset_list.append(" OFFSET 0");
 
-        column_functions.clear();
+        column_aggregates.clear();
         for(int i=0; i < column_types.length(); i++) {
             if(group_clause.indexOf(column_list.at(i)) != -1) {
-                current_column_functions.replace(i, "");
-                QStringList fs;
-                fs << column_list.at(i);
-                column_functions.append(fs);
+                current_column_aggregates.replace(i, "");
+                column_aggregates.append(QStringList() << "");
                 continue;
             }
 
             if(column_types.at(i).startsWith("bool")) {
-                current_column_functions.replace(i, "count");
+                current_column_aggregates.replace(i, "count");
                 QStringList fs;
                 fs << "count" << "every";
-                column_functions.append(fs);
+                column_aggregates.append(fs);
             }
             else if(column_types.at(i).startsWith("char") ||
                     column_types.at(i).startsWith("text") ||
                     column_types.at(i).contains("time")) {
-                current_column_functions.replace(i, "count");
+                current_column_aggregates.replace(i, "count");
                 QStringList fs;
                 fs << "count" << "min" << "max";
-                column_functions.append(fs);
+                column_aggregates.append(fs);
             }
             else if(column_types.at(i).contains("int") ||
                     column_types.at(i).startsWith("real") ||
                     column_types.at(i).startsWith("numeric")) {
-                current_column_functions.replace(i, "sum");
+                current_column_aggregates.replace(i, "sum");
                 QStringList fs;
                 fs << "sum" << "count" << "min" << "max" << "avg";
-                column_functions.append(fs);
+                column_aggregates.append(fs);
             }
         }
 
+        //Remove all order clause terms that
+        //don't match our grouping clause terms
+        QStringList pruned_order_clause;
+        for(int i=0; i<order_clause.length(); i++) {
+            for(int j=0; j<group_clause.length(); j++) {
+                if(order_clause.at(i).startsWith(group_clause.at(j))) {
+                    pruned_order_clause.append(order_clause.at(i));
+                    break;
+                }
+            }
+        }
+        order_clause = pruned_order_clause;
+
         QtConcurrent::run(this, &TableView::fetchConditionDataInitial);
     }
-    emit functionsUpdated(column_functions);
+    emit functionsUpdated();
+}
+
+void TableView::regroup(QStringList funcs)
+{
+    offset_list.clear();
+    offset_list.append(" OFFSET 0");
+
+    column_aggregates.clear();
+    current_column_aggregates = funcs;
+
+    QtConcurrent::run(this, &TableView::fetchConditionDataInitial);
 }
 
 void TableView::window()
@@ -1426,10 +1454,12 @@ void TableView::customContextMenuViewport()
     }
 
     else if(a->icon().cacheKey() == group_icon.cacheKey()) {
-        if((status = group_clause.indexOf(a->text())) != -1) {
+        QString item_for_removal = a->text();
+        if((status = group_clause.indexOf(item_for_removal)) != -1) {
             statusBar()->showMessage(tr("Fetching data..."));
 
             group_clause.removeAt(status);
+
             if(table_model->rowCount() == 0)
                 can_fetch_more = false;
             else
@@ -1437,34 +1467,63 @@ void TableView::customContextMenuViewport()
             offset_list.clear();
             offset_list.append(" OFFSET 0");
 
+            column_aggregates.clear();
             if(group_clause.size() == 0) {
-                for(int i=0; i < current_column_functions.length(); i++)
-                        current_column_functions.replace(i, "");
+                for(int i=0; i < current_column_aggregates.length(); i++) {
+                   current_column_aggregates.replace(i, "");
+                   column_aggregates.append(QStringList() << "");
+                }
             }
             else {
+                //Remove all order clause terms that
+                //don't match our grouping clause terms
+                QStringList pruned_order_clause;
+                for(int i=0; i<order_clause.length(); i++) {
+                    for(int j=0; j<group_clause.length(); j++) {
+                        if(order_clause.at(i).startsWith(group_clause.at(j))) {
+                            pruned_order_clause.append(order_clause.at(i));
+                            break;
+                        }
+                    }
+                }
+                order_clause = pruned_order_clause;
+
                 for(int i=0; i < column_types.length(); i++) {
                     if(group_clause.indexOf(column_list.at(i)) != -1) {
-                        current_column_functions.replace(i, "");
+                        current_column_aggregates.replace(i, "");
+                        QStringList fs;
+                        fs << "";
+                        column_aggregates.append(fs);
                         continue;
                     }
 
                     if(column_types.at(i).startsWith("bool")) {
-                        current_column_functions.replace(i, "every");
+                        current_column_aggregates.replace(i, "count");
+                        QStringList fs;
+                        fs << "count" << "every";
+                        column_aggregates.append(fs);
                     }
                     else if(column_types.at(i).startsWith("char") ||
                             column_types.at(i).startsWith("text") ||
                             column_types.at(i).contains("time")) {
-                        current_column_functions.replace(i, "min");
+                        current_column_aggregates.replace(i, "count");
+                        QStringList fs;
+                        fs << "count" << "min" << "max";
+                        column_aggregates.append(fs);
                     }
                     else if(column_types.at(i).contains("int") ||
                             column_types.at(i).startsWith("real") ||
                             column_types.at(i).startsWith("numeric")) {
-                        current_column_functions.replace(i, "sum");
+                        current_column_aggregates.replace(i, "sum");
+                        QStringList fs;
+                        fs << "sum" << "count" << "min" << "max" << "avg";
+                        column_aggregates.append(fs);
                     }
                 }
             }
 
             QtConcurrent::run(this, &TableView::fetchConditionDataInitial);
+            emit functionsUpdated();
             return;
         }
     }
@@ -1535,8 +1594,11 @@ void TableView::removeAllFilters()
 
 void TableView::removeAllGrouping()
 {
-    for(int i=0; i < current_column_functions.length(); i++)
-            current_column_functions.replace(i, "");
+    column_aggregates.clear();
+    for(int i=0; i < current_column_aggregates.length(); i++) {
+        current_column_aggregates.replace(i, "");
+        column_aggregates.append(QStringList() << "");
+    }
 
     statusBar()->showMessage(tr("Fetching data..."));
 
@@ -1545,6 +1607,7 @@ void TableView::removeAllGrouping()
     offset_list.append(" OFFSET 0");
 
     QtConcurrent::run(this, &TableView::fetchConditionDataInitial);
+    emit functionsUpdated();
 }
 
 void TableView::removeAllOrdering()

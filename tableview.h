@@ -57,8 +57,10 @@ private:
     QStringList column_list;
     QStringList column_types;
     QStringList column_lengths;
-    QStringList current_column_functions;
-    QList<QStringList> column_functions;
+    QStringList current_column_aggregates;
+    QStringList current_column_windows;
+    QList<QStringList> column_aggregates;
+    QList<QStringList> column_windows;
     QMenuBar *menubar;
     QDockWidget *dock_widget;
     QString status_message;
@@ -150,12 +152,33 @@ public:
         return toolbar;
     }
 
+    QStringList columnNames()
+    {
+        return column_list;
+    }
+
+    QStringList primaryKeys()
+    {
+        return primary_key;
+    }
+
+    QStringList curColumnAggs()
+    {
+        return current_column_aggregates;
+    }
+
+    QList<QStringList> columnAggsList()
+    {
+        return column_aggregates;
+    }
+
 public slots:
     void languageChanged(QEvent*);
     void customContextMenuViewport();
     void customContextMenuHeader();
     void displayErrorMessage(QString);
     void bringOnTop();
+    void regroup(QStringList);
     void selectColumn(int col)
     {
         table_view->selectColumn(col);
@@ -208,7 +231,7 @@ signals:
     void notBusySignal();
     void updRowCntSignal(QString);
     void queryFailed(QString);
-    void functionsUpdated(QList<QStringList>);
+    void functionsUpdated();
     void tableViewClosing(TableView*);
 };
 
