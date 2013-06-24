@@ -1244,13 +1244,24 @@ void TableView::group()
     emit functionsUpdated();
 }
 
-void TableView::regroup(QStringList funcs)
+void TableView::regroup(QStringList aggs)
 {
     offset_list.clear();
     offset_list.append(" OFFSET 0");
 
     column_aggregates.clear();
-    current_column_aggregates = funcs;
+    current_column_aggregates = aggs;
+    
+    for(int i=0; i<current_column_aggregates.length(); i++) {
+    	if(!current_column_aggregates.at(i).isEmpty()) {
+        	for(int j=0; j<order_clause.length(); j++) {
+        		QString rem(column_list.at(i));
+        		if(order_clause.at(j).contains(rem.remove("\""))) {
+        			order_clause.replace(j, current_column_aggregates.at(i) + "(" + rem + ")");
+        		}
+        	}
+    	}
+    }
 
     QtConcurrent::run(this, &TableView::fetchConditionDataInitial);
 }
