@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <davyjones@github>
+  Copyright (c) 2010-2013, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -44,16 +44,26 @@ public:
     QVariant headerData(int section, Qt::Orientation orientation, int role) const;
     bool update();
     void setRowsFrom(int);
+    int getPivotCol();
+    int getPivotCat();
+    int getPivotVal();
+    void setPivotCol(int);
+    void setPivotCat(int);
+    void setPivotVal(int);
 
 private:
     Database *database;
     QString table_name;
     int rows_from;
     QStringList primary_key;
+    bool primary_key_with_oid;
     QStringList primary_key_values;
     QString edit_column;
     QModelIndex edit_index;
     QVariant edit_value;
+    int pivot_col;
+    int pivot_cat;
+    int pivot_val;
     QMap<QModelIndex, QVariant> cache_values;
 
 signals:

@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <dj@pgxplorer.com>
+  Copyright (c) 2010-2013, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -19,7 +19,7 @@
 #ifndef PGXPLORER
 #define PGXPLORER
 
-#include <QtWidgets>
+#include <QtWidgets/QtWidgets>
 #include <QtGui>
 
 /*!
@@ -253,6 +253,7 @@ public slots:
     void createSchema(QString, QString);
     void createTable(QString, QString, GraphicsTextItem*);
     void renameTable(QString, QString, GraphicsTextItem*);
+    void showQueryView(Database *, QString);
     void showAllTables();
     void showAllViews();
     void showAllFunctions();
@@ -317,7 +318,6 @@ private slots:
     void showViewView(Database *, Schema *, View *);
     void dropView(Database *, Schema *, View *);
     void dropFunction(Database *, Schema *, Function *);
-    void showQueryView(Database *, QString);
     void fitView();
     void zoomIn();
     void zoomOut();

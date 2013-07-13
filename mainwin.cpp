@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <dj@pgxplorer.com>
+  Copyright (c) 2010-2013, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -17,10 +17,7 @@
 */
 
 #include <QDateTime>
-#include <QMainWindow>
-#include <QStatusBar>
-#include <QMenuBar>
-#include <QApplication>
+#include <QtWidgets>
 #include <QPainter>
 #include <QtNetwork/QNetworkAccessManager>
 #include <QtNetwork/QNetworkRequest>
@@ -43,6 +40,7 @@
 #include "pgxeditor.h"
 #include "licensedialog.h"
 #include "help.h"
+#include "comboheader.h"
 
 bool MainWin::session_unsaved = false;
 
@@ -106,6 +104,14 @@ void GraphicsView::mouseMoveEvent(QMouseEvent *event)
     QGraphicsView::mouseMoveEvent(event);
 }
 
+/*void GraphicsView::mousePressEvent(QMouseEvent *event)
+{
+    if(event->button() == Qt::RightButton && (zoom == false)) {
+        zoom = true;
+    }
+    QGraphicsView::mousePressEvent(event);
+}*/
+
 void GraphicsView::mouseReleaseEvent(QMouseEvent *event)
 {
     if(event->button() == Qt::RightButton && (zoom == true)) {
@@ -160,7 +166,7 @@ MainWin::MainWin(QWidget *parent, const QString arg1, Qt::WindowFlags f)
 
     setAcceptDrops(true);
 
-    toolbar = new ToolBar;
+    toolbar = new ToolBar();
     toolbar->setIconSize(icon_size);
     toolbar->setObjectName("mainwin");
     toolbar->setMovable(false);
@@ -386,7 +392,7 @@ void MainWin::open(QString file_name)
     database_file_stream >> magic_from_file;
     if(magic != magic_from_file) {
         QMessageBox *fileErr = new QMessageBox("pgXplorer", MainWin::tr("Not a database file."),
-                                               QMessageBox::Critical, 1, 0, 0, this, false );
+                                               QMessageBox::Critical, 1, 0, 0, this);
         fileErr->setButtonText(1, "Close");
         fileErr->show();
         return;
@@ -395,7 +401,7 @@ void MainWin::open(QString file_name)
     database_file_stream >> version;
     if(version > 010) {
         QMessageBox *fileVerErr = new QMessageBox("pgXplorer", MainWin::tr("Database file version not supported."),
-                                               QMessageBox::Critical, 1, 0, 0, this, false );
+                                               QMessageBox::Critical, 1, 0, 0, this);
         fileVerErr->setButtonText(1, "Close");
         fileVerErr->show();
         return;
@@ -1880,13 +1886,11 @@ void MainWin::showTableView(Database *database, Schema *schema, Table *table)
 {
     //table->setColumnData();
     table->copyPrimaryKey();
-    QString table_name = schema->getName();
-    table_name.append(".\"");
-    table_name.append(table->getName());
-    table_name.append("\"");
+    QString table_name = table->getFullName();
     TableView *table_view = new TableView(database, table_name, table_name, table->getColumnList(), table->getPrimaryKey(), table->getColumnTypes(), table->getColumnLengths(), false, Qt::WA_DeleteOnClose);
     table_view_list.append(table_view);
     QObject::connect(table_view, SIGNAL(tableViewClosing(TableView*)), SLOT(tableViewClosed(TableView*)));
+    QObject::connect(table_view, SIGNAL(showQueryView(Database*, QString)), SLOT(showQueryView(Database*, QString)));
     QObject::connect(table_view->getToolbar(), SIGNAL(iconSizeChanged(QSize)), SLOT(resizeToolbarIcons(QSize)));
     QObject::connect(this, SIGNAL(changeLanguage(QEvent*)), table_view, SLOT(languageChanged(QEvent*)));
 
@@ -2110,6 +2114,7 @@ void MainWin::dropFunction(Database *database, Schema *schema, Function *functio
 
 void MainWin::showQueryView(Database *database, QString command)
 {
+    qDebug() << command;
     QueryView *query_view = new QueryView(database, command);
     query_view_list.append(query_view);
     QObject::connect(query_view, SIGNAL(queryViewClosing(QueryView*)), SLOT(queryViewClosed(QueryView*)));

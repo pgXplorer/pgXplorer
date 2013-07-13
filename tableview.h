@@ -68,6 +68,7 @@ private:
     QMenu deselect_menu;
     QMenu disarrange_menu;
     QMenu ungroup_menu;
+    QMenu unwindow_menu;
     QTime t;
     ToolBar *toolbar;
     TableModel *table_model;
@@ -78,7 +79,8 @@ private:
     QStringList where_clause;
     QStringList order_clause;
     QStringList group_clause;
-    QStringList window_clause;
+    QStringList window_partition_clause;
+    QList<QStringList> window_order_clause;
     QString limit;
     QStringList offset_list;
     bool quick_fetch;
@@ -87,14 +89,37 @@ private:
     qint32 rows_to;
     qint32 column_count;
     bool thread_busy;
+    bool window_closed;
+    bool grouping;
+    bool windowing;
+    bool pivoting;
     ulong thisTableViewId;
     const QIcon key_icon = QIcon(":/icons/key.png");
     const QIcon filter_icon = QIcon(":/icons/filter.png");
     const QIcon exclude_icon = QIcon(":/icons/exclude.png");
     const QIcon group_icon = QIcon(":/icons/group.png");
     const QIcon window_icon = QIcon(":/icons/window.png");
+    const QIcon pivot_icon = QIcon(":/icons/pivot.png");
     const QIcon ascend_icon = QIcon(":/icons/ascending.png");
     const QIcon descend_icon = QIcon(":/icons/descending.png");
+    const QString default_css = "QTableView {selection-background-color: \
+                                qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0.25, \
+                                stop: 0 #5F5F7F, stop: 1 #7F7F9F); \
+                                selection-color: #F0F0F0; \
+                                color: #0F0F0F; \
+                                }";
+    const QString pivot_hightlight_css = "QTableView {selection-background-color: rgba(128, 128, 255, 127); \
+                                          selection-color: #0F0F0F; \
+                                          color: #0F0F0F; \
+                                          }";
+    const QString pivot_cat_css = "QTableView {selection-background-color: rgba(0, 255, 0, 127); \
+                                   selection-color: #0F0F0F; \
+                                   color: #0F0F0F; \
+                                   }";
+    const QString pivot_col_css = "QTableView {selection-background-color: rgba(255, 0, 0, 127); \
+                                   selection-color: #0F0F0F; \
+                                   color: #0F0F0F; \
+                                   }";
     QAction *default_action;
     QAction *refresh_action;
     QAction *copy_action;
@@ -106,9 +131,11 @@ private:
     QAction *window_action;
     QAction *ascend_action;
     QAction *descend_action;
+    QAction *pivot_action;
     QAction *remove_all_filters_action;
     QAction *remove_all_ordering_action;
     QAction *remove_all_grouping_action;
+    QAction *remove_all_windowing_action;
     QAction *truncate_action;
     QAction *delete_rows_action;
     QAction *previous_set_action;
@@ -141,6 +168,7 @@ public:
     void createBrushes();
     void createActions();
     void fetchConditionDataInitial();
+    void fetchPivotData();
     void deleteData();
     QString tableName()
     {
@@ -185,7 +213,8 @@ public slots:
     }
 
 private slots:
-    void buildTableQuery();
+    void buildQuery();
+    void buildPivotQuery();
     void fetchDefaultData();
     void fetchRefreshData(QString);
     void fetchDataSlot();
@@ -202,10 +231,13 @@ private slots:
     void exclude();
     void group();
     void window();
+    void pivot();
+    void unpivot();
     void ascend();
     void descend();
     void removeAllFilters();
     void removeAllGrouping();
+    void removeAllWindowing();
     void removeAllOrdering();
     void removeColumns();
     void customFilterReturnPressed();
@@ -229,6 +261,7 @@ private slots:
 signals:
     void busySignal();
     void notBusySignal();
+    void showQueryView(Database *, QString);
     void updRowCntSignal(QString);
     void queryFailed(QString);
     void functionsUpdated();

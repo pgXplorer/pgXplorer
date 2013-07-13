@@ -74,5 +74,6 @@
         <file>icons/group.png</file>
         <file>icons/window.png</file>
         <file>icons/down.png</file>
+        <file>icons/pivot.png</file>
     </qresource>
 </RCC>

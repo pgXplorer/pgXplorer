@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <dj@pgxplorer.com>
+  Copyright (c) 2010-2013, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -22,14 +22,48 @@ TableModel::TableModel(Database *database, QStringList primary_key, QString tabl
 {
     this->database = database;
     this->primary_key = primary_key;
-    //this->primary_key_with_oid = primary_key_with_oid;
+    this->primary_key_with_oid = primary_key_with_oid;
     this->table_name = table_name;
     this->rows_from = 1;
+
+    pivot_col = -1;
+    pivot_cat = -1;
+    pivot_val = -1;
 }
 
 void TableModel::setRowsFrom(int rows_from)
 {
     this->rows_from = rows_from;
+}
+
+int TableModel::getPivotCol()
+{
+    return this->pivot_col;
+}
+
+int TableModel::getPivotCat()
+{
+    return this->pivot_cat;
+}
+
+int TableModel::getPivotVal()
+{
+    return this->pivot_val;
+}
+
+void TableModel::setPivotCol(int pivot_col)
+{
+    this->pivot_col = pivot_col;
+}
+
+void TableModel::setPivotCat(int pivot_cat)
+{
+    this->pivot_cat = pivot_cat;
+}
+
+void TableModel::setPivotVal(int pivot_val)
+{
+    this->pivot_val = pivot_val;
 }
 
 Qt::ItemFlags TableModel::flags(const QModelIndex &index) const
@@ -42,7 +76,7 @@ Qt::ItemFlags TableModel::flags(const QModelIndex &index) const
     return flags;
 }
 
-bool TableModel::setData(const QModelIndex &index, const QVariant &value, int /* role */)
+bool TableModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
     //Make sure tables without primary key don't propagate changes.
     if(primary_key.isEmpty())
@@ -95,6 +129,12 @@ QVariant TableModel::data(const QModelIndex &index, int role) const
     //Align integers to the right.
     if ((index.isValid() && role == Qt::TextAlignmentRole) && index.data().type() != QMetaType::QString)
         return (Qt::AlignVCenter + Qt::AlignRight);
+
+    if(index.isValid() && role == Qt::BackgroundRole && index.column() == pivot_col)
+        return QColor(255, 0, 0, 127);
+
+    if(index.isValid() && role == Qt::BackgroundRole && index.column() == pivot_cat)
+        return QColor(0, 255, 0, 127);
 
     //Disable all roles except DisplayRole and EditRole
     if (!index.isValid() || (role != Qt::DisplayRole && role != Qt::EditRole))
