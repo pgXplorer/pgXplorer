@@ -2278,23 +2278,23 @@ void TableView::createBrushes()
 
 void TableView::createActions()
 {
-    default_action = new QAction(QIcon(":/icons/table.png"), tr("Default"), this);
+    default_action = new QAction(QIcon(":/icons/table.svg"), tr("Default"), this);
     default_action->setShortcut(QKeySequence("Ctrl+D"));
     default_action->setStatusTip(tr("Default"));
     connect(default_action, SIGNAL(triggered()), SLOT(defaultView()));
 
-    refresh_action = new QAction(QIcon(":/icons/refresh.png"), tr("Refresh"), this);
+    refresh_action = new QAction(QIcon(":/icons/refresh.svg"), tr("Refresh"), this);
     refresh_action->setShortcut(QKeySequence::Refresh);
     refresh_action->setStatusTip(tr("Refresh"));
     connect(refresh_action, SIGNAL(triggered()), SLOT(refreshView()));
 
-    copy_action = new QAction(QIcon(":/icons/copy_without_headers.png"), tr("Copy"), this);
+    copy_action = new QAction(QIcon(":/icons/copy_without_headers.svg"), tr("Copy"), this);
     copy_action->setShortcuts(QKeySequence::Copy);
     copy_action->setStatusTip(tr("Copy selected"));
     //copy_action->setEnabled(false);
     connect(copy_action, SIGNAL(triggered()), SLOT(copyToClipboard()));
 
-    copy_with_headers_action = new QAction(QIcon(":/icons/copy_with_headers.png"), tr("Copy with headers"), this);
+    copy_with_headers_action = new QAction(QIcon(":/icons/copy_with_headers.svg"), tr("Copy with headers"), this);
     copy_with_headers_action->setShortcut(QKeySequence("Ctrl+Shift+C"));
     copy_with_headers_action->setStatusTip(tr("Copy selected with headers"));
     //copy_with_headers_action->setEnabled(false);
@@ -2367,27 +2367,27 @@ void TableView::createActions()
     bulk_update_action->setDefaultWidget(bulk_update);
     connect(bulk_update, SIGNAL(returnPressed()), SLOT(bulkUpdate()));
 
-    copy_query_action = new QAction(QIcon(":/icons/copy_sql.png"), tr("Copy query"), this);
+    copy_query_action = new QAction(QIcon(":/icons/copy_sql.svg"), tr("Copy query"), this);
     copy_query_action->setStatusTip(tr("Copy the query to clipboard"));
     connect(copy_query_action, SIGNAL(triggered()), SLOT(copyQuery()));
 
-    truncate_action = new QAction(QIcon(":/icons/truncate.png"), tr("Clear table"), this);
+    truncate_action = new QAction(QIcon(":/icons/truncate.svg"), tr("Clear table"), this);
     truncate_action->setStatusTip(tr("Delete the contents of the table"));
     connect(truncate_action, SIGNAL(triggered()), SLOT(truncateTable()));
 
-    delete_rows_action = new QAction(QIcon(":/icons/delete_rows.png"), tr("Delete row(s)"), this);
+    delete_rows_action = new QAction(QIcon(":/icons/delete_rows.svg"), tr("Delete row(s)"), this);
     delete_rows_action->setEnabled(false);
     delete_rows_action->setStatusTip(tr("Delete the selected row(s) of the table"));
     connect(delete_rows_action, SIGNAL(triggered()), SLOT(deleteRows()));
 
-    previous_set_action = new QAction(QIcon(":/icons/previous.png"), "", this);
+    previous_set_action = new QAction(QIcon(":/icons/previous.svg"), "", this);
     previous_set_action->setToolTip(tr("Fetch previous set"));
     connect(previous_set_action, SIGNAL(triggered()), SLOT(fetchPreviousData()));
     previous_set_button = new QToolButton;
     previous_set_button->setDefaultAction(previous_set_action);
     previous_set_button->setEnabled(false);
 
-    next_set_action = new QAction(QIcon(":/icons/next.png"), "", this);
+    next_set_action = new QAction(QIcon(":/icons/next.svg"), "", this);
     next_set_action->setToolTip(tr("Fetch next set"));
     connect(next_set_action, SIGNAL(triggered()), SLOT(fetchNextData()));
     next_set_button = new QToolButton;

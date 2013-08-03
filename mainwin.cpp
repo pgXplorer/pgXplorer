@@ -1716,23 +1716,23 @@ void MainWin::hideOtherTables(Schema *schema)
 
 void MainWin::createActions()
 {
-    new_file_action = new QAction(QIcon(":/icons/new.png"), MainWin::tr("&New"), this);
+    new_file_action = new QAction(QIcon(":/icons/new.svg"), MainWin::tr("&New"), this);
     new_file_action->setShortcuts(QKeySequence::New);
     new_file_action->setStatusTip(MainWin::tr("Create a new file"));
     connect(new_file_action, SIGNAL(triggered()), SLOT(newPgxplorer()));
 
-    open_file_action = new QAction(QIcon(":/icons/open.png"), MainWin::tr("&Open..."), this);
+    open_file_action = new QAction(QIcon(":/icons/open.svg"), MainWin::tr("&Open..."), this);
     open_file_action->setShortcuts(QKeySequence::Open);
     open_file_action->setStatusTip(MainWin::tr("Open an existing file"));
     connect(open_file_action, SIGNAL(triggered()), SLOT(openFile()));
 
-    save_file_action = new QAction(QIcon(":/icons/save.png"), MainWin::tr("&Save"), this);
+    save_file_action = new QAction(QIcon(":/icons/save.svg"), MainWin::tr("&Save"), this);
     save_file_action->setShortcuts(QKeySequence::Save);
     save_file_action->setStatusTip(MainWin::tr("Save the database session to disk"));
     save_file_action->setEnabled(false);
     connect(save_file_action, SIGNAL(triggered()), SLOT(saveFile()));
 
-    save_file_as_action = new QAction(QIcon(":/icons/save_as.png"), MainWin::tr("Save &As..."), this);
+    save_file_as_action = new QAction(QIcon(":/icons/save_as.svg"), MainWin::tr("Save &As..."), this);
     save_file_as_action->setShortcuts(QKeySequence::SaveAs);
     save_file_as_action->setStatusTip(MainWin::tr("Save the database session under a new name"));
     save_file_as_action->setEnabled(false);
@@ -1743,32 +1743,32 @@ void MainWin::createActions()
     exit_action->setStatusTip(MainWin::tr("Exit the application"));
     connect(exit_action, SIGNAL(triggered()), SLOT(quitApp()));
 
-    connection_properties_action = new QAction(QIcon(":/icons/properties.png"), MainWin::tr("Connection properties"), this);
+    connection_properties_action = new QAction(QIcon(":/icons/properties.svg"), MainWin::tr("Connection properties"), this);
     connection_properties_action->setShortcut(QKeySequence(Qt::Key_P));
     connection_properties_action->setStatusTip(MainWin::tr("Set connection properties"));
     connection_properties_action->setCheckable(true);
     connect(connection_properties_action, SIGNAL(triggered()), SLOT(openDatabaseProperties()));
 
-    console_action = new QAction(QIcon(":/icons/console.png"), MainWin::tr("SQL Console"), this);
+    console_action = new QAction(QIcon(":/icons/console.svg"), MainWin::tr("SQL Console"), this);
     console_action->setShortcut(QKeySequence(Qt::Key_C));
     console_action->setEnabled(false);
     console_action->setStatusTip(MainWin::tr("Launch SQL console"));
     connect(console_action, SIGNAL(triggered()), SLOT(showPgxconsole()));
 
-    editor_action = new QAction(QIcon(":/icons/editor.png"), MainWin::tr("SQL Editor"), this);
+    editor_action = new QAction(QIcon(":/icons/editor.svg"), MainWin::tr("SQL Editor"), this);
     editor_action->setShortcut(QKeySequence(Qt::Key_E));
     editor_action->setEnabled(false);
     editor_action->setStatusTip(MainWin::tr("Launch SQL editor"));
     connect(editor_action, SIGNAL(triggered()), SLOT(showPgxeditor()));
 
-    search_action = new QAction(QIcon(":/icons/search.png"), MainWin::tr("Search for items"), this);
+    search_action = new QAction(QIcon(":/icons/search.svg"), MainWin::tr("Search for items"), this);
     //search_action->setShortcuts(QKeySequence::Find);
     search_action->setStatusTip(MainWin::tr("Highlight items that match"));
     search_action->setCheckable(true);
     search_action->setEnabled(false);
     connect(search_action, SIGNAL(triggered()), SLOT(search()));
 
-    fullscreen_action = new QAction(QIcon(":/icons/fullscreen.png"), MainWin::tr("Fullscreen"), this);
+    fullscreen_action = new QAction(QIcon(":/icons/fullscreen.svg"), MainWin::tr("Fullscreen"), this);
     fullscreen_action->setShortcut(QKeySequence(Qt::Key_F11));
     fullscreen_action->setStatusTip(MainWin::tr("Occupy full desktop"));
     connect(fullscreen_action, SIGNAL(triggered()), SLOT(toggleFullscreen()));
@@ -1790,19 +1790,19 @@ void MainWin::createActions()
     layout_view_actiongroup->addAction(columnview_action);
     columnview_action->setChecked(true);
 
-    tableview_action = new QAction(QIcon(":/icons/table.png"), MainWin::tr("Tables"), this);
+    tableview_action = new QAction(QIcon(":/icons/table.svg"), MainWin::tr("Tables"), this);
     tableview_action->setShortcut(QKeySequence(Qt::Key_T));
     tableview_action->setStatusTip(MainWin::tr("Show database tables"));
     tableview_action->setCheckable(true);
     connect(tableview_action, SIGNAL(triggered()), SLOT(showAllTables()));
 
-    viewview_action = new QAction(QIcon(":/icons/view2.png"), MainWin::tr("Views"), this);
+    viewview_action = new QAction(QIcon(":/icons/view2.svg"), MainWin::tr("Views"), this);
     viewview_action->setShortcut(QKeySequence(Qt::Key_V));
     viewview_action->setStatusTip(MainWin::tr("Show database views"));
     viewview_action->setCheckable(true);
     connect(viewview_action, SIGNAL(triggered()), SLOT(showAllViews()));
 
-    functionview_action = new QAction(QIcon(":/icons/function.png"), MainWin::tr("Functions"), this);
+    functionview_action = new QAction(QIcon(":/icons/function.svg"), MainWin::tr("Functions"), this);
     functionview_action->setShortcut(QKeySequence(Qt::Key_F));
     functionview_action->setStatusTip(MainWin::tr("Show database functions"));
     functionview_action->setCheckable(true);
@@ -1820,12 +1820,12 @@ void MainWin::createActions()
     else
         tableview_action->setChecked(true);
 
-    english_action = new QAction(QIcon(":/icons/ok.png"), MainWin::tr("English (default)"), this);
+    english_action = new QAction(QIcon(":/icons/ok.svg"), MainWin::tr("English (default)"), this);
     connect(english_action, SIGNAL(triggered()), SLOT(setLanguageDefault()));
     if(language() != MainWin::English)
         english_action->setIconVisibleInMenu(false);
 
-    japanese_action = new QAction(QIcon(":/icons/ok.png"), MainWin::tr("Japanese"), this);
+    japanese_action = new QAction(QIcon(":/icons/ok.svg"), MainWin::tr("Japanese"), this);
     connect(japanese_action, SIGNAL(triggered()), SLOT(setLanguageJapanese()));
     if(language() != MainWin::Japanese)
         japanese_action->setIconVisibleInMenu(false);

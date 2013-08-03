@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- License Agreement at http://iconmonstr.com/license/ -->
+<!-- The icon can be used freely in both personal and commercial projects with no attribution required, but always appreciated. 
+You may NOT sub-license, resell, rent, redistribute or otherwise transfer the icon without express written permission from iconmonstr.com -->
 
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
@@ -19,7 +20,7 @@
    xml:space="preserve"
    id="svg2"
    inkscape:version="0.48.4 r9939"
-   sodipodi:docname="copy_without_headers.svg"><metadata
+   sodipodi:docname="refresh.svg"><metadata
      id="metadata9"><rdf:RDF><cc:Work
          rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" /></cc:Work></rdf:RDF></metadata><defs
@@ -43,7 +44,7 @@
      inkscape:window-y="0"
      inkscape:window-maximized="0"
      inkscape:current-layer="svg2" /><path
-     id="copy-icon"
-     d="M 360.277,151.862 V 50.001 H 50 V 360.138 H 151.723 V 461.999 H 462 V 151.862 H 360.277 z M 90,320.138 V 90.001 h 230.277 v 61.861 H 151.723 V 320.137 H 90 z"
+     id="refresh-3-icon"
+     d="m 373.223,142.573 -37.252,37.253 c -20.225,-20.224 -48.162,-32.731 -79.021,-32.731 -61.719,0 -111.752,50.056 -111.752,111.776 0,0.016 0,-0.016 0,0 H 188.61 L 119.268,328.186 50,258.871 h 42.514 c 0,-0.008 0,0.006 0,0 0,-90.816 73.621,-164.46 164.436,-164.46 45.407,0 86.517,18.405 116.273,48.162 z M 462,253.129 392.732,183.813 323.39,253.129 h 43.412 c 0,0.016 0,-0.017 0,0 0,61.72 -50.033,111.776 -111.752,111.776 -30.859,0 -58.797,-12.508 -79.021,-32.731 l -37.252,37.253 c 29.758,29.757 70.867,48.162 116.273,48.162 90.814,0 164.436,-73.644 164.436,-164.459 0,-0.007 0,0.008 0,0 H 462 z"
      style="fill:#67536c"
      inkscape:connector-curvature="0" /></svg>

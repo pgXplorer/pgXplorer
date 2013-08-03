@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- License Agreement at http://iconmonstr.com/license/ -->
+<!-- The icon can be used freely in both personal and commercial projects with no attribution required, but always appreciated. 
+You may NOT sub-license, resell, rent, redistribute or otherwise transfer the icon without express written permission from iconmonstr.com -->
 
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
@@ -19,7 +20,7 @@
    xml:space="preserve"
    id="svg2"
    inkscape:version="0.48.4 r9939"
-   sodipodi:docname="copy_without_headers.svg"><metadata
+   sodipodi:docname="delete_rows.svg"><metadata
      id="metadata9"><rdf:RDF><cc:Work
          rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" /></cc:Work></rdf:RDF></metadata><defs
@@ -32,18 +33,23 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="640"
-     inkscape:window-height="480"
+     inkscape:window-width="929"
+     inkscape:window-height="716"
      id="namedview5"
      showgrid="false"
-     inkscape:zoom="0.4609375"
-     inkscape:cx="256"
-     inkscape:cy="256"
+     inkscape:zoom="0.65186406"
+     inkscape:cx="116.61669"
+     inkscape:cy="188.78991"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="0"
      inkscape:current-layer="svg2" /><path
-     id="copy-icon"
-     d="M 360.277,151.862 V 50.001 H 50 V 360.138 H 151.723 V 461.999 H 462 V 151.862 H 360.277 z M 90,320.138 V 90.001 h 230.277 v 61.861 H 151.723 V 320.137 H 90 z"
+     id="list-view-icon"
+     d="m 462,108.857 -412,0 L 50,50 462,50 z m 0,58.857 -412,0 0,58.857 412,0 z M 360.57628,285.42899 50,285.429 l 0,58.857 311.11864,-1.62712 23.86442,-31.19599 M 462,403.143 l -412,0 0,58.857 412,0 z"
      style="fill:#67536c"
-     inkscape:connector-curvature="0" /></svg>
+     inkscape:connector-curvature="0"
+     sodipodi:nodetypes="cccccccccccccccccccc" /><polygon
+     transform="matrix(0.41716467,0,0,0.41716467,342.29058,204.52788)"
+     id="x-mark-icon"
+     points="438.378,137.348 374.595,73.607 255.995,192.225 137.375,73.622 73.607,137.352 192.246,255.983 73.622,374.625 137.352,438.393 256.002,319.734 374.652,438.378 438.393,374.595 319.757,255.977 "
+     style="fill:#67536c" /></svg>

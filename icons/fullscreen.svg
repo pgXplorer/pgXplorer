@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- License Agreement at http://iconmonstr.com/license/ -->
+<!-- The icon can be used freely in both personal and commercial projects with no attribution required, but always appreciated. 
+You may NOT sub-license, resell, rent, redistribute or otherwise transfer the icon without express written permission from iconmonstr.com -->
 
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
@@ -19,7 +20,7 @@
    xml:space="preserve"
    id="svg2"
    inkscape:version="0.48.4 r9939"
-   sodipodi:docname="copy_without_headers.svg"><metadata
+   sodipodi:docname="fullscreen.svg"><metadata
      id="metadata9"><rdf:RDF><cc:Work
          rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" /></cc:Work></rdf:RDF></metadata><defs
@@ -43,7 +44,7 @@
      inkscape:window-y="0"
      inkscape:window-maximized="0"
      inkscape:current-layer="svg2" /><path
-     id="copy-icon"
-     d="M 360.277,151.862 V 50.001 H 50 V 360.138 H 151.723 V 461.999 H 462 V 151.862 H 360.277 z M 90,320.138 V 90.001 h 230.277 v 61.861 H 151.723 V 320.137 H 90 z"
+     id="fullscreen-4-icon"
+     d="M 331,331 H 181 V 181 H 331 V 331 z M 188.841,366 H 146 V 323.158 L 91.868,377.289 50,335.477 V 462 H 176.525 L 134.71,420.131 188.841,366 z M 91.869,134.71 50,176.525 V 50 H 176.525 L 134.711,91.868 188.843,146 H 146 v 42.841 L 91.869,134.71 z M 462,50.001 V 176.525 L 420.132,134.711 366,188.843 V 146 H 323.159 L 377.29,91.87 335.475,50.001 H 462 z M 420.131,377.291 462,335.475 V 462 H 335.476 L 377.289,420.133 323.158,366 H 366 v -42.84 l 54.131,54.131 z"
      style="fill:#67536c"
      inkscape:connector-curvature="0" /></svg>

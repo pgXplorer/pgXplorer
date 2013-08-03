@@ -94,14 +94,14 @@ private:
     bool windowing;
     bool pivoting;
     ulong thisTableViewId;
-    const QIcon key_icon = QIcon(":/icons/key.png");
-    const QIcon filter_icon = QIcon(":/icons/filter.png");
-    const QIcon exclude_icon = QIcon(":/icons/exclude.png");
-    const QIcon group_icon = QIcon(":/icons/group.png");
-    const QIcon window_icon = QIcon(":/icons/window.png");
-    const QIcon pivot_icon = QIcon(":/icons/pivot.png");
-    const QIcon ascend_icon = QIcon(":/icons/ascending.png");
-    const QIcon descend_icon = QIcon(":/icons/descending.png");
+    const QIcon key_icon = QIcon(":/icons/key.svg");
+    const QIcon filter_icon = QIcon(":/icons/filter.svg");
+    const QIcon exclude_icon = QIcon(":/icons/exclude.svg");
+    const QIcon group_icon = QIcon(":/icons/group.svg");
+    const QIcon window_icon = QIcon(":/icons/window.svg");
+    const QIcon pivot_icon = QIcon(":/icons/pivot.svg");
+    const QIcon ascend_icon = QIcon(":/icons/ascending.svg");
+    const QIcon descend_icon = QIcon(":/icons/descending.svg");
     const QString default_css = "QTableView {selection-background-color: \
                                 qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0.25, \
                                 stop: 0 #5F5F7F, stop: 1 #7F7F9F); \

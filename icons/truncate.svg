@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- The icon can be used freely in both personal and commercial projects with no attribution required, but always appreciated. 
+You may NOT sub-license, resell, rent, redistribute or otherwise transfer the icon without express written permission from iconmonstr.com -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.1"
+   x="0px"
+   y="0px"
+   width="512px"
+   height="512px"
+   viewBox="0 0 512 512"
+   enable-background="new 0 0 512 512"
+   xml:space="preserve"
+   id="svg2"
+   inkscape:version="0.48.4 r9939"
+   sodipodi:docname="truncate.svg"><metadata
+     id="metadata9"><rdf:RDF><cc:Work
+         rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /></cc:Work></rdf:RDF></metadata><defs
+     id="defs7" /><sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1440"
+     inkscape:window-height="853"
+     id="namedview5"
+     showgrid="false"
+     inkscape:zoom="0.65186406"
+     inkscape:cx="414.44218"
+     inkscape:cy="267.58049"
+     inkscape:window-x="-2"
+     inkscape:window-y="-3"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg2" /><path
+     id="list-view-icon"
+     d="M 391.49153,78.20339 364.37288,108.31463 50,108.857 50,50 362.74576,50 m 1.62712,117.714 -314.37288,0 0,58.857 312.74577,-1.08474 27.66101,-31.73837 m -29.8305,91.6811 L 50,285.429 l 0,58.857 313.8305,-2.16949 27.11866,-29.56887 M 363.8305,402.05825 50,403.143 50,462 l 313.8305,0 27.11866,-32.28073"
+     style="fill:#67536c"
+     inkscape:connector-curvature="0"
+     sodipodi:nodetypes="cccccccccccccccccccc" /><polygon
+     transform="matrix(0.30713963,0,0,0.30713963,370.99937,351.47395)"
+     id="x-mark-icon-2"
+     points="319.757,255.977 438.378,137.348 374.595,73.607 255.995,192.225 137.375,73.622 73.607,137.352 192.246,255.983 73.622,374.625 137.352,438.393 256.002,319.734 374.652,438.378 438.393,374.595 "
+     style="fill:#67536c" /><polygon
+     style="fill:#67536c"
+     points="438.378,137.348 374.595,73.607 255.995,192.225 137.375,73.622 73.607,137.352 192.246,255.983 73.622,374.625 137.352,438.393 256.002,319.734 374.652,438.378 438.393,374.595 319.757,255.977 "
+     id="polygon3010"
+     transform="matrix(0.30713963,0,0,0.30713963,370.99937,0.01632068)" /><polygon
+     transform="matrix(0.30713963,0,0,0.30713963,370.99937,116.08412)"
+     id="polygon3012"
+     points="255.995,192.225 137.375,73.622 73.607,137.352 192.246,255.983 73.622,374.625 137.352,438.393 256.002,319.734 374.652,438.378 438.393,374.595 319.757,255.977 438.378,137.348 374.595,73.607 "
+     style="fill:#67536c" /><polygon
+     style="fill:#67536c"
+     points="137.375,73.622 73.607,137.352 192.246,255.983 73.622,374.625 137.352,438.393 256.002,319.734 374.652,438.378 438.393,374.595 319.757,255.977 438.378,137.348 374.595,73.607 255.995,192.225 "
+     id="polygon3014"
+     transform="matrix(0.30713963,0,0,0.30713963,370.99937,234.3214)" /></svg>

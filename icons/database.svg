@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- The icon can be used freely in both personal and commercial projects with no attribution required, but always appreciated. 
+You may NOT sub-license, resell, rent, redistribute or otherwise transfer the icon without express written permission from iconmonstr.com -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.1"
+   x="0px"
+   y="0px"
+   width="512px"
+   height="512px"
+   viewBox="0 0 512 512"
+   enable-background="new 0 0 512 512"
+   xml:space="preserve"
+   id="svg4470"
+   inkscape:version="0.48.4 r9939"
+   sodipodi:docname="database.svg"><metadata
+     id="metadata4477"><rdf:RDF><cc:Work
+         rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /></cc:Work></rdf:RDF></metadata><defs
+     id="defs4475" /><sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1440"
+     inkscape:window-height="853"
+     id="namedview4473"
+     showgrid="false"
+     inkscape:zoom="0.4609375"
+     inkscape:cx="256"
+     inkscape:cy="256"
+     inkscape:window-x="-2"
+     inkscape:window-y="-3"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg4470" /><path
+     id="database-icon"
+     d="M 422.122,355.606 V 402.13 C 422.122,435.196 347.747,462 256,462 164.253,462 89.878,435.196 89.878,402.131 v -46.524 c 10.283,7.391 23.186,13.907 38.485,19.422 34.555,12.452 79.885,19.311 127.637,19.311 47.753,0 93.082,-6.858 127.638,-19.312 15.3,-5.514 28.201,-12.031 38.484,-19.422 z M 383.638,277.788 C 349.082,290.242 303.753,297.1 256,297.1 c -47.752,0 -93.082,-6.858 -127.638,-19.312 -15.299,-5.514 -28.201,-12.03 -38.484,-19.421 v 46.104 c 0,33.065 74.375,59.869 166.122,59.869 91.747,0 166.122,-26.804 166.122,-59.869 v -46.104 c -10.283,7.391 -23.184,13.907 -38.484,19.421 z M 256,50 c -91.747,0 -166.122,26.805 -166.122,59.87 0,33.066 74.375,59.871 166.122,59.871 91.747,0 166.122,-26.805 166.122,-59.871 C 422.122,76.805 347.747,50 256,50 z M 383.638,180.428 C 349.082,192.881 303.753,199.74 256,199.74 c -47.752,0 -93.082,-6.859 -127.638,-19.312 -15.299,-5.514 -28.201,-12.031 -38.484,-19.422 v 46.225 c 0,33.065 74.375,59.87 166.122,59.87 91.747,0 166.122,-26.805 166.122,-59.87 v -46.224 c -10.283,7.39 -23.184,13.907 -38.484,19.421 z"
+     style="fill:#672178"
+     inkscape:connector-curvature="0" /></svg>

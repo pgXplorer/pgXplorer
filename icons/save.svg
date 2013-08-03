@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- License Agreement at http://iconmonstr.com/license/ -->
+<!-- The icon can be used freely in both personal and commercial projects with no attribution required, but always appreciated. 
+You may NOT sub-license, resell, rent, redistribute or otherwise transfer the icon without express written permission from iconmonstr.com -->
 
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
@@ -19,7 +20,7 @@
    xml:space="preserve"
    id="svg2"
    inkscape:version="0.48.4 r9939"
-   sodipodi:docname="copy_without_headers.svg"><metadata
+   sodipodi:docname="save.svg"><metadata
      id="metadata9"><rdf:RDF><cc:Work
          rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" /></cc:Work></rdf:RDF></metadata><defs
@@ -32,8 +33,8 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="640"
-     inkscape:window-height="480"
+     inkscape:window-width="483"
+     inkscape:window-height="451"
      id="namedview5"
      showgrid="false"
      inkscape:zoom="0.4609375"
@@ -43,7 +44,7 @@
      inkscape:window-y="0"
      inkscape:window-maximized="0"
      inkscape:current-layer="svg2" /><path
-     id="copy-icon"
-     d="M 360.277,151.862 V 50.001 H 50 V 360.138 H 151.723 V 461.999 H 462 V 151.862 H 360.277 z M 90,320.138 V 90.001 h 230.277 v 61.861 H 151.723 V 320.137 H 90 z"
+     id="save-2-icon"
+     d="m 285.666,102.333 h 43 V 180 h -43 V 102.333 z M 383,50 H 56 V 462 H 456 V 123 L 383,50 z M 150.5,80 H 354 V 202 H 150.5 V 80 z M 398.333,429.332 H 113.667 V 269.666 H 398.333 V 429.332 z M 368.5,316.5 h -225 v -20 h 225 v 20 z m 0,23 h -225 v 20 h 225 v -20 z m 0,43 h -225 v 20 h 225 v -20 z"
      style="fill:#67536c"
      inkscape:connector-curvature="0" /></svg>

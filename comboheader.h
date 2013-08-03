@@ -31,7 +31,7 @@ class ComboHeader : public QHeaderView
 private:
     TableView* tv;
     QList<QComboBox*> boxes;
-    const QIcon key_icon = QIcon(":/icons/key.png");
+    const QIcon key_icon = QIcon(":/icons/key.svg");
 
 public:
     explicit ComboHeader(TableView *parent = 0);

@@ -69,7 +69,7 @@ SOURCES		= main.cpp \
 
 QT += core gui widgets sql network
 
-LIBS += /home/nimbus/libharu/src/libhpdfs.a -lz -lpoppler-qt4
+linux:LIBS += /home/nimbus/libharu/src/libhpdfs.a -lz
 
 RESOURCES += pgXplorer.qrc
 
