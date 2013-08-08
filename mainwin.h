@@ -100,7 +100,6 @@ public:
 
 protected:
     void wheelEvent(QWheelEvent *event);
-    //void mousePressEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
     void dragEnterEvent(QDragEnterEvent *);
@@ -234,6 +233,14 @@ public:
         return scene.selectedItems();
     }
 
+protected:
+     void resizeEvent(QResizeEvent *);
+     void changeEvent(QEvent*);
+     void dragEnterEvent(QDragEnterEvent *);
+     void dropEvent(QDropEvent *);
+     void contextMenuEvent(QContextMenuEvent *);
+     void closeEvent(QCloseEvent *);
+
 public slots:
     void about();
     void showHelp();
@@ -248,28 +255,24 @@ public slots:
     void pgxconsoleClosed(PgxConsole *);
     void pgxeditorClosed(PgxEditor *);
     void newDatabase();
-    bool newDatabase(QString, qint32, QString, QString, QString);
-    void newPgxplorer(QString);
+    bool newDatabaseWithParams(QString, qint32, QString, QString, QString);
+    void newPgxplorerFromFile(QString);
     void createSchema(QString, QString);
     void createTable(QString, QString, GraphicsTextItem*);
     void renameTable(QString, QString, GraphicsTextItem*);
     void showQueryView(Database *, QString);
+    void showSchemas();
+    void hideSchemas();
+    void showTables(Schema *);
+    void hideTables(Schema *);
+    void explodeAndShowSchemas();
+    void explodeAndShowSchemasVertically();
     void showAllTables();
     void showAllViews();
     void showAllFunctions();
     void populateWindowMenu();
     void adjustSearchBoxPosition();
     void resizeToolbarIcons(QSize);
-
-protected:
-     void resizeEvent(QResizeEvent *);
-     void changeEvent(QEvent*);
-     void dragEnterEvent(QDragEnterEvent *);
-     void dropEvent(QDropEvent *);
-     void contextMenuEvent(QContextMenuEvent *);
-     void closeEvent(QCloseEvent *);
-
-private slots:
     void clear();
     void openFile();
     void saveFile();
@@ -282,8 +285,8 @@ private slots:
     void newPgxplorer();
     void showPgxconsole();
     void showPgxeditor();
-    void showPgxeditor(QString);
-    void showPgxeditor(QString, QString);
+    void showPgxeditorQuery(QString);
+    void showPgxeditorFunction(QString, QString);
     void showFunctionEditor(Schema *, Function *);
     void showViewEditor(Schema *, View *);
     void showTableEditor(Schema *, Table *);
@@ -295,12 +298,6 @@ private slots:
     void setLanguageJapanese();
     void setLanguageFrench();
     void restore();
-    void showSchemas();
-    void explodeAndShowSchemas();
-    void explodeAndShowSchemasVertically();
-    void hideSchemas();
-    void showTables(Schema *);
-    void hideTables(Schema *);
     void hideAllTables();
     void showViews(Schema *);
     void hideViews(Schema *);

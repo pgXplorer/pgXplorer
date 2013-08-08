@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <dj@pgxplorer.com>
+  Copyright (c) 2010-2013, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -17,7 +17,7 @@
 */
 
 #include "pgxplorerapplication.h"
-#include <QDesktopWidget>
+#include <QtWidgets/QtWidgets>
 #include <QTimer>
 #include "mainwin.h"
 #include "licensedialog.h"
@@ -71,10 +71,10 @@ int main(int argc, char **argv)
     //                      border-style: inset;}");
 
     qApp->setStyleSheet("QTableView {selection-background-color: \
-                        qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0.25, \
-                        stop: 0 #5F5F7F, stop: 1 #7F7F9F); \
-                        selection-color: #F0F0F0; \
-                        color: #0F0F0F; \
+                            qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0.25, \
+                            stop: 0 #5F5F7F, stop: 1 #7F7F9F); \
+                            selection-color: #F0F0F0; \
+                            color: #0F0F0F; \
                         }");
 
     return pgXplorer.exec();

@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <dj@pgxplorer.com>
+  Copyright (c) 2010-2013, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -437,7 +437,7 @@ void PgxEditor::executeFunction()
     query.append(QLatin1Char('('));
     query.append(function_args.split(" ").join(","));
     query.append(QLatin1Char(')'));
-    emit newPgxeditor(query);
+    emit newPgxeditorQuery(query);
 }
 
 void PgxEditor::explainText()
@@ -1021,9 +1021,9 @@ void PgxEditor::wheelEvent(QWheelEvent *wheelEvent)
 {
     if(wheelEvent->modifiers() == Qt::ControlModifier) {
         if (wheelEvent->delta()>0)
-            font_size < 28 ? font_size++:font_size;
+            font_size < 36 ? font_size++ : font_size;
         else
-            font_size > 8 ? font_size--:font_size;
+            font_size > 8 ? font_size-- : font_size;
 
         style_sheet = QString("QPlainTextEdit{background-color: white; "
                               "font: bold %1px 'Courier New';}").arg(QString::number(font_size));

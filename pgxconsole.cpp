@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <dj@pgxplorer.com>
+  Copyright (c) 2010-2013, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -435,7 +435,7 @@ void PgxConsole::toggleFindBar()
     }
 }
 
-void PgxConsole::insertFromMimeData(const QMimeData *source)
+void PgxConsole::insertFromMimeData(const QMimeData *)
 {
     pasteFromClipboard();
 }

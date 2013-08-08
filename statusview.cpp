@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <dj@pgxplorer.com>
+  Copyright (c) 2010-2013, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -57,13 +57,31 @@ StatusView::StatusView(Database *database)
     status_view->setSelectionBehavior(QAbstractItemView::SelectRows);
     status_view->setSelectionMode(QAbstractItemView::SingleSelection);
     status_view->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
-
     status_view->setModel(status_query_model);
+
+    QString sql;
+    if(database->settings("server_version_num").compare("90200") < 0) {
+        sql = ("SELECT procpid AS \"PID\", usename AS \"User\", client_addr AS \"Client\", query_start AS \"Started\", current_query AS \"Query\" FROM pg_stat_activity where current_query not like '%pg_stat_activity%' and datname='");
+    }
+    else {
+        sql = ("SELECT pid AS \"PID\", usename AS \"User\", client_addr AS \"Client\", query_start AS \"Started\", query AS \"Query\" FROM pg_stat_activity where query not like '%pg_stat_activity%' and state<>'idle' and datname='");
+    }
+
+    sql.append(database->getName() + "'");
+    status_query_thread = new SimpleQueryThread(0, status_query_model, sql);
+    status_query_thread->setConnectionParameters(database->getHost(),
+                                                  database->getPort(),
+                                                  database->getName(),
+                                                  database->getUser(),
+                                                  database->getPassword());
+    status_query_thread->setExecOnStart(true);
+    connect(this, &StatusView::requestStatus, status_query_thread, &SimpleQueryThread::executeDefaultQuery);
+    connect(status_query_thread, &SimpleQueryThread::workerIsDone, this, &StatusView::updateStatus);
+    status_query_thread->start();
 
     connect(status_view->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)), SLOT(toggleActions()));
 
     setCentralWidget(status_view);
-    getStatus();
     statusBar()->showMessage("");
 
     if(timer_interval>0)
@@ -97,34 +115,11 @@ void StatusView::setTimerInterval2()
     setTimerInterval(StatusView::TimerInterval2);
 }
 
-void StatusView::getStatus()
+void StatusView::updateStatus()
 {
     if(!timer.isActive() && timer_interval>0)
         timer.start(timer_interval, this);
-    {
-        QSqlDatabase database_connection;
-        database_connection = QSqlDatabase::addDatabase("QPSQL", QLatin1String("statusview"));
-        database_connection.setHostName(database->getHost());
-        database_connection.setPort(database->getPort().toInt());
-        database_connection.setDatabaseName(database->getName());
-        database_connection.setUserName(database->getUser());
-        database_connection.setPassword(database->getPassword());
-        if (!database_connection.open()) {
-            qDebug() << tr("Couldn't connect to database.\n"
-                         "Check connection parameters.\n");
-            return;
-        }
-        QString sql;
-        if(database->settings("server_version_num").compare("90200") <0) {
-          sql = ("SELECT procpid AS \"PID\", usename AS \"User\", client_addr AS \"Client\", query_start AS \"Started\", current_query AS \"Query\" FROM pg_stat_activity where current_query not like '%pg_stat_activity%' and datname='");
-        }
-        else {
-          sql = ("SELECT pid AS \"PID\", usename AS \"User\", client_addr AS \"Client\", query_start AS \"Started\", query AS \"Query\" FROM pg_stat_activity where query not like '%pg_stat_activity%' and state<>'idle' and datname='");
-        }
-        sql.append(database->getName() + "'");
-        status_query_model->setQuery(sql, database_connection);
-    }
-    QSqlDatabase::removeDatabase(QLatin1String("statusview"));
+
     status_view->setModel(status_query_model);
     status_view->resizeColumnsToContents();
     toggleActions();
@@ -135,7 +130,7 @@ void StatusView::createActions()
     refresh_action = new QAction(QIcon(":/icons/refresh.png"), tr("Refresh"), this);
     refresh_action->setShortcut(QKeySequence::Refresh);
     refresh_action->setStatusTip(tr("Refresh status now"));
-    connect(refresh_action, SIGNAL(triggered()), SLOT(getStatus()));
+    connect(refresh_action, SIGNAL(triggered()), SIGNAL(requestStatus()));
 
     stop_action = new QAction(QIcon(":/icons/stop.png"), tr("Stop"), this);
     stop_action->setEnabled(false);
@@ -245,7 +240,7 @@ void StatusView::stopQuery()
         }
         QSqlDatabase::removeDatabase(QLatin1String("cancel"));
     }
-    getStatus();
+    emit requestStatus();
 }
 
 void StatusView::terminateQuery()
@@ -291,7 +286,7 @@ void StatusView::terminateQuery()
         }
         QSqlDatabase::removeDatabase(QLatin1String("terminate"));
     }
-    getStatus();
+    emit requestStatus();
 }
 
 void StatusView::copyQuery()
@@ -356,7 +351,7 @@ void StatusView::timerEvent(QTimerEvent *event)
 {
     if(timer.timerId() == event->timerId()) {
         if(isVisible()) {
-            getStatus();
+            emit requestStatus();
             statusBar()->showMessage(tr("Refreshed just now"), 1000);
         }
         else

@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <davyjones@github>
+  Copyright (c) 2010-2013, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -84,11 +84,9 @@ public:
     {
         return QRectF(-35, -30, 80, 50);
     }
-    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *,
+               QWidget *)
     {
-        Q_UNUSED (option);
-        Q_UNUSED (widget);
-
         if(this->isSelected())
             painter->setPen(QColor(100,100,100));
         else

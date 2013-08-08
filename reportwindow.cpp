@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <dj@pgxplorer.com>
+  Copyright (c) 2010-2013, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -92,7 +92,7 @@ bool ReportTable::onCol(qreal hover_point_x)
 {
     bool match = false;
     for(int i=1; i<enabled_cols.size(); i++) {
-        if(match = MainWin::qFuzzyComp(hover_point_x, top_left.x() + widthTill(i))) {
+        if((match = MainWin::qFuzzyComp(hover_point_x, top_left.x() + widthTill(i)))) {
             break;
         }
     }
@@ -194,10 +194,27 @@ void ReportTable::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
     context_menu.addAction(tr("Change font..."));
     context_menu.addSeparator();
     context_menu.addAction(tr("Set colour..."));
+
+    hidden_cols_menu.clear();
+    for(int i=0; i<enabled_cols.size(); i++) {
+        if(!enabled_cols.at(i))
+            hidden_cols_menu.addAction(column_header_list.at(i));
+    }
+    if(hidden_cols_menu.actions().isEmpty()) {
+        hidden_cols_menu.setEnabled(false);
+    }
+    else
+        hidden_cols_menu.setEnabled(true);
+
     context_menu.addSeparator();
-    context_menu.addAction(tr("Delete column"));
+    if(column_header_list.size() - hidden_cols_menu.actions().size() == 1)
+        context_menu.addAction(tr("Hide column"))->setEnabled(false);
+    else
+        context_menu.addAction(tr("Hide column"))->setEnabled(true);
+
+    context_menu.addMenu(&hidden_cols_menu);
     context_menu.addSeparator();
-    context_menu.addAction(tr("Delete this"));
+    context_menu.addAction(tr("Delete"));
 
     QAction *a = context_menu.exec(event->screenPos());
 
@@ -219,13 +236,19 @@ void ReportTable::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
             scene()->update();
         }
     }
-    else if(a && QString::compare(a->text(), tr("Delete column")) == 0) {
+    else if(a && QString::compare(a->text(), tr("Hide column")) == 0) {
         disableColumnAt(event->scenePos());
         scene()->update();
     }
-    else if(a && QString::compare(a->text(), tr("Delete this")) == 0) {
+    else if(a && QString::compare(a->text(), tr("Delete")) == 0) {
         emit deletingTable(this);
         deleteLater();
+    }
+    else {
+        for(int i=0; i<enabled_cols.size(); i++) {
+            if(a && QString::compare(a->text(), column_header_list.at(i)) == 0)
+                enabled_cols.toggleBit(i);
+        }
     }
 }
 
@@ -299,7 +322,7 @@ ReportWindow::ReportWindow(Database *database, QString sql)
     toolbar->addAction(odf_print_action);
     addToolBar(toolbar);
 
-    progress_dialog = new QProgressDialog("Creating PDF...", "Cancel", 0, 0, this);
+    progress_dialog = new QProgressDialog(tr("Creating file..."), tr("Cancel"), 0, 0, this);
     progress_dialog->setAttribute(Qt::WA_DeleteOnClose);
     progress_dialog->setWindowModality(Qt::WindowModal);
 
@@ -591,7 +614,7 @@ void ReportWindow::createActions()
     pdf_print_action->setStatusTip(tr("Print to an HTML document"));
     connect(html_print_action, SIGNAL(triggered()), SLOT(htmlPrintThread()));
 
-    odf_print_action = new QAction(QIcon(":/icons/odt.png"), tr("Create OopenDocument file"), this);
+    odf_print_action = new QAction(QIcon(":/icons/odt.png"), tr("Create OpenDocument file"), this);
     //html_print_action->setShortcuts(QKeySequence::Print);
     odf_print_action->setStatusTip(tr("Print to an HTML document"));
     connect(odf_print_action, SIGNAL(triggered()), SLOT(odfPrintThread()));
@@ -696,7 +719,7 @@ void ReportWindow::pdfPrint(QString file_name)
     HPDF_Doc  pdf;
     HPDF_Page page;
     HPDF_Font jfont[16];
-    HPDF_Font font[11];
+    HPDF_Font font[12];
     HPDF_REAL height;
     HPDF_REAL width;
 
@@ -910,7 +933,7 @@ void ReportWindow::pdfPrint(QString file_name)
                     HPDF_Page_SetRGBStroke(page,0.0,0.0,0.0);
 
                     foreach(ReportTable *report_table, table_list) {
-                        if(report_table->repeatOnEveryPage()) {
+                        if(report_table->repeatHeaderEveryPage()) {
                             int column_size = column_list.size();
                             size = report_table->font().pointSize();
                             HPDF_Page_SetFontAndSize (page, jfont[0], size);
@@ -985,7 +1008,67 @@ void ReportWindow::htmlPrint(QString file_name)
         td->setPageSize(QSizeF(595.276,841.89));
         td->setDocumentMargin(70.0);
 
-        td->setHtml("Hello world!");
+        QTextCursor cursor(td);
+        QTextFrame *main_frame = cursor.currentFrame();
+        QTextCharFormat tcf;
+
+        QTextFrameFormat tff;
+        tff.setBorderStyle(QTextFrameFormat::BorderStyle_Solid);
+        tff.setBorderBrush(QBrush(Qt::black));
+        tff.setBorder(2);
+
+        foreach(QGraphicsTextItem *label, label_list) {
+            tcf.setFont(label->font());
+            cursor.setCharFormat(tcf);
+
+            QTextFrame *tf = cursor.insertFrame(tff);
+            cursor = tf->firstCursorPosition();
+            cursor.insertText(label->toPlainText());
+            cursor = main_frame->lastCursorPosition();
+        }
+
+        QTextTableFormat table_format;
+        table_format.setBorderStyle(QTextFrameFormat::BorderStyle_Solid);
+        table_format.setBorderBrush(QBrush(Qt::black));
+        table_format.setBorder(0.2);
+        table_format.setCellPadding(0.0);
+        table_format.setCellSpacing(0.2);
+        table_format.setMargin(0.0);
+
+        QTextTable* tb;
+
+        int column_size = column_list.size();
+        QTextTableCell tc;
+        foreach(ReportTable *report_table, table_list) {
+            table_format.setWidth(report_table->totalWidth());
+            QVector<QTextLength> constraints;
+            constraints << QTextLength(QTextLength::VariableLength, report_table->totalWidth());
+            table_format.setColumnWidthConstraints(constraints);
+            tb = cursor.insertTable(1, column_list.size(), table_format);
+            for(int col=0; col<column_size; col++) {
+                if(report_table->getColumnEnabled(col)) {
+                    tc = tb->cellAt(0, col);
+                    cursor = tc.firstCursorPosition();
+                    cursor.insertText(column_list.at(col));
+                }
+            }
+        }
+
+        int row = 1;
+        while(sql_query.next()) {
+            foreach(ReportTable *report_table, table_list) {
+                tb->appendRows(1);
+                for(int col=0; col<column_size; col++) {
+                    if(print_cancelled)
+                        return;
+                    if(report_table->getColumnEnabled(col)) {
+                        tc = tb->cellAt(row++, col);
+                        cursor = tc.firstCursorPosition();
+                        cursor.insertText(sql_query.value(col).toString());
+                    }
+                }
+            }
+        }
 
         QTextDocumentWriter writer(file_name, "html");
         writer.write(td);
@@ -1041,26 +1124,43 @@ void ReportWindow::odfPrint(QString file_name)
         table_format.setBorderStyle(QTextFrameFormat::BorderStyle_Solid);
         table_format.setBorderBrush(QBrush(Qt::black));
         table_format.setBorder(0.2);
-        table_format.setWidth(table_list.at(0)->totalWidth());
         table_format.setCellPadding(0.0);
         table_format.setCellSpacing(0.2);
         table_format.setMargin(0.0);
-        QVector<QTextLength> constraints;
-        constraints << QTextLength(QTextLength::VariableLength, table_list.at(0)->totalWidth());
-        table_format.setColumnWidthConstraints(constraints);
 
-        QTextTable* tb = cursor.insertTable(1, 1, table_format);
+        QTextTable* tb;
 
-        QTextTableCell tc = tb->cellAt(0, 0);
-        cursor = tc.firstCursorPosition();
-        cursor.insertText(column_list.at(0));
+        int column_size = column_list.size();
+        QTextTableCell tc;
+        foreach(ReportTable *report_table, table_list) {
+            table_format.setWidth(report_table->totalWidth());
+            QVector<QTextLength> constraints;
+            constraints << QTextLength(QTextLength::VariableLength, report_table->totalWidth());
+            table_format.setColumnWidthConstraints(constraints);
+            tb = cursor.insertTable(1, column_list.size(), table_format);
+            for(int col=0; col<column_size; col++) {
+                if(report_table->getColumnEnabled(col)) {
+                    tc = tb->cellAt(0, col);
+                    cursor = tc.firstCursorPosition();
+                    cursor.insertText(column_list.at(col));
+                }
+            }
+        }
 
         int row = 1;
         while(sql_query.next()) {
-            tb->appendRows(1);
-            tc = tb->cellAt(row++, 0);
-            cursor = tc.firstCursorPosition();
-            cursor.insertText(sql_query.value(0).toString());
+            foreach(ReportTable *report_table, table_list) {
+                tb->appendRows(1);
+                for(int col=0; col<column_size; col++) {
+                    if(print_cancelled)
+                        return;
+                    if(report_table->getColumnEnabled(col)) {
+                        tc = tb->cellAt(row++, col);
+                        cursor = tc.firstCursorPosition();
+                        cursor.insertText(sql_query.value(col).toString());
+                    }
+                }
+            }
         }
 
         QTextDocumentWriter writer(file_name, "odf");

@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <davyjones@github>
+  Copyright (c) 2010-2013, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -37,8 +37,8 @@ ConnectionProperties::ConnectionProperties(Database *database, MainWin *mainwin)
 
     button_box = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
     button_box->setCenterButtons(true);
-    connect(button_box, SIGNAL(accepted()), this, SLOT(okslot()));
-    connect(button_box, SIGNAL(rejected()), this, SLOT(close()));
+    connect(button_box, &QDialogButtonBox::accepted, this, &ConnectionProperties::okslot);
+    connect(button_box, &QDialogButtonBox::rejected, this, &ConnectionProperties::close);
 
     server = new QLineEdit(this);
     server->setFont(font);
@@ -74,26 +74,17 @@ ConnectionProperties::ConnectionProperties(Database *database, MainWin *mainwin)
     form_layout->addRow(button_box);
     setLayout(form_layout);
 
-    QObject::connect(this, SIGNAL(oksignal(QString,qint32,QString,QString,QString)),
-                     mainwin, SLOT(newDatabase(QString,qint32,QString,QString,QString)));
+    connect(this, &ConnectionProperties::oksignal,
+                     mainwin, &MainWin::newDatabaseWithParams);
 
-    if(!database->getDatabaseStatus()) {
-        server->setText(database->getHost());
-        db_name->setText(database->getName());
-        port->setText(database->getPort());
-        username->setText(database->getUser());
-        password->setText(database->getPassword());
-    }
-    else {
-        QSqlDatabase database_connection = QSqlDatabase::database(QString("base").append(QString::number(database->getId())));
-        server->setText(database_connection.hostName());
-        db_name->setText(database->getName());
-        port->setText(QString::number(database_connection.port()));
-        username->setText(database_connection.userName());
-        password->setText(database_connection.password());
-    }
+    server->setText(database->getHost());
+    db_name->setText(database->getName());
+    port->setText(database->getPort());
+    username->setText(database->getUser());
+    password->setText(database->getPassword());
 
 #ifdef Q_WS_X11
     move(mainwin->x()+mainwin->width()/2-sizeHint().width()/2, mainwin->y()+mainwin->height()/2-sizeHint().height()/2);
 #endif
 }
+

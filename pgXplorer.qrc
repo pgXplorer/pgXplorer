@@ -75,35 +75,39 @@
         <file>icons/window.png</file>
         <file>icons/down.png</file>
         <file>icons/pivot.png</file>
-        <file>icons/database.svg</file>
-        <file>icons/open.svg</file>
-        <file>icons/save.svg</file>
-        <file>icons/properties.svg</file>
-        <file>icons/editor.svg</file>
-        <file>icons/search.svg</file>
-        <file>icons/fullscreen.svg</file>
-        <file>icons/new.svg</file>
+        <file>icons/having.png</file>
         <file>icons/console.svg</file>
-        <file>icons/table.svg</file>
-        <file>icons/view2.svg</file>
-        <file>icons/function.svg</file>
-        <file>icons/ok.svg</file>
-        <file>icons/save_as.svg</file>
-        <file>icons/key.svg</file>
-        <file>icons/refresh.svg</file>
-        <file>icons/pivot.svg</file>
+        <file>icons/copy_sql.svg</file>
         <file>icons/copy_with_headers.svg</file>
         <file>icons/copy_without_headers.svg</file>
-        <file>icons/filter.svg</file>
-        <file>icons/exclude.svg</file>
-        <file>icons/ascending.svg</file>
-        <file>icons/descending.svg</file>
-        <file>icons/group.svg</file>
-        <file>icons/window.svg</file>
-        <file>icons/copy_sql.svg</file>
+        <file>icons/database.svg</file>
         <file>icons/delete_rows.svg</file>
-        <file>icons/truncate.svg</file>
+        <file>icons/descending.svg</file>
+        <file>icons/editor.svg</file>
+        <file>icons/exclude.svg</file>
+        <file>icons/filter.svg</file>
+        <file>icons/fullscreen.svg</file>
+        <file>icons/function.svg</file>
+        <file>icons/group.svg</file>
+        <file>icons/key.svg</file>
+        <file>icons/minus.svg</file>
+        <file>icons/new.svg</file>
         <file>icons/next.svg</file>
+        <file>icons/ok.svg</file>
+        <file>icons/open.svg</file>
+        <file>icons/pencil.svg</file>
+        <file>icons/pivot.svg</file>
         <file>icons/previous.svg</file>
+        <file>icons/properties.svg</file>
+        <file>icons/refresh.svg</file>
+        <file>icons/save_as.svg</file>
+        <file>icons/save.svg</file>
+        <file>icons/search.svg</file>
+        <file>icons/table.svg</file>
+        <file>icons/truncate.svg</file>
+        <file>icons/view2.svg</file>
+        <file>icons/window.svg</file>
+        <file>icons/x.svg</file>
+        <file>icons/ascending.svg</file>
     </qresource>
 </RCC>

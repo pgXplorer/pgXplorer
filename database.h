@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <dj@pgxplorer.com>
+  Copyright (c) 2010-2013, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -53,7 +53,8 @@ private:
     QString port;
     QString user;
     QString password;
-    bool status;
+    bool connection_status;
+    bool param_status;
     bool collapsed;
     QList<SchemaLink*> edgeList;
     QPointF newPos;
@@ -97,7 +98,7 @@ public:
     {
         return QRectF(-50, -37.5, 100, 75);
     }
-    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *,
                QWidget *)
     {
         painter->setPen(QColor(0,0,0,0));
@@ -179,11 +180,19 @@ public:
     }
     bool getDatabaseStatus()
     {
-        return status;
+        return connection_status;
+    }
+    bool getParamStatus()
+    {
+        return param_status;
     }
     void setDatabaseStatus(bool status)
     {
-        this->status = status;
+        this->connection_status = status;
+    }
+    void setParamStatus(bool status)
+    {
+        param_status = status;
     }
     QList<Schema*> getSchemaList()
     {
@@ -241,7 +250,7 @@ public:
     {
         return settings_list.value(key);
     }
-    
+
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent*);
     void contextMenuEvent(QGraphicsSceneContextMenuEvent*);
 

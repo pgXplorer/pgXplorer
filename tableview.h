@@ -19,6 +19,7 @@
 #ifndef TABLEVIEW_H
 #define TABLEVIEW_H
 
+#include <QDebug>
 #include <QtWidgets/QtWidgets>
 #include <QtConcurrent/QtConcurrent>
 #include <QSqlTableModel>
@@ -28,6 +29,7 @@
 #include <QSqlError>
 #include <QtGui>
 #include "database.h"
+#include "tablequerythread.h"
 #include "tablemodel.h"
 #include "comboheader.h"
 
@@ -71,14 +73,17 @@ private:
     QMenu unwindow_menu;
     QTime t;
     ToolBar *toolbar;
+    TableQueryThread *table_query_thread;
     TableModel *table_model;
     QTableView *table_view;
     QStandardItemModel *new_row_model;
     NewRowTableView *new_row_view;
-    QString sql;
+    QString check_query;
+    QString main_query;
     QStringList where_clause;
     QStringList order_clause;
     QStringList group_clause;
+    QStringList having_clause;
     QStringList window_partition_clause;
     QList<QStringList> window_order_clause;
     QString limit;
@@ -89,7 +94,6 @@ private:
     qint32 rows_to;
     qint32 column_count;
     bool thread_busy;
-    bool window_closed;
     bool grouping;
     bool windowing;
     bool pivoting;
@@ -98,27 +102,33 @@ private:
     const QIcon filter_icon = QIcon(":/icons/filter.svg");
     const QIcon exclude_icon = QIcon(":/icons/exclude.svg");
     const QIcon group_icon = QIcon(":/icons/group.svg");
+    const QIcon having_icon = QIcon(":/icons/filter.svg");
     const QIcon window_icon = QIcon(":/icons/window.svg");
     const QIcon pivot_icon = QIcon(":/icons/pivot.svg");
     const QIcon ascend_icon = QIcon(":/icons/ascending.svg");
     const QIcon descend_icon = QIcon(":/icons/descending.svg");
     const QString default_css = "QTableView {selection-background-color: \
-                                qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0.25, \
-                                stop: 0 #5F5F7F, stop: 1 #7F7F9F); \
-                                selection-color: #F0F0F0; \
-                                color: #0F0F0F; \
-                                }";
-    const QString pivot_hightlight_css = "QTableView {selection-background-color: rgba(128, 128, 255, 127); \
-                                          selection-color: #0F0F0F; \
-                                          color: #0F0F0F; \
+                                    qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0.25, \
+                                    stop: 0 #5F5F7F, stop: 1 #7F7F9F); \
+                                    selection-color: #F0F0F0; \
+                                    color: #0F0F0F; \
+                                 } \
+                                 QHeaderView {\
+                                    border-bottom: 2px solid lightgray;\
+                                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, \
+                                    stop: 0 #FFFFFF, stop: 1 #EEEEEE); \
+                                 }";
+    const QString pivot_hightlight_css = "QTableView {selection-background-color: rgba(128, 128, 255, 100); \
+                                              selection-color: #0F0F0F; \
+                                              color: #0F0F0F; \
                                           }";
-    const QString pivot_cat_css = "QTableView {selection-background-color: rgba(0, 255, 0, 127); \
-                                   selection-color: #0F0F0F; \
-                                   color: #0F0F0F; \
+    const QString pivot_cat_css = "QTableView {selection-background-color: rgba(0, 255, 0, 100); \
+                                       selection-color: #0F0F0F; \
+                                       color: #0F0F0F; \
                                    }";
-    const QString pivot_col_css = "QTableView {selection-background-color: rgba(255, 0, 0, 127); \
-                                   selection-color: #0F0F0F; \
-                                   color: #0F0F0F; \
+    const QString pivot_col_css = "QTableView {selection-background-color: rgba(255, 0, 0, 100); \
+                                       selection-color: #0F0F0F; \
+                                       color: #0F0F0F; \
                                    }";
     QAction *default_action;
     QAction *refresh_action;
@@ -155,10 +165,8 @@ private:
 
 public:
     static ulong tableViewObjectId;
-    TableView(Database *, QString const, QString const, QStringList const, QStringList const, QStringList const, QStringList const, bool, Qt::WidgetAttribute f);
-    ~TableView()
-    {
-    };
+    explicit TableView(Database *, QString const, QStringList const, QStringList const, QStringList const, QStringList const, bool, Qt::WidgetAttribute f);
+    ~TableView();
 
     bool eventFilter(QObject *, QEvent*);
     void keyReleaseEvent(QKeyEvent*);
@@ -170,6 +178,16 @@ public:
     void fetchConditionDataInitial();
     void fetchPivotData();
     void deleteData();
+    QTableView *getTableView()
+    {
+        return table_view;
+    }
+
+    NewRowTableView *getNewRowView()
+    {
+        return new_row_view;
+    }
+
     QString tableName()
     {
         return table_name;
@@ -207,19 +225,17 @@ public slots:
     void displayErrorMessage(QString);
     void bringOnTop();
     void regroup(QStringList);
-    void selectColumn(int col)
-    {
+    void selectColumn(int col) {
         table_view->selectColumn(col);
     }
 
 private slots:
-    void buildQuery();
+    void buildQuery(int);
     void buildPivotQuery();
-    void fetchDefaultData();
     void fetchRefreshData(QString);
     void fetchDataSlot();
-    void fetchNextData();
-    void fetchPreviousData();
+    void fetchNextSlot();
+    void fetchPrevSlot();
     void bulkUpdateData(QModelIndexList, QVariant);
     void copyToClipboard();
     void copyToClipboardWithHeaders();
@@ -227,7 +243,7 @@ private slots:
     void refreshView();
     void addRowRefreshView();
     void filter();
-    void filter(QString);
+    void customFilter(QString);
     void exclude();
     void group();
     void window();
@@ -248,10 +264,9 @@ private slots:
     void deleteRow(int);
     void updatePrimaryKeyInfo();
     void bulkUpdate();
-
     void busySlot();
     void notBusySlot();
-    void updRowCntSlot(QString);
+    void updRowCntSlot(QString, QString, bool);
     void fullscreen();
     void restore();
     void toggleActions();
@@ -262,8 +277,12 @@ signals:
     void busySignal();
     void notBusySignal();
     void showQueryView(Database *, QString);
-    void updRowCntSignal(QString);
+    void updRowCntSignal(QString, QString);
+    void updateColumnAggregate(QStringList);
+    void canUpdate(bool);
     void queryFailed(QString);
+    void startQuery(QString, QString);
+    void stopQuery();
     void functionsUpdated();
     void tableViewClosing(TableView*);
 };
@@ -282,6 +301,9 @@ public:
 
 public slots:
     void resizeCells(int, int, int);
+    void setFocuz() {
+        setFocus();
+    }
 
 signals:
     void insertRow();

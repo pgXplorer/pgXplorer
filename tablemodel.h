@@ -34,6 +34,8 @@ class TableModel : public QSqlQueryModel
 
 public slots:
     void clearCache();
+    void setColumnAggregate(QStringList);
+    void setCanUpdate(bool);
 
 public:
     TableModel(Database *database, QStringList primary_key, QString table_name);
@@ -42,6 +44,7 @@ public:
     bool setData(const QModelIndex &index, const QVariant &value, int role);
     QVariant data(const QModelIndex & item, int role = Qt::DisplayRole) const;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const;
+    bool setUpdateData(const QModelIndex &index, const QVariant &value);
     bool update();
     void setRowsFrom(int);
     int getPivotCol();
@@ -56,7 +59,9 @@ private:
     QString table_name;
     int rows_from;
     QStringList primary_key;
+    QStringList current_column_aggregates;
     bool primary_key_with_oid;
+    bool can_update;
     QStringList primary_key_values;
     QString edit_column;
     QModelIndex edit_index;

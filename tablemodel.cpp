@@ -25,6 +25,7 @@ TableModel::TableModel(Database *database, QStringList primary_key, QString tabl
     this->primary_key_with_oid = primary_key_with_oid;
     this->table_name = table_name;
     this->rows_from = 1;
+    this->can_update = false;
 
     pivot_col = -1;
     pivot_cat = -1;
@@ -71,9 +72,19 @@ Qt::ItemFlags TableModel::flags(const QModelIndex &index) const
     Qt::ItemFlags flags = QSqlQueryModel::flags(index);
 
     //Make table editable only when primary key exists.
-    if(!primary_key.isEmpty())
+    if(!primary_key.isEmpty() && can_update)
         flags |= Qt::ItemIsEditable;
     return flags;
+}
+
+void TableModel::setColumnAggregate(QStringList aggs)
+{
+    current_column_aggregates = aggs;
+}
+
+void TableModel::setCanUpdate(bool can_update)
+{
+    this->can_update = can_update;
 }
 
 bool TableModel::setData(const QModelIndex &index, const QVariant &value, int role)
@@ -121,6 +132,43 @@ bool TableModel::setData(const QModelIndex &index, const QVariant &value, int ro
     }
 }
 
+bool TableModel::setUpdateData(const QModelIndex &index, const QVariant &value)
+{
+    //Make sure tables without primary key don't propagate changes.
+    if(primary_key.isEmpty())
+        return false;
+
+    //if(!primary_key.isEmpty() && primary_key_with_oid && index.column()==0)
+    //    return false;
+
+    //Make sure that only changed values are UPDATEd.
+    if(value.toString().compare(data(index).toString()) == 0)
+        return false;
+
+    //Get the row data into a QSqlRecord object
+    QSqlRecord rec = record(index.row());
+
+    //Get parameters for UPDATE query
+    edit_column = QString("\"" + rec.fieldName(index.column()) + "\"");
+    edit_index = index;
+    edit_value = value;
+
+    //Initialise primary_key_values and number of columns.
+    primary_key_values.clear();
+    int column_count = rec.count();
+
+    //Check for primary keys to pass to UPDATE statment
+    for(int column = 0; column < column_count; column++) {
+        if(primary_key.contains(QString("\"" + rec.fieldName(column)) + "\""))
+                primary_key_values.append(rec.value(column).toString());
+    }
+
+    cache_values.insert(index, value);
+    primary_key_values.clear();
+    emit dataChanged(index, index);
+    return true;
+}
+
 QVariant TableModel::data(const QModelIndex &index, int role) const
 {
     //Store the index into item to call the sibling of index.
@@ -131,10 +179,10 @@ QVariant TableModel::data(const QModelIndex &index, int role) const
         return (Qt::AlignVCenter + Qt::AlignRight);
 
     if(index.isValid() && role == Qt::BackgroundRole && index.column() == pivot_col)
-        return QColor(255, 0, 0, 127);
+        return QColor(255, 0, 0, 100);
 
     if(index.isValid() && role == Qt::BackgroundRole && index.column() == pivot_cat)
-        return QColor(0, 255, 0, 127);
+        return QColor(0, 255, 0, 100);
 
     //Disable all roles except DisplayRole and EditRole
     if (!index.isValid() || (role != Qt::DisplayRole && role != Qt::EditRole))
@@ -152,8 +200,10 @@ QVariant TableModel::headerData(int section, Qt::Orientation orientation, int ro
 {
     if(orientation == Qt::Vertical && role == Qt::DisplayRole)
         return QVariant(rows_from + section);
-    else
-        return QSqlQueryModel::headerData(section, orientation, role);
+    else {
+        //return QSqlQueryModel::headerData(section, orientation, role);
+        return QVariant();
+    }
 }
 
 bool TableModel::update()
@@ -161,7 +211,7 @@ bool TableModel::update()
     //initialise the UPDATE status
     bool update_status = false;
 
-    //Block to perform the actual UPDATE
+    //Code-block to perform the actual UPDATE
     {
         QSqlDatabase database_connection = QSqlDatabase::addDatabase("QPSQL", "update " + objectName());
         database_connection.setHostName(database->getHost());

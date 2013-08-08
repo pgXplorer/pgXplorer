@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <dj@pgxplorer.com>
+  Copyright (c) 2010-2013, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -29,16 +29,17 @@ Database::Database(MainWin *mainwin, int database_id)
         this->database_id = database_id;
     this->mainwin = mainwin;
     setDatabaseStatus(false);
+    setParamStatus(false);
     setDatabaseCollapsed(true);
     setFlags(QGraphicsItem::ItemIsSelectable | ItemSendsGeometryChanges);
     setToolTip(getName());
     setCacheMode(DeviceCoordinateCache);
     setZValue(-1);
-    connect(this, SIGNAL(setMainWinTitle(QString)), mainwin, SLOT(setWindowTitle(QString)));
-    connect(this, SIGNAL(expandDatabase(Database*)), mainwin, SLOT(showSchemas()));
-    connect(this, SIGNAL(collapseDatabase(Database*)), mainwin, SLOT(hideSchemas()));
-    connect(this, SIGNAL(expandAll(Database*)), mainwin, SLOT(explodeAndShowSchemas()));
-    connect(this, SIGNAL(expandAllVertically(Database*)), mainwin, SLOT(explodeAndShowSchemasVertically()));
+    connect(this, &Database::setMainWinTitle, mainwin, &MainWin::setWindowTitle);
+    connect(this, &Database::expandDatabase, mainwin, &MainWin::showSchemas);
+    connect(this, &Database::collapseDatabase, mainwin, &MainWin::hideSchemas);
+    connect(this, &Database::expandAll, mainwin, &MainWin::explodeAndShowSchemas);
+    connect(this, &Database::expandAllVertically, mainwin, &MainWin::explodeAndShowSchemasVertically);
 }
 
 void Database::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
@@ -189,18 +190,18 @@ bool Database::populateDatabase()
                 schema_link->show();
             schema_link->show();*/
 
-            QObject::connect(schema, SIGNAL(expandSchemaTables(Schema*)), mainwin, SLOT(showTables(Schema*)));
-            QObject::connect(schema, SIGNAL(collapseSchemaTables(Schema*)), mainwin, SLOT(hideTables(Schema*)));
-            QObject::connect(schema, SIGNAL(collapseOtherSchemas(Schema*)), mainwin, SLOT(hideOtherTables(Schema*)));
-            QObject::connect(schema, SIGNAL(expandSchemaViews(Schema*)), mainwin, SLOT(showViews(Schema*)));
-            QObject::connect(schema, SIGNAL(collapseSchemaViews(Schema*)), mainwin, SLOT(hideViews(Schema*)));
-            QObject::connect(schema, SIGNAL(expandSchemaFunctions(Schema*)), mainwin, SLOT(showFunctions(Schema*)));
-            QObject::connect(schema, SIGNAL(collapseSchemaFunctions(Schema*)), mainwin, SLOT(hideFunctions(Schema*)));
-            QObject::connect(schema, SIGNAL(newTable(Schema*)), mainwin, SLOT(newTable(Schema*)));
-            //QObject::connect(schema, SIGNAL(newView(Schema*)), mainwin, SLOT(newView(Schema*)));
-            QObject::connect(schema, SIGNAL(newFunction(Schema*)), mainwin, SLOT(newFunction(Schema*)));
-            connect(this, SIGNAL(collapseSchemaTables(Schema*)), mainwin, SLOT(hideTables(Schema*)));
-            connect(this, SIGNAL(collapseSchemaFunctions(Schema*)), mainwin, SLOT(hideFunctions(Schema*)));
+            QObject::connect(schema, &Schema::expandSchemaTables, mainwin, &MainWin::showTables);
+            QObject::connect(schema, &Schema::collapseSchemaTables, mainwin, &MainWin::hideTables);
+            QObject::connect(schema, &Schema::collapseOtherSchemas, mainwin, &MainWin::hideOtherTables);
+            QObject::connect(schema, &Schema::expandSchemaViews, mainwin, &MainWin::showViews);
+            QObject::connect(schema, &Schema::collapseSchemaViews, mainwin, &MainWin::hideViews);
+            QObject::connect(schema, &Schema::expandSchemaFunctions, mainwin, &MainWin::showFunctions);
+            QObject::connect(schema, &Schema::collapseSchemaFunctions, mainwin, &MainWin::hideFunctions);
+            QObject::connect(schema, &Schema::newTable, mainwin, &MainWin::newTable);
+            //QObject::connect(schema, &Schema::newView, mainwin, &MainWin::newView);
+            QObject::connect(schema, &Schema::newFunction, mainwin, &MainWin::newFunction);
+            connect(this, &Database::collapseSchemaTables, mainwin, &MainWin::hideTables);
+            connect(this, &Database::collapseSchemaFunctions, mainwin, &MainWin::hideFunctions);
             if(!mainwin->isColumnView()) {
                 emit collapseSchemaTables(schema);
             }
@@ -240,7 +241,7 @@ bool Database::populateDatabase()
             keywords_list.append(query->value(0).toString());
             keywords_list.append(query->value(1).toString());
         }
-        
+
         query->exec("show all");
         if(query->lastError().isValid()) {
             QMessageBox *error_message = new QMessageBox(QMessageBox::Critical,
@@ -253,7 +254,7 @@ bool Database::populateDatabase()
             return false;
         }
         while (query->next()) {
-          settings_list.insert(query->value(0).toString(), query->value(1).toString());
+            settings_list.insert(query->value(0).toString(),query->value(1).toString());
         }
     }
 
@@ -293,6 +294,8 @@ bool Database::setConnectionProperties(const QString srv,
     setName(dbname);
     setUser(user);
     setPassword(pass);
+
+    setParamStatus(true);
 
     database_connection = QSqlDatabase::addDatabase("QPSQL", QString("base").append(QString::number(database_id)));
 

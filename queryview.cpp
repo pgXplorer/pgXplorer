@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <dj@pgxplorer.com>
+  Copyright (c) 2010-2013, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -24,8 +24,9 @@ ulong QueryView::queryViewObjectId = 0;
 
 QueryView::QueryView(Database *database, QString command)
 {
+    setAttribute(Qt::WA_DeleteOnClose);
     this->database = database;
-    this->sql = command;
+    this->command = command;
 
     //Identify this object with thisTableViewId for constructing database connection
     //specific to this object and this object alone.
@@ -44,6 +45,8 @@ QueryView::QueryView(Database *database, QString command)
     toolbar->setIconSize(QSize(36,36));
     toolbar->setObjectName("tableview");
     toolbar->setMovable(false);
+    toolbar->addAction(stop_action);
+    toolbar->addAction(terminate_action);
     toolbar->addAction(copy_action);
     toolbar->addAction(copy_with_headers_action);
     toolbar->addSeparator();
@@ -67,17 +70,24 @@ QueryView::QueryView(Database *database, QString command)
 
     //Create key-sequences for fullscreen and restore.
     shortcut_fullscreen = new QShortcut(QKeySequence(Qt::Key_F11), this);
-    connect(shortcut_fullscreen, SIGNAL(activated()), SLOT(fullscreen()));
+    connect(shortcut_fullscreen, &QShortcut::activated, this, &QueryView::fullscreen);
     shortcut_restore = new QShortcut(QKeySequence(Qt::Key_Escape), this);
-    connect(shortcut_restore, SIGNAL(activated()), SLOT(restore()));
-
-    //Tie thread finish to an update slot that refreshes meta-information.
-    connect(this, SIGNAL(updRowCntSignal(QString)), SLOT(updRowCntSlot(QString)));
+    connect(shortcut_restore, &QShortcut::activated, this, &QueryView::restore);
 
     //Tie a busy signal to a slot that changes the cursor to wait cursor.
-    connect(this, SIGNAL(busySignal()), SLOT(busySlot()));
+    connect(this, &QueryView::busySignal, this, &QueryView::busySlot);
 
-    QtConcurrent::run(this, &QueryView::fetchData, sql);
+    //Create and start a query thread.
+    simple_query_thread = new SimpleQueryThread(0, query_model, command);
+    simple_query_thread->setConnectionParameters(database->getHost(),
+                                                  database->getPort(),
+                                                  database->getName(),
+                                                  database->getUser(),
+                                                  database->getPassword());
+    simple_query_thread->setExecOnStart(true);
+    connect(this, &QueryView::cancelQuery, simple_query_thread, &SimpleQueryThread::stopQuery);
+    connect(simple_query_thread, &SimpleQueryThread::workerIsDone, this, &QueryView::updRowCntSlot);
+    simple_query_thread->start(QThread::TimeCriticalPriority);
 }
 
 void QueryView::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
@@ -116,61 +126,78 @@ void QueryView::closeEvent(QCloseEvent *event)
         settings.setValue("queryview_maximized", true);
         showNormal();
     }
-    else
+    else {
         settings.setValue("queryview_maximized", false);
+    }
     settings.setValue("queryview_pos", pos());
     settings.setValue("queryview_size", size());
     settings.setValue("icon_size", toolbar->iconSize());
 
-    if(!thread_busy) {
-        delete query_view;
-        delete errors_model;
-        delete query_model;
-        delete shortcut_fullscreen;
-        delete shortcut_restore;
-        QSqlDatabase::removeDatabase("queryview " + QString::number(thisQueryViewId));
-        close();
-    }
+    emit cancelQuery();
+
+    simple_query_thread->quit();
+    simple_query_thread->wait();
+
+    QSqlDatabase::removeDatabase("queryview " + QString::number(thisQueryViewId));
+    QMainWindow::closeEvent(event);
+}
+
+QueryView::~QueryView()
+{
+    delete simple_query_thread;
+    delete query_view;
+    delete errors_model;
+    delete query_model;
+    delete shortcut_fullscreen;
+    delete shortcut_restore;
 }
 
 void QueryView::createActions()
 {
+    stop_action = new QAction(QIcon(":/icons/stop.png"), tr("Stop"), this);
+    stop_action->setStatusTip(tr("Cancel selected query"));
+    connect(stop_action, &QAction::triggered, this , &QueryView::stopQuery);
+
+    terminate_action = new QAction(QIcon(":/icons/terminate.png"), tr("Terminate"), this);
+    terminate_action->setStatusTip(tr("Terminate selected query"));
+    connect(terminate_action, &QAction::triggered, this , &QueryView::terminateQuery);
+
     copy_action = new QAction(QIcon(":/icons/copy_without_headers.png"), tr("Copy"), this);
     copy_action->setShortcuts(QKeySequence::Copy);
     copy_action->setStatusTip(tr("Copy selected"));
     copy_action->setEnabled(false);
-    connect(copy_action, SIGNAL(triggered()), SLOT(copyToClipboard()));
+    connect(copy_action, &QAction::triggered, this , &QueryView::copyToClipboard);
 
     copy_with_headers_action = new QAction(QIcon(":/icons/copy_with_headers.png"), tr("Copy with headers"), this);
     copy_with_headers_action->setShortcut(QKeySequence("Ctrl+Shift+C"));
     copy_with_headers_action->setStatusTip(tr("Copy selected with headers"));
     copy_with_headers_action->setEnabled(false);
-    connect(copy_with_headers_action, SIGNAL(triggered()), SLOT(copyToClipboardWithHeaders()));
+    connect(copy_with_headers_action, &QAction::triggered, this , &QueryView::copyToClipboardWithHeaders);
 
     scatterplot_action = new QAction(QIcon(":/icons/scatter.png"), tr("Scatter plot"), this);
     scatterplot_action->setEnabled(false);
     scatterplot_action->setStatusTip(tr("Plot the selected columns as a scatter plot"));
-    connect(scatterplot_action, SIGNAL(triggered()), SLOT(scatterPlot()));
+    connect(scatterplot_action, &QAction::triggered, this , &QueryView::scatterPlot);
 
     lineplot_action = new QAction(QIcon(":/icons/line.png"), tr("Line plot"), this);
     lineplot_action->setEnabled(false);
     lineplot_action->setStatusTip(tr("Plot the selected columns as a line plot"));
-    connect(lineplot_action, SIGNAL(triggered()), SLOT(linePlot()));
+    connect(lineplot_action, &QAction::triggered, this , &QueryView::linePlot);
 
     barplot_action = new QAction(QIcon(":/icons/bar.png"), tr("Bar plot"), this);
     barplot_action->setEnabled(false);
     barplot_action->setStatusTip(tr("Plot the selected columns as a bar plot"));
-    connect(barplot_action, SIGNAL(triggered()), SLOT(barPlot()));
+    connect(barplot_action, &QAction::triggered, this , &QueryView::barPlot);
 
     areaplot_action = new QAction(QIcon(":/icons/area.png"), tr("Area plot"), this);
     areaplot_action->setEnabled(false);
     areaplot_action->setStatusTip(tr("Plot the selected columns as an area plot"));
-    connect(areaplot_action, SIGNAL(triggered()), SLOT(areaPlot()));
+    connect(areaplot_action, &QAction::triggered, this , &QueryView::areaPlot);
 
     report_action = new QAction(QIcon(":/icons/report.png"), tr("Report"), this);
     report_action->setEnabled(false);
     report_action->setStatusTip(tr("Create a report based on this data"));
-    connect(report_action, SIGNAL(triggered()), SLOT(createReport()));
+    connect(report_action, &QAction::triggered, this , &QueryView::createReport);
 }
 
 void QueryView::copyToClipboard()
@@ -250,24 +277,28 @@ void QueryView::busySlot()
     setCursor(Qt::WaitCursor);
     t.start();
     query_view->horizontalHeader()->setStretchLastSection(false);
-    disableCopyActions();
+    disableActions();
 }
 
 void QueryView::notBusy()
 {
-    enableCopyActions();
+    enableActions();
     setCursor(Qt::ArrowCursor);
     thread_busy = false;
 }
 
-void QueryView::enableCopyActions()
+void QueryView::enableActions()
 {
+    stop_action->setEnabled(false);
+    terminate_action->setEnabled(false);
     copy_action->setEnabled(true);
     copy_with_headers_action->setEnabled(true);
 }
 
-void QueryView::disableCopyActions()
+void QueryView::disableActions()
 {
+    stop_action->setEnabled(true);
+    terminate_action->setEnabled(true);
     copy_action->setEnabled(false);
     copy_with_headers_action->setEnabled(false);
 }
@@ -316,7 +347,7 @@ void QueryView::bringOnTop()
     raise();
 }
 
-void QueryView::updRowCntSlot(QString error)
+void QueryView::updRowCntSlot(QString status, QString error)
 {
     time_elapsed_string = QApplication::translate("QueryView", "Time elapsed:", 0);
     rows_string = QApplication::translate("QueryView", "Rows:", 0);
@@ -364,7 +395,7 @@ void QueryView::updRowCntSlot(QString error)
     }
     else {
         query_view->setModel(query_model);
-        connect(query_view->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)), SLOT(togglePlots()));
+        connect(query_view->selectionModel(), &QItemSelectionModel::selectionChanged, this, &QueryView::togglePlots);
 
         query_view->verticalScrollBar()->setValue(0);
         if(query_model->rowCount() == 0)
@@ -502,7 +533,7 @@ void QueryView::areaPlot()
 
 void QueryView::createReport()
 {
-    ReportWindow *report_win = new ReportWindow(database, sql);
+    ReportWindow *report_win = new ReportWindow(database, command);
     QSettings settings("pgXplorer", "pgXplorer");
     QPoint pos = settings.value("reportwindow_pos", QPoint(100, 100)).toPoint();
     QSize size = settings.value("reportwindow_size", QSize(1024, 768)).toSize();
@@ -512,4 +543,108 @@ void QueryView::createReport()
     report_win->move(pos);
     report_win->getToolbar()->setIconSize(icon_size);
     report_win->show();
+}
+
+void QueryView::stopQuery()
+{
+    int ret = QMessageBox::question(this, "pgXplorer",
+                                    tr("Do you want to cancel this query?"),
+                                    QMessageBox::Yes | QMessageBox::No,
+                                    QMessageBox::Yes);
+    if(ret == QMessageBox::No)
+        return;
+    emit cancelQuery();
+}
+
+/*void QueryView::stopQuery()
+{
+    int ret = QMessageBox::question(this, "pgXplorer",
+                                    tr("Do you want to cancel this query?"),
+                                    QMessageBox::Yes | QMessageBox::No,
+                                    QMessageBox::Yes);
+    if(ret == QMessageBox::No)
+        return;
+
+    {
+        QSqlDatabase database_connection;
+        database_connection = QSqlDatabase::addDatabase("QPSQL", QLatin1String("cancel"));
+        database_connection.setHostName(database->getHost());
+        database_connection.setPort(database->getPort().toInt());
+        database_connection.setDatabaseName(database->getName());
+        database_connection.setUserName(database->getUser());
+        database_connection.setPassword(database->getPassword());
+        if (!database_connection.open()) {
+            qDebug() << tr("Couldn't connect to database.\n"
+                         "Check connection parameters.\n");
+            return;
+        }
+
+        QString sql;
+        if(database->settings("server_version_num").compare("90200") < 0) {
+            sql = "SELECT pg_cancel_backend(procpid) FROM pg_stat_activity WHERE current_query LIKE '";
+        }
+        else
+        {
+            sql = "SELECT pg_cancel_backend(pid) FROM pg_stat_activity WHERE query LIKE '";
+        }
+        sql.append(command);
+        sql.append("%'");
+        QSqlQueryModel query_model;
+        query_model.setQuery(sql, database_connection);
+
+        if (query_model.lastError().isValid()) {
+             qDebug() << query_model.lastError();
+        }
+        if(query_model.data(query_model.index(0, 0)).toBool())
+            statusBar()->showMessage(tr("Query was successfully cancelled."), 5000);
+        else
+            statusBar()->showMessage(tr("Could not cancel the selected query. Try terminating it."), 5000);
+    }
+    QSqlDatabase::removeDatabase(QLatin1String("cancel"));
+}*/
+
+void QueryView::terminateQuery()
+{
+    int ret = QMessageBox::question(this, "pgXplorer",
+                                    tr("Do you want to terminate this query?"),
+                                    QMessageBox::Yes | QMessageBox::No,
+                                    QMessageBox::Yes);
+    if(ret == QMessageBox::No)
+        return;
+
+    {
+        QSqlDatabase database_connection;
+        database_connection = QSqlDatabase::addDatabase("QPSQL", QLatin1String("terminate"));
+        database_connection.setHostName(database->getHost());
+        database_connection.setPort(database->getPort().toInt());
+        database_connection.setDatabaseName(database->getName());
+        database_connection.setUserName(database->getUser());
+        database_connection.setPassword(database->getPassword());
+        if (!database_connection.open()) {
+            qDebug() << tr("Couldn't connect to database.\n"
+                           "Check connection parameters.\n");
+            return;
+        }
+
+        QString sql;
+        if(database->settings("server_version_num").compare("90200") < 0) {
+            sql = "SELECT pg_terminate_backend(procpid) FROM pg_stat_activity WHERE current_query LIKE '";
+        }
+        else {
+            sql = "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE query LIKE '";
+        }
+
+        sql.append(command);
+        sql.append("%'");
+        QSqlQueryModel query_model;
+        query_model.setQuery(sql, database_connection);
+        if (query_model.lastError().isValid()) {
+             qDebug() << query_model.lastError();
+        }
+        if(query_model.data(query_model.index(0, 0)).toBool())
+            statusBar()->showMessage(tr("Query was successfully terminated."), 5000);
+        else
+            statusBar()->showMessage(tr("Could not terminate the selected query. Contact database administrator."), 5000);
+    }
+    QSqlDatabase::removeDatabase(QLatin1String("terminate"));
 }

@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <dj@pgxplorer.com>
+  Copyright (c) 2010-2013, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -20,7 +20,7 @@
 #define PGXEDITOR_H
 
 #include <QtGui>
-#include <QPlainTextEdit>
+#include <QtWidgets/QtWidgets>
 #include <QObject>
 #include "database.h"
 #include "highlighter.h"
@@ -155,7 +155,7 @@ private:
 
 signals:
     void newPgxeditor();
-    void newPgxeditor(QString);
+    void newPgxeditorQuery(QString);
     void showQueryView(Database *, QString);
     void pgxeditorClosing(PgxEditor *);
 };

@@ -3,10 +3,12 @@ TARGET		= pgXplorer
 
 CONFIG		+= qt warn_on
 
-VER_MAJ = 0
-VER_MIN = 1
+VER_MAJ = 1
+VER_MIN = 0
 VER_PAT = 0
-VERSION = 0.1.0
+VERSION = 1.0.0
+
+#DEFINES *= QT_USE_QSTRINGBUILDER
 
 HEADERS		= \
     database.h \
@@ -33,10 +35,13 @@ HEADERS		= \
     checkboxdelegate.h \
     tableproperties.h \
     graphwindow.h \
-    pgxplorerapplication.h \
     reportwindow.h \
+    pgxplorerapplication.h \
     statusview.h \
-    comboheader.h
+    comboheader.h \
+    tablequerythread.h \
+    simplequerythread.h
+
 SOURCES		= main.cpp \
     database.cpp \
     table.cpp \
@@ -62,15 +67,25 @@ SOURCES		= main.cpp \
     checkboxdelegate.cpp \
     tableproperties.cpp \
     graphwindow.cpp \
-    pgxplorerapplication.cpp \
     reportwindow.cpp \
+    pgxplorerapplication.cpp \
     statusview.cpp \
-    comboheader.cpp
+    comboheader.cpp \
+    tablequerythread.cpp \
+    simplequerythread.cpp
 
-QT += core gui widgets sql network
+QT += core gui sql widgets network
 
-linux:LIBS += /home/nimbus/libharu/src/libhpdfs.a -lz
+#SUBDIRS = threads models gui graphicalitems views
 
+win32:INCLUDEPATH += "C:/tmp3/postgresql-9.2.4/src/interfaces/libpq" "C:/tmp3/postgresql-9.2.4/src/include"
+unix:INCLUDEPATH += "/home/nimbus/libharu/include" "/usr/include"
+
+unix:LIBS += "/home/nimbus/libharu/src/libhpdfs.a" -lQt5Concurrent -lz -lpq
+win32:LIBS += C:/tmp5/libhpdf-2.3.0RC2/src/.libs/libhpdf.a -lQt5Concurrent C:/tmp3/postgresql-9.2.4/src/interfaces/libpq/libpq.a
+
+MOC_DIR = mocs
+OBJECTS_DIR = objs
 RESOURCES += pgXplorer.qrc
 
 TRANSLATIONS = pgXplorer_ja.ts \
@@ -83,14 +98,11 @@ ICON = database.icns
 
 CODECFORTR = UTF-8
 
-desktop.path = /usr/share/applications
-desktop.files += pgXplorer.desktop
-
 # install
-target.path = C:/QtSDK/Examples/4.7/graphicsview/pgXplorer
-sources.files = $$SOURCES $$HEADERS $$RESOURCES pgXplorer.pro
-sources.path = C:/QtSDK/Examples/4.7/graphicsview/pgXplorer
-INSTALLS += target sources desktop
+#target.path = C:/QtSDK/Examples/4.7/graphicsview/pgXplorer
+#sources.files = $$SOURCES $$HEADERS $$RESOURCES pgXplorer.pro
+#sources.path = C:/QtSDK/Examples/4.7/graphicsview/pgXplorer
+#INSTALLS += target sources
 
 OTHER_FILES += \
     pgXplorer.rc

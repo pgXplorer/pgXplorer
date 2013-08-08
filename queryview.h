@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <dj@pgxplorer.com>
+  Copyright (c) 2010-2013, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -19,13 +19,14 @@
 #ifndef QUERYVIEW_H
 #define QUERYVIEW_H
 
+#include <QtConcurrent/QtConcurrent>
 #include <QSqlTableModel>
 #include <QSqlError>
 #include <QtGui>
 #include <QObject>
-#include <QtConcurrent/QtConcurrent>
 #include "pgxconsole.h"
 #include "querymodel.h"
+#include "simplequerythread.h"
 
 class QueryView : public QMainWindow
 {
@@ -38,6 +39,7 @@ private:
     QString seconds_string;
 
     Database *database;
+    SimpleQueryThread *simple_query_thread;
     QMenu *fileMenu;
     QTime t;
     double time_elapsed;
@@ -47,10 +49,12 @@ private:
     QStandardItemModel *errors_model;
     QShortcut *shortcut_fullscreen;
     QShortcut *shortcut_restore;
-    QString sql;
+    QString command;
     QStringList whereCl;
     QStringList orderCl;
     ulong thisQueryViewId;
+    QAction *stop_action;
+    QAction *terminate_action;
     QAction *copy_action;
     QAction *copy_with_headers_action;
     QAction *scatterplot_action;
@@ -66,8 +70,8 @@ protected:
 
 public:
     static ulong queryViewObjectId;
-    QueryView(Database *, QString);
-    ~QueryView(){}
+    explicit QueryView(Database *, QString);
+    ~QueryView();
     void createActions();
 
     ulong getId()
@@ -77,7 +81,7 @@ public:
 
     QString query()
     {
-        return sql;
+        return command;
     }
 
     ToolBar* getToolbar()
@@ -86,19 +90,19 @@ public:
     }
 
     void notBusy();
-    void enableCopyActions();
-    void disableCopyActions();
+    void enableActions();
+    void disableActions();
 
 public slots:
     void bringOnTop();
     void togglePlots();
+    void updRowCntSlot(QString, QString);
     void languageChanged(QEvent*);
 
 private slots:
     void copyToClipboard();
     void copyToClipboardWithHeaders();
     void busySlot();
-    void updRowCntSlot(QString);
     void fullscreen();
     void restore();
     void fetchData(QString);
@@ -107,9 +111,13 @@ private slots:
     void barPlot();
     void areaPlot();
     void createReport();
+    void stopQuery();
+    void terminateQuery();
 
 signals:
     void busySignal();
+    void cancelQuery();
+    void startQuery(QString);
     void updRowCntSignal(QString);
     void errMesg(QString, uint);
     void queryViewClosing(QueryView*);

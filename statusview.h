@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <dj@pgxplorer.com>
+  Copyright (c) 2010-2013, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -22,6 +22,7 @@
 #include<QtGui>
 #include<QtSql>
 #include "database.h"
+#include "simplequerythread.h"
 
 class StatusView : public QMainWindow
 {
@@ -61,6 +62,7 @@ private:
     Database *database;
     ToolBar *toolbar;
     QSqlQueryModel *status_query_model;
+    SimpleQueryThread *status_query_thread;
     QTableView *status_view;
     QString status_message;
     int timer_interval;
@@ -79,13 +81,16 @@ private:
 
     QMenu *timer_menu;
 
+signals:
+    void requestStatus();
+
 private slots:
     void setNoInterval();
     void setTimerInterval1();
     void setTimerInterval2();
 
 public slots:
-    void getStatus();
+    void updateStatus();
     void toggleActions();
     void stopQuery();
     void terminateQuery();

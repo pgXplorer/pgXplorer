@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <dj@pgxplorer.com>
+  Copyright (c) 2010-2013, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -21,9 +21,8 @@
 
 #include <QtGui>
 #include <QtConcurrent/QtConcurrent>
-
 #include "database.h"
-#include "/home/nimbus/libharu/include/hpdf.h"
+#include "hpdf.h"
 
 class ReportView;
 class ReportWindow;
@@ -392,9 +391,11 @@ class ReportTable : public QGraphicsObject
 private:
     int rows;
     QStringList column_list;
+    QStringList column_header_list;
     QBitArray enabled_cols;
     QList<QColor> column_color_list;
     bool repeat_header_every_page;
+    QMenu hidden_cols_menu;
 
     QFont f;
 
@@ -450,7 +451,9 @@ public:
         height = f.pointSize()*2;
         rows = 1;
         column_list = QStringList();
+        column_header_list = QStringList();
         enabled_cols = QBitArray();
+        hidden_cols_menu.setTitle(tr("Unhide columns"));
         setCacheMode(DeviceCoordinateCache);
         prepareGeometryChange();
     }
@@ -466,6 +469,8 @@ public:
         height = f.pointSize()*2;
         rows = 1;
         this->column_list = column_list;
+        this->column_header_list = column_list;
+        hidden_cols_menu.setTitle(tr("Unhide columns"));
         enabled_cols = QBitArray(column_list.size(), true);
         for(int col = 0; col < enabled_cols.size(); col++)
             column_color_list.append(Qt::black);
@@ -571,7 +576,7 @@ public:
         return column_color_list.at(col);
     }
 
-    bool repeatOnEveryPage()
+    bool repeatHeaderEveryPage()
     {
         return repeat_header_every_page;
     }

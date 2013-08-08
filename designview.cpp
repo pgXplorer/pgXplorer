@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <dj@pgxplorer.com>
+  Copyright (c) 2010-2013, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -128,8 +128,8 @@ DesignView::DesignView(Database *database, Table *table, QString const table_nam
     design_view->setAlternatingRowColors(true);
     design_view->verticalHeader()->setDefaultAlignment(Qt::AlignRight | Qt::AlignVCenter);
     design_view->setModel(design_model);
-    connect(design_model, SIGNAL(dataChanged(QModelIndex,QModelIndex)), SLOT(updateDesigner(QModelIndex,QModelIndex)));
-    connect(design_view->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)), SLOT(updateSelectionChanged()));
+    connect(design_model, &QStandardItemModel::dataChanged, this, &DesignView::updateDesigner);
+    connect(design_view->selectionModel(), &QItemSelectionModel::selectionChanged, this, &DesignView::updateSelectionChanged);
 
     setCentralWidget(design_view);
 }
@@ -175,6 +175,10 @@ void DesignView::initialiseModel()
     design_model->setHeaderData(2, Qt::Vertical, tr("Primary key"));
     design_model->setHeaderData(3, Qt::Vertical, tr("Not null"));
     design_model->setHeaderData(4, Qt::Vertical, tr("Default value"));
+
+    save_action->setEnabled(false);
+    insert_column_left_action->setEnabled(false);
+    delete_column_action->setEnabled(false);
 }
 
 void DesignView::updateDesigner(QModelIndex from, QModelIndex to)
@@ -217,9 +221,9 @@ void DesignView::updateSelectionChanged()
     if(design_view->selectionModel()) {
         insert_column_left_action->setEnabled(true);
 
-        QModelIndexList indices = design_view->selectionModel()->selectedColumns();
+        QModelIndexList indices = design_view->selectionModel()->selectedIndexes();
         qSort(indices);
-        if(indices.isEmpty() || indices.last().column() == design_model->columnCount()-1)
+        if(indices.isEmpty())
             delete_column_action->setEnabled(false);
         else
             delete_column_action->setEnabled(true);
@@ -250,23 +254,19 @@ void DesignView::createActions()
     save_action = new QAction(QIcon(":/icons/save.png"), tr("&Save"), this);
     save_action->setShortcuts(QKeySequence::Save);
     save_action->setStatusTip(tr("Save the table definition to database"));
-    save_action->setEnabled(false);
-    connect(save_action, SIGNAL(triggered()), SLOT(saveTable()));
+    connect(save_action, &QAction::triggered, this, &DesignView::saveTable);
 
     properties_action = new QAction(QIcon(":/icons/properties.png"), tr("&Properties"), this);
     properties_action->setStatusTip(tr("Specify table properties"));
-    properties_action->setCheckable(true);
-    connect(properties_action, SIGNAL(triggered()), SLOT(showTableProperties()));
+    connect(properties_action, &QAction::triggered, this, &DesignView::showTableProperties);
 
     insert_column_left_action = new QAction(QIcon(":/icons/insertleft.png"), tr("Insert column left"), this);
     insert_column_left_action->setStatusTip(tr("Insert to the left of the selected column(s)"));
-    insert_column_left_action->setEnabled(false);
-    connect(insert_column_left_action, SIGNAL(triggered()), SLOT(insertLeftColumn()));
+    connect(insert_column_left_action, &QAction::triggered, this, &DesignView::insertLeftColumn);
 
     delete_column_action = new QAction(QIcon(":/icons/removecolumn.png"), tr("&Delete column(s)"), this);
     delete_column_action->setStatusTip(tr("Delete selected column(s)"));
-    delete_column_action->setEnabled(false);
-    connect(delete_column_action, SIGNAL(triggered()), SLOT(deleteColumns()));
+    connect(delete_column_action, &QAction::triggered, this, &DesignView::deleteColumns);
 }
 
 void DesignView::saveTable()
@@ -349,10 +349,10 @@ void DesignView::showTableProperties()
             completer_list.append(schema->getName().append(".\"" + table->getName() + "\""));
 
     TableProperties *table_props = new TableProperties(this, new_table_name, completer_list, properties2.oid, properties2.inherits, properties2.tablespace, properties2.fill_factor);
-    connect(this, SIGNAL(changeLanguage(QEvent*)), table_props, SLOT(languageChanged(QEvent*)));
-    connect(table_props, SIGNAL(oksignal(bool, QString, QString, int)), SLOT(setProperties(bool, QString, QString, int)));
-    connect(table_props, SIGNAL(accepted()), SLOT(popPropertiesButton()));
-    connect(table_props, SIGNAL(rejected()), SLOT(popPropertiesButton()));
+    connect(this, &DesignView::changeLanguage, table_props, &TableProperties::languageChanged);
+    connect(table_props, &TableProperties::oksignal, this, &DesignView::setProperties);
+    connect(table_props, &TableProperties::accepted, this, &DesignView::popPropertiesButton);
+    connect(table_props, &TableProperties::rejected, this, &DesignView::popPropertiesButton);
     table_props->show();
 }
 
@@ -442,12 +442,13 @@ void DesignView::deleteColumns()
 {
     QModelIndexList indices;
 
-    while(indices = design_view->selectionModel()->selectedColumns(), !indices.isEmpty()) {
+    while(indices = design_view->selectionModel()->selectedIndexes(), !indices.isEmpty()) {
         design_model->removeColumn(indices.at(0).column());
     }
 
-    if(design_model->columnCount() == 1)
-        save_action->setEnabled(false);
+    if(design_model->columnCount() == 0) {
+        initialiseModel();
+    }
 
     insert_column_left_action->setEnabled(false);
 }
