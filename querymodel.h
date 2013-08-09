@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <davyjones@github>
+  Copyright (c) 2010-2013, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -22,6 +22,7 @@
 #include <QtGui>
 #include <QObject>
 #include <QSqlQueryModel>
+#include <QtConcurrent/QtConcurrent>
 
 class QueryModel : public QSqlQueryModel
 {
@@ -31,12 +32,14 @@ private:
     QString database_connection_id;
     QString query_name;
     int rows_from;
-
-public slots:
-    //void destroyQueryModel();
+    QStringList current_column_aggregates;
+    int pivot_col;
+    int pivot_cat;
+    int pivot_val;
 
 public:
-    QueryModel();
+    explicit QueryModel();
+    ~QueryModel(){}
     void fetchData(QString, QStringList);
     void setQueryName(QString query_name)
     {
@@ -45,10 +48,15 @@ public:
     QVariant data(const QModelIndex &index, int role) const;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const;
     void setRowsFrom(int);
+    int getPivotCol();
+    int getPivotCat();
+    int getPivotVal();
+    void setPivotCol(int);
+    void setPivotCat(int);
+    void setPivotVal(int);
 
-signals:
-    void fetchDataSignal(int, qint32, qint32);
-    void busySignal();
+public slots:
+    void setColumnAggregate(QStringList);
 };
 
 #endif // QUERYMODEL_H

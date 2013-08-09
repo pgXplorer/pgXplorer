@@ -76,13 +76,15 @@ SOURCES		= main.cpp \
 
 QT += core gui sql widgets network
 
+QMAKE_CXXFLAGS += -std=c++11
+
 #SUBDIRS = threads models gui graphicalitems views
 
 win32:INCLUDEPATH += "C:/tmp3/postgresql-9.2.4/src/interfaces/libpq" "C:/tmp3/postgresql-9.2.4/src/include"
 unix:INCLUDEPATH += "/home/nimbus/libharu/include" "/usr/include"
 
-unix:LIBS += "/home/nimbus/libharu/src/libhpdfs.a" -lQt5Concurrent -lz -lpq
 win32:LIBS += C:/tmp5/libhpdf-2.3.0RC2/src/.libs/libhpdf.a -lQt5Concurrent C:/tmp3/postgresql-9.2.4/src/interfaces/libpq/libpq.a
+unix:LIBS += "/home/nimbus/libharu/src/libhpdfs.a" -lQt5Concurrent -lz -lpq
 
 MOC_DIR = mocs
 OBJECTS_DIR = objs

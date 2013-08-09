@@ -1,7 +1,7 @@
 /*
   LICENSE AND COPYRIGHT INFORMATION - Please read carefully.
 
-  Copyright (c) 2011-2012, davyjones <davyjones@github>
+  Copyright (c) 2010-2013, davyjones <dj@pgxplorer.com>
 
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted, provided that the above
@@ -23,35 +23,44 @@ QueryModel::QueryModel()
     this->rows_from = 1;
 }
 
-void QueryModel::fetchData(QString command, QStringList vars)
-{
-    emit busySignal();
-    database_connection_id = command + vars.at(5);
-    QTime ts;
-    ts.start();
-    {
-        QSqlDatabase::removeDatabase("queryview " + database_connection_id);
-        QSqlDatabase database_connection;
-        database_connection = QSqlDatabase::addDatabase("QPSQL", "queryview " + database_connection_id);
-        database_connection.setHostName(vars.at(0));
-        database_connection.setPort(vars.at(1).toInt());
-        database_connection.setDatabaseName(vars.at(2));
-        database_connection.setUserName(vars.at(3));
-        database_connection.setPassword(vars.at(4));
-        if (!database_connection.open()) {
-            qDebug() << tr("Couldn't connect to database.\n"
-                           "Check connection parameters.\n");
-            return;
-        }
-        setQuery(command, database_connection);
-    }
-    QSqlDatabase::removeDatabase("queryview " + database_connection_id);
-    fetchDataSignal(ts.elapsed(), rowCount(), columnCount());
-}
-
 void QueryModel::setRowsFrom(int rows_from)
 {
     this->rows_from = rows_from;
+}
+
+int QueryModel::getPivotCol()
+{
+    return this->pivot_col;
+}
+
+int QueryModel::getPivotCat()
+{
+    return this->pivot_cat;
+}
+
+int QueryModel::getPivotVal()
+{
+    return this->pivot_val;
+}
+
+void QueryModel::setPivotCol(int pivot_col)
+{
+    this->pivot_col = pivot_col;
+}
+
+void QueryModel::setPivotCat(int pivot_cat)
+{
+    this->pivot_cat = pivot_cat;
+}
+
+void QueryModel::setPivotVal(int pivot_val)
+{
+    this->pivot_val = pivot_val;
+}
+
+void QueryModel::setColumnAggregate(QStringList aggs)
+{
+    current_column_aggregates = aggs;
 }
 
 QVariant QueryModel::data(const QModelIndex &index, int role) const
@@ -62,6 +71,16 @@ QVariant QueryModel::data(const QModelIndex &index, int role) const
     //Align integers to the right
     if ((index.isValid() && role == Qt::TextAlignmentRole) && (index.data().type() != QMetaType::QString))
         return (Qt::AlignVCenter + Qt::AlignRight);
+
+    if(index.isValid() && role == Qt::BackgroundRole && index.column() == pivot_col)
+        return QColor(255, 0, 0, 100);
+
+    if(index.isValid() && role == Qt::BackgroundRole && index.column() == pivot_cat)
+        return QColor(0, 255, 0, 100);
+
+    //Disable all roles except DisplayRole
+    if (!index.isValid() || (role != Qt::DisplayRole))
+        return QVariant();
 
     //Return sibling of index
     return QSqlQueryModel::data(index.sibling(item.row(), index.column()), role);

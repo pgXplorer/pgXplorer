@@ -1882,10 +1882,10 @@ void MainWin::showTableView(Database *database, Schema *schema, Table *table)
     QString table_name = table->getFullName();
     TableView *table_view = new TableView(database, table_name, table->getColumnList(), table->getPrimaryKey(), table->getColumnTypes(), table->getColumnLengths(), false, Qt::WA_DeleteOnClose);
     table_view_list.append(table_view);
-    QObject::connect(table_view, SIGNAL(tableViewClosing(TableView*)), SLOT(tableViewClosed(TableView*)));
-    QObject::connect(table_view, SIGNAL(showQueryView(Database*, QString)), SLOT(showQueryView(Database*, QString)));
-    QObject::connect(table_view->getToolbar(), SIGNAL(iconSizeChanged(QSize)), SLOT(resizeToolbarIcons(QSize)));
-    QObject::connect(this, SIGNAL(changeLanguage(QEvent*)), table_view, SLOT(languageChanged(QEvent*)));
+    connect(table_view, &TableView::tableViewClosing, this, &MainWin::tableViewClosed);
+    connect(table_view, &TableView::showQueryView, this, &MainWin::showQueryView);
+    connect(table_view->getToolbar(), &ToolBar::iconSizeChanged, this, &MainWin::resizeToolbarIcons);
+    connect(this, &MainWin::changeLanguage, table_view, &TableView::languageChanged);
 
     QSettings settings("pgXplorer", "pgXplorer");
     QPoint pos = settings.value("tableview_pos", QPoint(100, 100)).toPoint();
@@ -1918,9 +1918,9 @@ void MainWin::showDesignView(Database *database, Schema *schema, Table *table)
 
     DesignView *design_view = new DesignView(database, table, table_name, table_name, table->getColumnList(), table->getPrimaryKey(), table->getColumnTypes(), table->getColumnLengths(), table->getColumnNulls(), false, Qt::WA_DeleteOnClose);
     design_view_list.append(design_view);
-    QObject::connect(design_view, SIGNAL(designViewClosing(DesignView*)), SLOT(designViewClosed(DesignView*)));
-    QObject::connect(design_view->getToolbar(), SIGNAL(iconSizeChanged(QSize)), SLOT(resizeToolbarIcons(QSize)));
-    QObject::connect(this, SIGNAL(changeLanguage(QEvent*)), design_view, SLOT(languageChanged(QEvent*)));
+    connect(design_view, SIGNAL(designViewClosing(DesignView*)), SLOT(designViewClosed(DesignView*)));
+    connect(design_view->getToolbar(), SIGNAL(iconSizeChanged(QSize)), SLOT(resizeToolbarIcons(QSize)));
+    connect(this, SIGNAL(changeLanguage(QEvent*)), design_view, SLOT(languageChanged(QEvent*)));
 
     QPoint pos = settings.value("designview_pos", QPoint(100, 100)).toPoint();
     QSize size = settings.value("designview_size", QSize(1024, 768)).toSize();
@@ -1944,9 +1944,10 @@ void MainWin::showViewView(Database *database, Schema *schema, View *view)
     view_name.append("\"");
     ViewView *view_view = new ViewView(database, view_name, view_name, view->getColumnList(), view->getColumnTypes(), true, Qt::WA_DeleteOnClose);
     view_view_list.append(view_view);
-    QObject::connect(view_view, SIGNAL(viewViewClosing(ViewView*)), SLOT(viewViewClosed(ViewView*)));
-    QObject::connect(view_view->getToolbar(), SIGNAL(iconSizeChanged(QSize)), SLOT(resizeToolbarIcons(QSize)));
-    QObject::connect(this, SIGNAL(changeLanguage(QEvent*)), view_view, SLOT(languageChanged(QEvent*)));
+    connect(view_view, &ViewView::viewViewClosing, this, &MainWin::viewViewClosed);
+    connect(view_view, &ViewView::showQueryView, this, &MainWin::showQueryView);
+    connect(view_view->getToolbar(), &ToolBar::iconSizeChanged, this, &MainWin::resizeToolbarIcons);
+    connect(this, &MainWin::changeLanguage, view_view, &ViewView::languageChanged);
 
     QSettings settings("pgXplorer", "pgXplorer");
     QPoint pos = settings.value("viewview_pos", QPoint(100, 100)).toPoint();

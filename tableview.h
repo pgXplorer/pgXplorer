@@ -175,8 +175,6 @@ public:
 
     void createBrushes();
     void createActions();
-    void fetchConditionDataInitial();
-    void fetchPivotData();
     void deleteData();
     QTableView *getTableView()
     {
@@ -232,7 +230,6 @@ public slots:
 private slots:
     void buildQuery(int);
     void buildPivotQuery();
-    void fetchRefreshData(QString);
     void fetchDataSlot();
     void fetchNextSlot();
     void fetchPrevSlot();
