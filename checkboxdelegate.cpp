@@ -12,10 +12,22 @@ void CheckBoxDelegate::paint(QPainter *painter,
   QStyleOptionButton check_box_style_option;
   check_box_style_option.state |= QStyle::State_Enabled;
   if (checked) {
-    check_box_style_option.state |= QStyle::State_On;
+      check_box_style_option.state |= QStyle::State_On;
   } else {
-    check_box_style_option.state |= QStyle::State_Off;
+      check_box_style_option.state |= QStyle::State_Off;
   }
+  
+  if(option.state & QStyle::State_Selected) {
+      QLinearGradient selection_gradient(0, 0, 1.0, 0.25);
+      selection_gradient.setCoordinateMode(QGradient::ObjectBoundingMode);
+      selection_gradient.setColorAt(0, QColor::fromRgb(0x5F, 0x5F, 0x7F));
+      selection_gradient.setColorAt(0, QColor::fromRgb(0x7F, 0x7F, 0x9F));
+      
+      QBrush selection(selection_gradient);
+      painter->setBrush(selection);
+      painter->drawRect(rect);
+  }
+  
   check_box_style_option.rect = CheckBoxRect(option);
 
   QApplication::style()->drawControl(QStyle::CE_CheckBox,
