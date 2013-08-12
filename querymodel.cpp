@@ -21,6 +21,10 @@
 QueryModel::QueryModel()
 {
     this->rows_from = 1;
+
+    pivot_col = -1;
+    pivot_cat = -1;
+    pivot_val = -1;
 }
 
 void QueryModel::setRowsFrom(int rows_from)
