@@ -35,7 +35,7 @@ public:
     explicit ComboBox(QWidget *parent=0, int index=0)
     {
         setParent(parent);
-        this.index = index;
+        this->index = index;
     }
     
     ~ComboBox(){}
@@ -43,10 +43,10 @@ public:
     void mousePressEvent(QMouseEvent *e)
     {
         emit columnToSelect(index);
-        if(e.x() > width()-20)
+        if(e->x() > width()-20)
             QComboBox::mousePressEvent(e);
         else
-            e.accept();
+            e->accept();
     }
     
     void paintEvent(QPaintEvent *e)
@@ -56,7 +56,7 @@ public:
         
         QStyleOptionComboBox opt;
         initStyleOption(&opt);
-        painter.drawyComplexControl(QStyle::CC_ComboBox, opt);
+        painter.drawComplexControl(QStyle::CC_ComboBox, opt);
         
         QRect rect = opt.rect;
         

@@ -16,6 +16,8 @@ void CheckBoxDelegate::paint(QPainter *painter,
   } else {
       check_box_style_option.state |= QStyle::State_Off;
   }
+
+  QRect rect = option.rect;
   
   if(option.state & QStyle::State_Selected) {
       QLinearGradient selection_gradient(0, 0, 1.0, 0.25);
