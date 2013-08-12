@@ -44,15 +44,12 @@ void ComboHeader::showEvent(QShowEvent *event)
         box->addItem(item.remove("\""));
         box->setItemData(0, Qt::AlignCenter, Qt::TextAlignmentRole);
 
-        box->setEditable(true);
         box->setStyleSheet(QString("QComboBox, QComboBox::drop-down { border: 0px solid gray;\
                                    border-bottom: 1px solid lightgray;\
                                    color: black; \
                                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, \
                                                                stop: 0 #FFFFFF, stop: 1 #EEEEEE); \
                               } QComboBox::drop-down { border: 0px}"));
-        box->lineEdit()->setReadOnly(true);
-        box->lineEdit()->setAlignment(Qt::AlignCenter);
 
         if(tv->primaryKeys().indexOf(tv->columnNames().at(i)) != -1) {
             box->setItemIcon(0, key_icon);
@@ -100,9 +97,6 @@ void ComboHeader::refreshCombos()
 
     for (int i=0; i<tv->columnNames().length(); i++) {
         QComboBox *box = new QComboBox(this);
-        box->setEditable(true);
-        box->lineEdit()->setReadOnly(true);
-        box->lineEdit()->setAlignment(Qt::AlignCenter);
 
         for(int j=0; j<tv->columnAggsList().at(i).length(); j++) {
             if(!tv->columnAggsList().at(i).at(j).isEmpty()) {
