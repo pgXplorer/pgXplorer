@@ -24,6 +24,64 @@
 #include <QComboBox>
 #include <QObject>
 
+class ComboBox : public QComboBox
+{
+    Q_OBJECT
+    
+private:
+    int index;
+    
+public:
+    explicit ComboBox(QWidget *parent=0, int index=0)
+    {
+        setParent(parent);
+        this.index = index;
+    }
+    
+    ~ComboBox(){}
+    
+    void mousePressEvent(QMouseEvent *e)
+    {
+        emit columnToSelect(index);
+        if(e.x() > width()-20)
+            QComboBox::mousePressEvent(e);
+        else
+            e.accept();
+    }
+    
+    void paintEvent(QPaintEvent *e)
+    {
+        QStylePainter painter(this);
+        painter.setPen(palette().color(QPalette::Text));
+        
+        QStyleOptionComboBox opt;
+        initStyleOption(&opt);
+        painter.drawyComplexControl(QStyle::CC_ComboBox, opt);
+        
+        QRect rect = opt.rect;
+        
+        int h = rect.height();
+        
+        QFontMetrics fm(painter.font());
+        
+        if(!itemIcon(0).isNull()) {
+            QSize icon_size = iconSize();
+            QRect icon_rect(QPoint((h-icon_size.height())/2, (h-icon_size.height())/2), icon_size);
+            painter.drawImage(icon_rect, QImage(":/icons/key.svg"), QImage(":/icons/key.svg").rect());
+            painter.drawItemText(rect.adjusted(0.75*h, 0, 0, 0), Qt::AlignCenter, palette(), false, fm.elidedText(currentText(), Qt::ElideMiddle, width()-0.75*h));
+        }
+        else {
+            if(count() > 1)
+                painter.drawItemText(rect.adjusted(0, 0, -0.5*h, 0), Qt::AlignCenter, palette(), false, fm.elidedText(currentText(), Qt::ElideMiddle, width()-0.5*h));
+            else
+                painter.drawItemText(rect, Qt::AlignCenter, palette(), false, fm.elidedText(currentText(), Qt::ElideMiddle, width()));
+        }
+    }
+    
+signals:
+    void columnToSelect(int);
+};
+
 class ComboHeader : public QHeaderView
 {
     Q_OBJECT
@@ -36,12 +94,6 @@ private:
 public:
     explicit ComboHeader(TableView *parent = 0);
     void showEvent(QShowEvent *event);
-    bool event(QEvent *e) {
-        if(e->type() == QEvent::HoverEnter) {
-            setCursor(Qt::ArrowCursor);
-        }
-        QHeaderView::event(e);
-    }
 
 signals:
     void changeGrouping(QStringList);
