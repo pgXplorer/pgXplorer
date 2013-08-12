@@ -37,7 +37,7 @@ void ComboHeader::showEvent(QShowEvent *event)
     }
 
     for (int i=0; i<tv->columnNames().length(); i++) {
-        QComboBox *box = new QComboBox(this);
+        ComboBox *box = new ComboBox(this, i);
         box->setEnabled(false);
 
         QString item(tv->columnNames().at(i));
@@ -54,6 +54,7 @@ void ComboHeader::showEvent(QShowEvent *event)
         if(tv->primaryKeys().indexOf(tv->columnNames().at(i)) != -1) {
             box->setItemIcon(0, key_icon);
         }
+        connect(box, &ComboBox::columnToSelect, tv, &TableView::selectColumn);
 
         boxes.append(box);
         boxes[i]->setGeometry(sectionViewportPosition(i), 0,
@@ -96,7 +97,7 @@ void ComboHeader::refreshCombos()
     }
 
     for (int i=0; i<tv->columnNames().length(); i++) {
-        QComboBox *box = new QComboBox(this);
+        ComboBox *box = new ComboBox(this, i);
 
         for(int j=0; j<tv->columnAggsList().at(i).length(); j++) {
             if(!tv->columnAggsList().at(i).at(j).isEmpty()) {
@@ -125,7 +126,7 @@ void ComboHeader::refreshCombos()
             }
             box->setItemData(j, Qt::AlignCenter, Qt::TextAlignmentRole);
         }
-
+        connect(box, &ComboBox::columnToSelect, tv, &TableView::selectColumn);
         connect(box, SIGNAL(currentIndexChanged(int)), this, SLOT(groupingChanged()));
         boxes.append(box);
         boxes[i]->setGeometry(sectionViewportPosition(i), 0,
