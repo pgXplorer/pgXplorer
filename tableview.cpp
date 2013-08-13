@@ -153,6 +153,7 @@ TableView::TableView(Database *database, QString const table_name, QStringList c
     setContextMenuPolicy(Qt::NoContextMenu);
 
     table_view = new QTableView(this);
+    table_view->setWordWrap(false);
     table_view->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     table_view->viewport()->installEventFilter(this);
     table_view->installEventFilter(this);

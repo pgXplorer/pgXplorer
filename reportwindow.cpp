@@ -718,10 +718,11 @@ void ReportWindow::pdfPrint(QString file_name)
 {
     HPDF_Doc  pdf;
     HPDF_Page page;
-    HPDF_Font jfont[16];
+    HPDF_Font jfont[17];
     HPDF_Font font[12];
     HPDF_REAL height;
     HPDF_REAL width;
+    const char *font_name;
 
     pdf = HPDF_New (error_handler, NULL);
     if (!pdf) {
@@ -743,6 +744,8 @@ void ReportWindow::pdfPrint(QString file_name)
 
         HPDF_SetCompressionMode (pdf, HPDF_COMP_ALL);
 
+        font_name = HPDF_LoadTTFontFromFile(pdf, "/usr/share/fonts/TTF/DroidSansFallbackFull.ttf", HPDF_TRUE);
+
         HPDF_UseJPFonts(pdf);
         HPDF_UseJPEncodings(pdf);
 
@@ -762,6 +765,7 @@ void ReportWindow::pdfPrint(QString file_name)
         jfont[13] = HPDF_GetFont (pdf, "MS-PGothic,Bold", "90msp-RKSJ-H");
         jfont[14] = HPDF_GetFont (pdf, "MS-PGothic,Italic", "90msp-RKSJ-H");
         jfont[15] = HPDF_GetFont (pdf, "MS-PGothic,BoldItalic", "90msp-RKSJ-H");
+        jfont[16] = HPDF_GetFont (pdf, font_name, "EUC-H");
 
         font[0] = HPDF_GetFont (pdf, "Courier", NULL);
         font[1] = HPDF_GetFont (pdf, "Courier-Bold", NULL);
@@ -796,7 +800,7 @@ void ReportWindow::pdfPrint(QString file_name)
                 HPDF_Page_SetFontAndSize (page, font[4], size);
             }
             else {
-                lba = label->toPlainText().toLocal8Bit();
+                lba = text_codec->fromUnicode(label->toPlainText());
                 HPDF_Page_SetFontAndSize (page, jfont[0], size);
             }
             const char *l = lba.data();
@@ -808,7 +812,7 @@ void ReportWindow::pdfPrint(QString file_name)
         foreach(ReportTable *report_table, table_list) {
             int column_size = column_list.size();
             size = report_table->font().pointSize();
-            HPDF_Page_SetFontAndSize (page, jfont[0], size);
+            HPDF_Page_SetFontAndSize (page, jfont[12], size);
             for(int col=0; col<column_size; col++) {
                 if(report_table->getColumnEnabled(col)) {
                     HPDF_Page_SetRGBStroke(page,0.0,0.0,0.0);
@@ -819,8 +823,8 @@ void ReportWindow::pdfPrint(QString file_name)
                                          report_table->getHeight());
                     HPDF_Page_FillStroke (page);
 
-                    QByteArray tba = QString(column_list.at(col)).toLocal8Bit();
-                    const char *text = tba.data();
+                    QByteArray tba = text_codec->fromUnicode(QString(column_list.at(col)));
+                    const char *text = tba.constData();
 
                     HPDF_Page_SetRGBFill(page,0.1,0.1,0.1);
                     HPDF_Page_BeginText (page);
@@ -863,7 +867,7 @@ void ReportWindow::pdfPrint(QString file_name)
                         if(print_cancelled)
                             return;
                         if(report_table->getColumnEnabled(col)) {
-                            QByteArray tba = sql_query.value(col).toString().toLocal8Bit();
+                            QByteArray tba = text_codec->fromUnicode(sql_query.value(col).toString());
                             const char *text = tba.data();
 
                             HPDF_Page_Rectangle(page, report_table->getTopLeft().x() + report_table->x() + (report_table->widthTill(col)),
@@ -871,7 +875,6 @@ void ReportWindow::pdfPrint(QString file_name)
                                                  report_table->getWidth(col),
                                                  report_table->getHeight());
                             HPDF_Page_Stroke(page);
-
 
                             HPDF_Page_SetRGBFill(page,
                                                  report_table->textColor(col).redF(),
@@ -921,7 +924,7 @@ void ReportWindow::pdfPrint(QString file_name)
                                 HPDF_Page_SetFontAndSize (page, font[4], size);
                             }
                             else {
-                                lba = label->toPlainText().toLocal8Bit();
+                                lba = text_codec->fromUnicode(label->toPlainText());
                                 HPDF_Page_SetFontAndSize (page, jfont[0], size);
                             }
                             const char *l = lba.data();
@@ -947,7 +950,7 @@ void ReportWindow::pdfPrint(QString file_name)
                                                          report_table->getHeight());
                                     HPDF_Page_FillStroke (page);
 
-                                    QByteArray tba = QString(column_list.at(col)).toLocal8Bit();
+                                    QByteArray tba = text_codec->fromUnicode(QString(column_list.at(col)));
                                     const char *text = tba.data();
 
                                     HPDF_Page_SetRGBFill(page,0.1,0.1,0.1);
@@ -971,7 +974,7 @@ void ReportWindow::pdfPrint(QString file_name)
             drawPDFLine(page, 70, hline->y());
         }
 
-        QByteArray fba = file_name.toLatin1();
+        QByteArray fba = text_codec->fromUnicode(file_name);
         const char *f = fba.data();
         HPDF_SaveToFile(pdf, f);
     } catch (...) {

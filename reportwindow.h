@@ -641,6 +641,7 @@ private:
     QGraphicsScene scene;
     ReportView *report_view;
     ToolBar *toolbar;
+    QTextCodec *text_codec = QTextCodec::codecForName("Shift-JIS");
 
     QProgressDialog *progress_dialog;
 
@@ -688,7 +689,9 @@ public slots:
     void noZoom();
 
 public:
-    ReportWindow(Database *, QString);
+    explicit ReportWindow(Database *, QString);
+    ~ReportWindow(){}
+
     void createActions();
 
     ToolBar* getToolbar()
