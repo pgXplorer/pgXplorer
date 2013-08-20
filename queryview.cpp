@@ -43,10 +43,10 @@ QueryView::QueryView(Database *database, QString command)
 
     toolbar = new ToolBar;
     toolbar->setIconSize(QSize(36,36));
-    toolbar->setObjectName("tableview");
+    toolbar->setObjectName("queryview");
     toolbar->setMovable(false);
     toolbar->addAction(stop_action);
-    toolbar->addAction(terminate_action);
+    //toolbar->addAction(terminate_action);
     toolbar->addAction(copy_action);
     toolbar->addAction(copy_with_headers_action);
     toolbar->addSeparator();
@@ -61,6 +61,7 @@ QueryView::QueryView(Database *database, QString command)
     errors_model = new QStandardItemModel(0,1);
     query_model = new QueryModel;
     query_view = new QTableView(this);
+    query_view->setWordWrap(false);
     query_view->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     query_view->resizeColumnsToContents();
     setCentralWidget(query_view);
@@ -154,21 +155,21 @@ QueryView::~QueryView()
 
 void QueryView::createActions()
 {
-    stop_action = new QAction(QIcon(":/icons/stop.png"), tr("Stop"), this);
+    stop_action = new QAction(QIcon(":/icons/stop.svg"), tr("Stop"), this);
     stop_action->setStatusTip(tr("Cancel selected query"));
     connect(stop_action, &QAction::triggered, this , &QueryView::stopQuery);
 
-    terminate_action = new QAction(QIcon(":/icons/terminate.png"), tr("Terminate"), this);
+    terminate_action = new QAction(QIcon(":/icons/terminate.svg"), tr("Terminate"), this);
     terminate_action->setStatusTip(tr("Terminate selected query"));
     connect(terminate_action, &QAction::triggered, this , &QueryView::terminateQuery);
 
-    copy_action = new QAction(QIcon(":/icons/copy_without_headers.png"), tr("Copy"), this);
+    copy_action = new QAction(QIcon(":/icons/copy_without_headers.svg"), tr("Copy"), this);
     copy_action->setShortcuts(QKeySequence::Copy);
     copy_action->setStatusTip(tr("Copy selected"));
     copy_action->setEnabled(false);
     connect(copy_action, &QAction::triggered, this , &QueryView::copyToClipboard);
 
-    copy_with_headers_action = new QAction(QIcon(":/icons/copy_with_headers.png"), tr("Copy with headers"), this);
+    copy_with_headers_action = new QAction(QIcon(":/icons/copy_with_headers.svg"), tr("Copy with headers"), this);
     copy_with_headers_action->setShortcut(QKeySequence("Ctrl+Shift+C"));
     copy_with_headers_action->setStatusTip(tr("Copy selected with headers"));
     copy_with_headers_action->setEnabled(false);
@@ -194,7 +195,7 @@ void QueryView::createActions()
     areaplot_action->setStatusTip(tr("Plot the selected columns as an area plot"));
     connect(areaplot_action, &QAction::triggered, this , &QueryView::areaPlot);
 
-    report_action = new QAction(QIcon(":/icons/report.png"), tr("Report"), this);
+    report_action = new QAction(QIcon(":/icons/report.svg"), tr("Report"), this);
     report_action->setEnabled(false);
     report_action->setStatusTip(tr("Create a report based on this data"));
     connect(report_action, &QAction::triggered, this , &QueryView::createReport);

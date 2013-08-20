@@ -109,5 +109,16 @@
         <file>icons/window.svg</file>
         <file>icons/x.svg</file>
         <file>icons/ascending.svg</file>
+        <file>icons/timer.svg</file>
+        <file>icons/report.svg</file>
+        <file>icons/terminate.svg</file>
+        <file>icons/stop.svg</file>
+        <file>icons/copy.svg</file>
+        <file>icons/cut.svg</file>
+        <file>icons/paste.svg</file>
+        <file>icons/run.svg</file>
+        <file>icons/explain.svg</file>
+        <file>icons/find.svg</file>
+        <file>icons/wrap.svg</file>
     </qresource>
 </RCC>

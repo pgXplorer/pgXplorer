@@ -77,7 +77,7 @@ void ReportTable::hoverMoveEvent(QGraphicsSceneHoverEvent *event)
     hovered = true;
     hover_spot = event->pos();
 
-    if(MainWin::qFuzzyComp(hover_spot.y(), top_left.y()+height))
+    if(qFuzzyCompare(hover_spot.y(), top_left.y()+height))
         setCursor(Qt::SizeVerCursor);
     else if(onCol(hover_spot.x()))
         setCursor(Qt::SizeHorCursor);
@@ -91,13 +91,17 @@ void ReportTable::hoverMoveEvent(QGraphicsSceneHoverEvent *event)
 bool ReportTable::onCol(qreal hover_point_x)
 {
     bool match = false;
-    for(int i=1; i<enabled_cols.size(); i++) {
-        if((match = MainWin::qFuzzyComp(hover_point_x, top_left.x() + widthTill(i)))) {
+    for(int i=0; i<enabled_cols.size(); i++) {
+        if((match = qFuzzyCompare(hover_point_x, top_left.x() + widthTill(i)))) {
             break;
         }
     }
     if(!match) {
-        match = MainWin::qFuzzyComp(hover_point_x, top_left.x()+totalWidth());
+        match = qFuzzyCompare(round(hover_point_x), round(top_left.x()+totalWidth()));
+    }
+    if(!match) {
+        match = qFuzzyCompare(round(hover_point_x), round(top_left.x()));
+        on_left_edge = true;
     }
     return match;
 }
@@ -114,7 +118,15 @@ void ReportTable::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     if (x_isResizing) {
         int dx = int(event->pos().x() - x_mouse_pressed);
         prepareGeometryChange();
-        width.replace(col_to_be_moved, x_width + dx);
+        if(col_to_be_moved < 0) {
+            qreal x = top_left.x();
+            x += dx;
+            top_left.setX(event->pos().x());
+            width.replace(0, x_width - dx);
+        }
+        else {
+            width.replace(col_to_be_moved, x_width + dx);
+        }
     }
     else if(y_isResizing) {
         int dy = int(event->pos().y() - y_mouse_pressed);
@@ -144,16 +156,22 @@ void ReportTable::mousePressEvent(QGraphicsSceneMouseEvent *event)
         x_mouse_pressed = event->pos().x();
         bool match = false;
         for(int i=1; i<enabled_cols.size(); i++) {
-            if(match = MainWin::qFuzzyComp(x_mouse_pressed, top_left.x() + widthTill(i))) {
+            if(match = qFuzzyCompare(x_mouse_pressed, top_left.x() + widthTill(i))) {
                 x_width = getWidth(i-1);
                 col_to_be_moved = i-1;
                 break;
             }
         }
         if(!match) {
-            if(match = MainWin::qFuzzyComp(x_mouse_pressed, top_left.x()+totalWidth())) {
+            if(match = qFuzzyCompare(x_mouse_pressed, top_left.x()+totalWidth())) {
                 x_width = getWidth(enabled_cols.size()-1);
                 col_to_be_moved = enabled_cols.size()-1;
+            }
+        }
+        if(!match) {
+            if(match = qFuzzyCompare(x_mouse_pressed, top_left.x())) {
+                x_width = getWidth(0);
+                col_to_be_moved = -1;
             }
         }
     }
@@ -173,6 +191,7 @@ void ReportTable::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         x_isResizing = false;
         x_mouse_pressed = 0.0;
         col_to_be_moved = 0;
+        on_left_edge = false;
     }
     else if (event->button() == Qt::LeftButton && y_isResizing) {
         y_isResizing = false;
@@ -269,6 +288,8 @@ ReportView::ReportView(QGraphicsScene &s, ReportWindow *parent,
 
 ReportWindow::ReportWindow(Database *database, QString sql)
 {
+    page_sizes_list << "Letter" << "Legal" << "A3" << "A4" << "A5" << "B4" << "B5"
+                    << "Executive" << "US 4x6" << "US 4x8" << "US 5x7" << "Common 10";
     this->database = database;
     this->sql = sql;
     {
@@ -306,8 +327,8 @@ ReportWindow::ReportWindow(Database *database, QString sql)
             for(int col=0; col < column_count; col++)
                 column_list << query_model.query().record().fieldName(col);
         }
-        else
-            ;
+        else {
+        }
     }
     QSqlDatabase::removeDatabase(QString("reportview ").append(sql));
 
@@ -356,7 +377,10 @@ ReportWindow::ReportWindow(Database *database, QString sql)
     item_layout->addWidget(hline);
     item_layout->addStretch();
 
-    scene.setSceneRect(0,0,595.276,841.89);
+    setOrientation(ReportWindow::Portrait);
+    setPageSize(ReportWindow::A4);
+
+    scene.setSceneRect(pages_sizes[pageSize()]);
     report_view = new ReportView(scene, this);
     report_view->setDragMode(QGraphicsView::RubberBandDrag);
 
@@ -367,6 +391,8 @@ ReportWindow::ReportWindow(Database *database, QString sql)
     connect(report_view, SIGNAL(droppedDatabox(QPointF)), SLOT(drawDatabox(QPointF)));
     connect(report_view, SIGNAL(droppedTable(QPointF)), SLOT(drawTable(QPointF)));
     connect(report_view, SIGNAL(droppedHLine(QPointF)), SLOT(drawHLine(QPointF)));
+
+    connect(&scene, &QGraphicsScene::changed, this, &ReportWindow::togglePrint);
 
     QWidget *main = new QWidget;
 
@@ -390,6 +416,10 @@ ReportWindow::ReportWindow(Database *database, QString sql)
 
     QShortcut *shortcut_default_view = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_0), this);
     connect(shortcut_default_view, SIGNAL(activated()), SLOT(noZoom()));
+
+    connect(this, &ReportWindow::orientationChanged, this, &ReportWindow::changeOrientation);
+    connect(this, &ReportWindow::pageSizeChanged, [this](){if(orientation() == ReportWindow::Portrait) {scene.setSceneRect(pages_sizes[pageSize()]);}
+                                                           else if(orientation() == ReportWindow::Landscape) {qreal w = pages_sizes[pageSize()].width(); qreal h = pages_sizes[pageSize()].height(); scene.setSceneRect(0, 0, h, w);} });
 }
 
 void ReportWindow::deleteSeletectedItems()
@@ -549,6 +579,16 @@ void ReportWindow::restore()
     scene.setSelectionArea(QPainterPath());
 }
 
+void ReportWindow::togglePrint()
+{
+    if(scene.items().isEmpty()) {
+        pdf_print_action->setEnabled(false);
+    }
+    else {
+        pdf_print_action->setEnabled(true);
+    }
+}
+
 void ReportWindow::selectAll()
 {
     foreach(QGraphicsItem *item, scene.items())
@@ -607,22 +647,25 @@ void ReportWindow::createActions()
     pdf_print_action = new QAction(QIcon(":/icons/print.png"), tr("Create PDF"), this);
     pdf_print_action->setShortcuts(QKeySequence::Print);
     pdf_print_action->setStatusTip(tr("Print to a PDF document"));
-    connect(pdf_print_action, SIGNAL(triggered()), SLOT(pdfPrintThread()));
+    connect(pdf_print_action, &QAction::triggered, this, &ReportWindow::pdfPrint);
 
     html_print_action = new QAction(QIcon(":/icons/html.png"), tr("Create HTML"), this);
     //html_print_action->setShortcuts(QKeySequence::Print);
     pdf_print_action->setStatusTip(tr("Print to an HTML document"));
-    connect(html_print_action, SIGNAL(triggered()), SLOT(htmlPrintThread()));
+    connect(html_print_action, &QAction::triggered, this, &ReportWindow::htmlPrint);
 
     odf_print_action = new QAction(QIcon(":/icons/odt.png"), tr("Create OpenDocument file"), this);
     //html_print_action->setShortcuts(QKeySequence::Print);
     odf_print_action->setStatusTip(tr("Print to an HTML document"));
-    connect(odf_print_action, SIGNAL(triggered()), SLOT(odfPrintThread()));
+    connect(odf_print_action, &QAction::triggered, this, &ReportWindow::odfPrint);
+
+    orientation_action = new QAction(QIcon(":/icons/portrait.png"), tr("Toggle page orientation"), this);
+    connect(orientation_action, &QAction::triggered, this, &ReportWindow::changeOrientation);
 
     print_cancelled = false;
 }
 
-void ReportWindow::pdfPrintThread()
+void ReportWindow::pdfPrint()
 {
     QString file_name = QFileDialog::getSaveFileName(this,
              tr("Open PDF file"), "C:/", tr("PDF Files (*.pdf)"));
@@ -646,12 +689,12 @@ void ReportWindow::pdfPrintThread()
     progress_dialog->show();
     connect(progress_dialog, SIGNAL(canceled()), SLOT(printingCancelled()));
 
-    QtConcurrent::run(this, &ReportWindow::pdfPrint, file_name);
+    QtConcurrent::run(this, &ReportWindow::pdfPrintThread, file_name);
 
     connect(this, SIGNAL(done()), progress_dialog, SLOT(hide()));
 }
 
-void ReportWindow::htmlPrintThread()
+void ReportWindow::htmlPrint()
 {
     QString file_name = QFileDialog::getSaveFileName(this,
              tr("Open HTML file"), "C:/", tr("HTML Files (*.html)"));
@@ -675,12 +718,12 @@ void ReportWindow::htmlPrintThread()
     progress_dialog->show();
     connect(progress_dialog, SIGNAL(canceled()), SLOT(printingCancelled()));
 
-    QtConcurrent::run(this, &ReportWindow::htmlPrint, file_name);
+    QtConcurrent::run(this, &ReportWindow::htmlPrintThread, file_name);
 
     connect(this, SIGNAL(done()), progress_dialog, SLOT(hide()));
 }
 
-void ReportWindow::odfPrintThread()
+void ReportWindow::odfPrint()
 {
     QString file_name = QFileDialog::getSaveFileName(this,
              tr("Open ODT file"), "C:/", tr("ODT Files (*.odt)"));
@@ -704,7 +747,7 @@ void ReportWindow::odfPrintThread()
     progress_dialog->show();
     connect(progress_dialog, SIGNAL(canceled()), SLOT(printingCancelled()));
 
-    QtConcurrent::run(this, &ReportWindow::odfPrint, file_name);
+    QtConcurrent::run(this, &ReportWindow::odfPrintThread, file_name);
 
     connect(this, SIGNAL(done()), progress_dialog, SLOT(hide()));
 }
@@ -714,15 +757,14 @@ void ReportWindow::printingCancelled()
     print_cancelled = true;
 }
 
-void ReportWindow::pdfPrint(QString file_name)
+void ReportWindow::pdfPrintThread(QString file_name)
 {
     HPDF_Doc  pdf;
     HPDF_Page page;
     HPDF_Font jfont[17];
     HPDF_Font font[12];
-    HPDF_REAL height;
-    HPDF_REAL width;
-    const char *font_name;
+    HPDF_REAL page_height;
+    HPDF_REAL page_width;
 
     pdf = HPDF_New (error_handler, NULL);
     if (!pdf) {
@@ -737,14 +779,59 @@ void ReportWindow::pdfPrint(QString file_name)
     try {
         page = HPDF_AddPage (pdf);
 
-        HPDF_Page_SetSize(page, HPDF_PAGE_SIZE_A4, HPDF_PAGE_PORTRAIT);
+        HPDF_PageSizes p_size;
 
-        height = HPDF_Page_GetHeight (page);
-        width = HPDF_Page_GetWidth (page);
+        switch(page_size) {
+        case ReportWindow::Letter:
+            p_size = HPDF_PAGE_SIZE_LETTER;
+            break;
+        case ReportWindow::Legal:
+            p_size = HPDF_PAGE_SIZE_LEGAL;
+            break;
+        case ReportWindow::A3:
+            p_size = HPDF_PAGE_SIZE_A3;
+            break;
+        case ReportWindow::A4:
+            p_size = HPDF_PAGE_SIZE_A4;
+            break;
+        case ReportWindow::A5:
+            p_size = HPDF_PAGE_SIZE_A5;
+            break;
+        case ReportWindow::B4:
+            p_size = HPDF_PAGE_SIZE_B4;
+            break;
+        case ReportWindow::B5:
+            p_size = HPDF_PAGE_SIZE_B5;
+            break;
+        case ReportWindow::US4x6:
+            p_size = HPDF_PAGE_SIZE_US4x6;
+            break;
+        case ReportWindow::US4x8:
+            p_size = HPDF_PAGE_SIZE_US4x8;
+            break;
+        case ReportWindow::US5x7:
+            p_size = HPDF_PAGE_SIZE_US5x7;
+            break;
+        case ReportWindow::Comm10:
+            p_size = HPDF_PAGE_SIZE_COMM10;
+            break;
+        default:
+            p_size = HPDF_PAGE_SIZE_A4;
+            break;
+        }
+
+        switch(o) {
+        case ReportWindow::Landscape:
+            HPDF_Page_SetSize(page, p_size, HPDF_PAGE_LANDSCAPE);
+            break;
+        default:
+            HPDF_Page_SetSize(page, p_size, HPDF_PAGE_PORTRAIT);
+        }
+
+        page_height = HPDF_Page_GetHeight (page);
+        page_width = HPDF_Page_GetWidth (page);
 
         HPDF_SetCompressionMode (pdf, HPDF_COMP_ALL);
-
-        font_name = HPDF_LoadTTFontFromFile(pdf, "/usr/share/fonts/TTF/DroidSansFallbackFull.ttf", HPDF_TRUE);
 
         HPDF_UseJPFonts(pdf);
         HPDF_UseJPEncodings(pdf);
@@ -765,7 +852,6 @@ void ReportWindow::pdfPrint(QString file_name)
         jfont[13] = HPDF_GetFont (pdf, "MS-PGothic,Bold", "90msp-RKSJ-H");
         jfont[14] = HPDF_GetFont (pdf, "MS-PGothic,Italic", "90msp-RKSJ-H");
         jfont[15] = HPDF_GetFont (pdf, "MS-PGothic,BoldItalic", "90msp-RKSJ-H");
-        jfont[16] = HPDF_GetFont (pdf, font_name, "EUC-H");
 
         font[0] = HPDF_GetFont (pdf, "Courier", NULL);
         font[1] = HPDF_GetFont (pdf, "Courier-Bold", NULL);
@@ -782,7 +868,7 @@ void ReportWindow::pdfPrint(QString file_name)
 
         int size = 10;
 
-        HPDF_Page_SetFontAndSize (page, jfont[0], 10);
+        HPDF_Page_SetFontAndSize (page, jfont[0], size);
 
         foreach(QGraphicsTextItem *label, label_list) {
             HPDF_Page_SetRGBFill(page,
@@ -792,7 +878,7 @@ void ReportWindow::pdfPrint(QString file_name)
             size = label->font().pointSize();
 
             HPDF_Page_BeginText (page);
-            HPDF_Page_MoveTextPos (page, label->x(), height - label->y() - label->boundingRect().height());
+            HPDF_Page_MoveTextPos (page, label->x(), page_height - label->y() - label->boundingRect().height());
 
             QByteArray lba;
             if(label->toPlainText().toLatin1().length() == label->toPlainText().toLocal8Bit().length()) {
@@ -812,13 +898,14 @@ void ReportWindow::pdfPrint(QString file_name)
         foreach(ReportTable *report_table, table_list) {
             int column_size = column_list.size();
             size = report_table->font().pointSize();
-            HPDF_Page_SetFontAndSize (page, jfont[12], size);
+
+            HPDF_Page_SetFontAndSize (page, jfont[8], size);
             for(int col=0; col<column_size; col++) {
                 if(report_table->getColumnEnabled(col)) {
                     HPDF_Page_SetRGBStroke(page,0.0,0.0,0.0);
                     HPDF_Page_SetRGBFill(page,0.9,0.9,0.9);
                     HPDF_Page_Rectangle(page, report_table->getTopLeft().x() + report_table->x() + (report_table->widthTill(col)),
-                                         height - report_table->getTopLeft().y() - report_table->y() - report_table->getHeight(),
+                                         page_height - report_table->getTopLeft().y() - report_table->y() - report_table->getHeight(),
                                          report_table->getWidth(col),
                                          report_table->getHeight());
                     HPDF_Page_FillStroke (page);
@@ -829,9 +916,9 @@ void ReportWindow::pdfPrint(QString file_name)
                     HPDF_Page_SetRGBFill(page,0.1,0.1,0.1);
                     HPDF_Page_BeginText (page);
                     HPDF_Page_TextRect(page, report_table->getTopLeft().x() + report_table->x() + report_table->widthTill(col),
-                                        height - report_table->getTopLeft().y() - report_table->y(),
+                                        page_height - report_table->getTopLeft().y() - report_table->y(),
                                         report_table->getTopLeft().x() + report_table->x() + report_table->widthTill(col) + report_table->getWidth(col),
-                                        height - report_table->getTopLeft().y() - report_table->y() - report_table->getHeight(),
+                                        page_height - report_table->getTopLeft().y() - report_table->y() - report_table->getHeight(),
                                         text, HPDF_TALIGN_CENTER | HPDF_TALIGN_MIDDLE, NULL);
                     HPDF_Page_EndText (page);
                 }
@@ -855,55 +942,131 @@ void ReportWindow::pdfPrint(QString file_name)
             QSqlQuery sql_query(sql, database_connection);
 
             int row_count = 1;
-            //int h = 1;
-            qreal bottom_point = height - 70;
+            qreal bottom_point = page_height - 70;
+
             while(sql_query.next()) {
+                int wrapped_rows = 1;
                 foreach(ReportTable *report_table, table_list) {
-                    int column_size = column_list.size();
                     size = report_table->font().pointSize();
-                    HPDF_Page_SetFontAndSize (page, jfont[0], size);
-                    bottom_point = height - report_table->getTopLeft().y() - report_table->y() - (row_count+1)*report_table->getHeight();
+                    HPDF_Page_SetFontAndSize (page, jfont[8], size);
+                    int column_size = column_list.size();
                     for(int col=0; col<column_size; col++) {
                         if(print_cancelled)
                             return;
                         if(report_table->getColumnEnabled(col)) {
-                            QByteArray tba = text_codec->fromUnicode(sql_query.value(col).toString());
-                            const char *text = tba.data();
+                            QString value = sql_query.value(col).toString();
+                            if(!value.isEmpty()) {
+                                QByteArray tba = text_codec->fromUnicode(value);
+                                const char *text = tba.constData();
+                                QStringList values;
+                                QString tmp_value(value);
 
-                            HPDF_Page_Rectangle(page, report_table->getTopLeft().x() + report_table->x() + (report_table->widthTill(col)),
-                                                 height - report_table->getTopLeft().y() - report_table->y() - (row_count+1)*report_table->getHeight(),
-                                                 report_table->getWidth(col),
-                                                 report_table->getHeight());
-                            HPDF_Page_Stroke(page);
+                                HPDF_Page_BeginText(page);
 
-                            HPDF_Page_SetRGBFill(page,
-                                                 report_table->textColor(col).redF(),
-                                                 report_table->textColor(col).greenF(),
-                                                 report_table->textColor(col).blueF());
-                            HPDF_Page_BeginText(page);
-                            /*HPDF_REAL rw;
-                            int len = HPDF_Page_MeasureText (page, text, (report_table->getTopLeft().x() + report_table->x() + report_table->widthTill(col) + report_table->getWidth(col)) - (report_table->getTopLeft().x() + report_table->x() + report_table->widthTill(col)), HPDF_TRUE, &rw);
-                            if(len == 0);
-                            h = 1;
-                            while(HPDF_Page_TextRect(page, report_table->getTopLeft().x() + report_table->x() + report_table->widthTill(col),
-                                   height - report_table->getTopLeft().y() - report_table->y() - row_count*report_table->getHeight(),
-                                   report_table->getTopLeft().x() + report_table->x() + report_table->widthTill(col) + report_table->getWidth(col),
-                                   height - report_table->getTopLeft().y() - report_table->y() - (row_count+h++)*report_table->getHeight(),
-                                   text, HPDF_TALIGN_LEFT, NULL) > 0);*/
-                            HPDF_Page_TextRect(page, report_table->getTopLeft().x() + report_table->x() + report_table->widthTill(col),
-                                                               height - report_table->getTopLeft().y() - report_table->y() - row_count*report_table->getHeight(),
-                                                               report_table->getTopLeft().x() + report_table->x() + report_table->widthTill(col) + report_table->getWidth(col),
-                                                               height - report_table->getTopLeft().y() - report_table->y() - (row_count+1)*report_table->getHeight(),
-                                                               text, HPDF_TALIGN_LEFT, NULL);
-                            HPDF_Page_EndText(page);
+                                HPDF_REAL rw = 0.0;
 
+                                while(!tmp_value.isEmpty()) {
+                                    tba = text_codec->fromUnicode(tmp_value);
+                                    text = tba.constData();
+                                    int length = HPDF_Page_MeasureText (page, text, (report_table->getTopLeft().x() + report_table->x() + report_table->widthTill(col) + report_table->getWidth(col)) - (report_table->getTopLeft().x() + report_table->x() + report_table->widthTill(col)), HPDF_TRUE, &rw);
+                                    if(length) {
+                                        QByteArray tmp_tba(text, length);
+                                        tmp_value = text_codec->toUnicode(tmp_tba);
+                                        values << tmp_value;
+                                        tmp_value = value.remove(0, tmp_value.length());
+                                    }
+                                    else {
+                                        tmp_value.chop(1);
+                                    }
+                                }
+                                wrapped_rows = values.size() > wrapped_rows ? values.size() : wrapped_rows;
+
+                                HPDF_Page_SetRGBFill(page,
+                                                     report_table->textColor(col).redF(),
+                                                     report_table->textColor(col).greenF(),
+                                                     report_table->textColor(col).blueF());
+                                int row = 0;
+                                foreach (QString text_row, values) {
+                                    tba = text_codec->fromUnicode(text_row);
+                                    text = tba.constData();
+                                    HPDF_Page_TextRect(page, report_table->getTopLeft().x() + report_table->x() + report_table->widthTill(col),
+                                                       page_height - report_table->getTopLeft().y() - report_table->y() - (row_count+row)*report_table->getHeight(),
+                                                       report_table->getTopLeft().x() + report_table->x() + report_table->widthTill(col) + report_table->getWidth(col),
+                                                       page_height - report_table->getTopLeft().y() - report_table->y() - (row_count+row+1)*report_table->getHeight(),
+                                                       text, HPDF_TALIGN_MIDDLE, NULL);
+                                    row++;
+                                }
+                                HPDF_Page_EndText(page);
+                            }
                         }
                     }
+                    for(int col=0; col<column_size; col++) {
+                        if(report_table->getColumnEnabled(col)) {
+                            HPDF_Page_Rectangle(page, report_table->getTopLeft().x() + report_table->x() + (report_table->widthTill(col)),
+                                                 page_height - report_table->getTopLeft().y() - report_table->y() - (row_count+wrapped_rows)*report_table->getHeight(),
+                                                 report_table->getWidth(col),
+                                                 report_table->getHeight()*wrapped_rows);
+                            HPDF_Page_Stroke(page);
+                        }
+                    }
+                    bottom_point = page_height - report_table->getTopLeft().y() - report_table->y() - (row_count+wrapped_rows)*report_table->getHeight();
                 }
-                row_count++;
+                row_count += wrapped_rows;
+                wrapped_rows = 1;
 
-                if(bottom_point < 70) {
+                if(bottom_point < 70 && sql_query.next()) {
+                    sql_query.previous();
                     page = HPDF_AddPage (pdf);
+
+                    HPDF_PageSizes p_size;
+
+                    switch(page_size) {
+                    case ReportWindow::Letter:
+                        p_size = HPDF_PAGE_SIZE_LETTER;
+                        break;
+                    case ReportWindow::Legal:
+                        p_size = HPDF_PAGE_SIZE_LEGAL;
+                        break;
+                    case ReportWindow::A3:
+                        p_size = HPDF_PAGE_SIZE_A3;
+                        break;
+                    case ReportWindow::A4:
+                        p_size = HPDF_PAGE_SIZE_A4;
+                        break;
+                    case ReportWindow::A5:
+                        p_size = HPDF_PAGE_SIZE_A5;
+                        break;
+                    case ReportWindow::B4:
+                        p_size = HPDF_PAGE_SIZE_B4;
+                        break;
+                    case ReportWindow::B5:
+                        p_size = HPDF_PAGE_SIZE_B5;
+                        break;
+                    case ReportWindow::US4x6:
+                        p_size = HPDF_PAGE_SIZE_US4x6;
+                        break;
+                    case ReportWindow::US4x8:
+                        p_size = HPDF_PAGE_SIZE_US4x8;
+                        break;
+                    case ReportWindow::US5x7:
+                        p_size = HPDF_PAGE_SIZE_US5x7;
+                        break;
+                    case ReportWindow::Comm10:
+                        p_size = HPDF_PAGE_SIZE_COMM10;
+                        break;
+                    default:
+                        p_size = HPDF_PAGE_SIZE_A4;
+                        break;
+                    }
+
+                    switch(o) {
+                    case ReportWindow::Landscape:
+                        HPDF_Page_SetSize(page, p_size, HPDF_PAGE_LANDSCAPE);
+                        break;
+                    default:
+                        HPDF_Page_SetSize(page, p_size, HPDF_PAGE_PORTRAIT);
+                    }
+
                     HPDF_Page_SetFontAndSize (page, jfont[0], 10);
                     row_count = 1;
 
@@ -916,7 +1079,7 @@ void ReportWindow::pdfPrint(QString file_name)
                             size = label->font().pointSize();
 
                             HPDF_Page_BeginText (page);
-                            HPDF_Page_MoveTextPos (page, label->x(), height - label->y() - label->boundingRect().height());
+                            HPDF_Page_MoveTextPos (page, label->x(), page_height - label->y() - label->boundingRect().height());
 
                             QByteArray lba;
                             if(label->toPlainText().toLatin1().length() == label->toPlainText().toLocal8Bit().length()) {
@@ -945,7 +1108,7 @@ void ReportWindow::pdfPrint(QString file_name)
                                     HPDF_Page_SetRGBStroke(page,0.0,0.0,0.0);
                                     HPDF_Page_SetRGBFill(page,0.9,0.9,0.9);
                                     HPDF_Page_Rectangle(page, report_table->getTopLeft().x() + report_table->x() + (report_table->widthTill(col)),
-                                                         height - report_table->getTopLeft().y() - report_table->y() - report_table->getHeight(),
+                                                         page_height - report_table->getTopLeft().y() - report_table->y() - report_table->getHeight(),
                                                          report_table->getWidth(col),
                                                          report_table->getHeight());
                                     HPDF_Page_FillStroke (page);
@@ -956,9 +1119,9 @@ void ReportWindow::pdfPrint(QString file_name)
                                     HPDF_Page_SetRGBFill(page,0.1,0.1,0.1);
                                     HPDF_Page_BeginText (page);
                                     HPDF_Page_TextRect(page, report_table->getTopLeft().x() + report_table->x() + report_table->widthTill(col),
-                                                        height - report_table->getTopLeft().y() - report_table->y(),
+                                                        page_height - report_table->getTopLeft().y() - report_table->y(),
                                                         report_table->getTopLeft().x() + report_table->x() + report_table->widthTill(col) + report_table->getWidth(col),
-                                                        height - report_table->getTopLeft().y() - report_table->y() - report_table->getHeight(),
+                                                        page_height - report_table->getTopLeft().y() - report_table->y() - report_table->getHeight(),
                                                         text, HPDF_TALIGN_CENTER | HPDF_TALIGN_MIDDLE, NULL);
                                     HPDF_Page_EndText (page);
                                 }
@@ -977,8 +1140,9 @@ void ReportWindow::pdfPrint(QString file_name)
         QByteArray fba = text_codec->fromUnicode(file_name);
         const char *f = fba.data();
         HPDF_SaveToFile(pdf, f);
+        HPDF_Free(pdf);
     } catch (...) {
-        HPDF_Free (pdf);
+        HPDF_Free(pdf);
         return;
     }
 
@@ -989,7 +1153,7 @@ void ReportWindow::pdfPrint(QString file_name)
     emit done();
 }
 
-void ReportWindow::htmlPrint(QString file_name)
+void ReportWindow::htmlPrintThread(QString file_name)
 {
     {
         QSqlDatabase database_connection = QSqlDatabase::addDatabase("QPSQL", QString("reportview ").append(sql));
@@ -1082,7 +1246,7 @@ void ReportWindow::htmlPrint(QString file_name)
     emit done();
 }
 
-void ReportWindow::odfPrint(QString file_name)
+void ReportWindow::odfPrintThread(QString file_name)
 {
     {
         QSqlDatabase database_connection = QSqlDatabase::addDatabase("QPSQL", QString("reportview ").append(sql));
@@ -1175,11 +1339,71 @@ void ReportWindow::odfPrint(QString file_name)
     emit done();
 }
 
+void ReportWindow::changeOrientation()
+{
+    qreal w = scene.width();
+    qreal h = scene.height();
+    scene.setSceneRect(0, 0, h, w);
+}
+
 void ReportWindow::drawPDFLine(HPDF_Page page, float x, float y)
 {
     HPDF_Page_MoveTo (page, 70, 842-y);
     HPDF_Page_LineTo (page, 525, 842-y);
     HPDF_Page_Stroke (page);
+}
+
+void ReportWindow::contextMenuEvent(QContextMenuEvent *event)
+{
+    QMenu context_menu;
+    QAction *orientation_action = context_menu.addAction(tr("Orientation"));
+    QAction *size_action = context_menu.addAction(tr("Size"));
+
+    QAction *a = context_menu.exec(event->globalPos());
+
+    QStringList orientations;
+    orientations << "Portrait" << "Landscape";
+
+    if(a) {
+        if(a == orientation_action) {
+            QString item = QInputDialog::getItem(this, tr("Orientation"), "", orientations, orientation(), false);
+            if(item.compare(tr("Portrait")) == 0)
+                setOrientation(ReportWindow::Portrait);
+            else if(item.compare(tr("Landscape")) == 0)
+                setOrientation(ReportWindow::Landscape);
+            else
+                setOrientation(ReportWindow::Portrait);
+        }
+        else if(a == size_action) {
+            QString item = QInputDialog::getItem(this, tr("Size"), "", pageSizesList(), pageSize(), false);
+            if(item.compare("Letter") == 0)
+                setPageSize(ReportWindow::Letter);
+            else if(item.compare("Legal") == 0)
+                setPageSize(ReportWindow::Legal);
+            else if(item.compare("A3") == 0)
+                setPageSize(ReportWindow::A3);
+            else if(item.compare("A4") == 0)
+                setPageSize(ReportWindow::A4);
+            else if(item.compare("A5") == 0)
+                setPageSize(ReportWindow::A5);
+            else if(item.compare("B4") == 0)
+                setPageSize(ReportWindow::B4);
+            else if(item.compare("B5") == 0)
+                setPageSize(ReportWindow::B5);
+            else if(item.compare("Executive") == 0)
+                setPageSize(ReportWindow::Executive);
+            else if(item.compare("US 4x6") == 0)
+                setPageSize(ReportWindow::US4x6);
+            else if(item.compare("US 4x8") == 0)
+                setPageSize(ReportWindow::US4x8);
+            else if(item.compare("US 5x7") == 0)
+                setPageSize(ReportWindow::US5x7);
+            else if(item.compare("Common 10") == 0)
+                setPageSize(ReportWindow::Comm10);
+            else
+                setPageSize(ReportWindow::A4);
+        }
+    }
 }
 
 void ReportWindow::closeEvent(QCloseEvent *event)

@@ -127,17 +127,17 @@ void StatusView::updateStatus()
 
 void StatusView::createActions()
 {
-    refresh_action = new QAction(QIcon(":/icons/refresh.png"), tr("Refresh"), this);
+    refresh_action = new QAction(QIcon(":/icons/refresh.svg"), tr("Refresh"), this);
     refresh_action->setShortcut(QKeySequence::Refresh);
     refresh_action->setStatusTip(tr("Refresh status now"));
     connect(refresh_action, SIGNAL(triggered()), SIGNAL(requestStatus()));
 
-    stop_action = new QAction(QIcon(":/icons/stop.png"), tr("Stop"), this);
+    stop_action = new QAction(QIcon(":/icons/stop.svg"), tr("Stop"), this);
     stop_action->setEnabled(false);
     stop_action->setStatusTip(tr("Cancel selected query"));
     connect(stop_action, SIGNAL(triggered()), SLOT(stopQuery()));
 
-    terminate_action = new QAction(QIcon(":/icons/terminate.png"), tr("Terminate"), this);
+    terminate_action = new QAction(QIcon(":/icons/terminate.svg"), tr("Terminate"), this);
     terminate_action->setEnabled(false);
     terminate_action->setStatusTip(tr("Terminate selected query"));
     connect(terminate_action, SIGNAL(triggered()), SLOT(terminateQuery()));
@@ -167,7 +167,7 @@ void StatusView::createActions()
     timer_menu->addAction(refresh_freq_1);
     timer_menu->addAction(refresh_freq_2);
 
-    timer_action = new QAction(QIcon(":/icons/timer.png"), tr("Set interval"), this);
+    timer_action = new QAction(QIcon(":/icons/timer.svg"), tr("Set interval"), this);
     //timer_action->setMenu(timer_menu);
     timer_action->setStatusTip(tr("Set refresh interval (in seconds)"));
 

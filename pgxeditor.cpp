@@ -41,7 +41,7 @@ PgxEditor::PgxEditor(Database *database, QString editor_name, QString function_a
     }
     completer_list.append(database->keywords());
 
-    next_icon = QIcon(":/icons/next.png");
+    next_icon = QIcon(":/icons/next.svg");
     createActions();
     breakpointArea = new BreakPointArea(this);
     lineNumberArea = new LineNumberArea(this);
@@ -59,19 +59,20 @@ PgxEditor::PgxEditor(Database *database, QString editor_name, QString function_a
     toolbar->setIconSize(QSize(36,36));
     toolbar->setObjectName("pgxeditor");
     toolbar->setMovable(false);
+    toolbar->addAction(save_action);
+    //toolbar->addAction(execute_action);
+    toolbar->addAction(selected_execute_action);
+    toolbar->addAction(explain_action);
+    toolbar->addSeparator();
     toolbar->addAction(newpgxeditor_action);
     toolbar->addSeparator();
     toolbar->addAction(cut_action);
     toolbar->addAction(copy_action);
     toolbar->addAction(paste_action);
     toolbar->addSeparator();
-    toolbar->addAction(save_action);
-    toolbar->addAction(execute_action);
-    toolbar->addAction(selected_execute_action);
-    toolbar->addAction(explain_action);
     toolbar->addAction(wrap_action);
     toolbar->addAction(find_action);
-    toolbar->addAction(complete_action);
+    //toolbar->addAction(complete_action);
 
     pgxeditor_mainwin = new PgxEditorMainWindow(this);
     pgxeditor_mainwin->addToolBar(toolbar);
@@ -261,37 +262,37 @@ void PgxEditor::breakpointAreaPaintEvent(QPaintEvent *event)
 
 void PgxEditor::createActions()
 {
-    newpgxeditor_action = new QAction(QIcon(":/icons/editor.png"), tr("New"), this);
+    newpgxeditor_action = new QAction(QIcon(":/icons/editor.svg"), tr("New"), this);
     newpgxeditor_action->setShortcuts(QKeySequence::New);
     newpgxeditor_action->setStatusTip(tr("New editor"));
     connect(newpgxeditor_action, SIGNAL(triggered()), this, SIGNAL(newPgxeditor()));
 
-    cut_action = new QAction(QIcon(":/icons/cut.png"), tr("Cut"), this);
+    cut_action = new QAction(QIcon(":/icons/cut.svg"), tr("Cut"), this);
     cut_action->setShortcuts(QKeySequence::Cut);
     cut_action->setStatusTip(tr("Cut selected text and copy to clipboard"));
     connect(cut_action, SIGNAL(triggered()), SLOT(cut()));
 
-    copy_action = new QAction(QIcon(":/icons/copy.png"), tr("Copy"), this);
+    copy_action = new QAction(QIcon(":/icons/copy.svg"), tr("Copy"), this);
     copy_action->setShortcuts(QKeySequence::Copy);
     copy_action->setStatusTip(tr("Copy selected text to clipboard"));
     connect(copy_action, SIGNAL(triggered()), SLOT(copy()));
 
-    paste_action = new QAction(QIcon(":/icons/paste.png"), tr("Paste"), this);
+    paste_action = new QAction(QIcon(":/icons/paste.svg"), tr("Paste"), this);
     paste_action->setShortcuts(QKeySequence::Paste);
     paste_action->setStatusTip(tr("Paste text from clipboard"));
     connect(paste_action, SIGNAL(triggered()), SLOT(paste()));
 
-    save_action = new QAction(QIcon(":/icons/save.png"), tr("&Save"), this);
+    save_action = new QAction(QIcon(":/icons/save.svg"), tr("&Save"), this);
     save_action->setShortcuts(QKeySequence::Save);
     save_action->setStatusTip(tr("Save function"));
     connect(save_action, SIGNAL(triggered()), SLOT(saveFunction()));
 
-    execute_action = new QAction(QIcon(":/icons/execute.png"), tr("&Execute"), this);
+    execute_action = new QAction(QIcon(":/icons/execute.svg"), tr("&Execute"), this);
     execute_action->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_R));
     execute_action->setStatusTip(tr("Execute function"));
     connect(execute_action, SIGNAL(triggered()), SLOT(executeFunction()));
 
-    explain_action = new QAction(QIcon(":/icons/explain.png"), tr("&Explain"), this);
+    explain_action = new QAction(QIcon(":/icons/explain.svg"), tr("&Explain"), this);
     explain_action->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_R));
     explain_action->setStatusTip(tr("Explain (selected) text"));
     connect(explain_action, SIGNAL(triggered()), SLOT(explainText()));
@@ -307,21 +308,21 @@ void PgxEditor::createActions()
         explain_action->setVisible(false);
     }
 
-    selected_execute_action = new QAction(QIcon(":/icons/selected_execute.png"), tr("&Run"), this);
+    selected_execute_action = new QAction(QIcon(":/icons/run.svg"), tr("&Run"), this);
     selected_execute_action->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_E));
     selected_execute_action->setStatusTip(tr("Execute (selected) text"));
     if(!editor_name.isEmpty())
         selected_execute_action->setEnabled(false);
     connect(selected_execute_action, SIGNAL(triggered()), SLOT(executeText()));
 
-    wrap_action = new QAction(QIcon(":/icons/wrap.png"), tr("Wrap/Un-wrap lines"),this);
+    wrap_action = new QAction(QIcon(":/icons/wrap.svg"), tr("Wrap/Un-wrap lines"),this);
     wrap_action->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_W));
     wrap_action->setStatusTip(tr("Toggle line wrapping"));
     wrap_action->setCheckable(true);
     wrap_action->setChecked(true);
     connect(wrap_action, SIGNAL(triggered()), SLOT(toggleWrap()));
 
-    find_action = new QAction(QIcon(":/icons/find.png"), tr("Find"), this);
+    find_action = new QAction(QIcon(":/icons/find.svg"), tr("Find"), this);
     find_action->setShortcuts(QKeySequence::Find);
     find_action->setCheckable(true);
     find_action->setStatusTip(tr("Find/replace text"));

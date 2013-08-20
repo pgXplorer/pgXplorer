@@ -61,6 +61,9 @@ public:
         QRect rect = opt.rect;
         
         int h = rect.height();
+
+        //if(opt.state == QStyle::State_MouseOver)
+        painter.setBackgroundMode(Qt::TransparentMode);
         
         QFontMetrics fm(painter.font());
         

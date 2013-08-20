@@ -21,13 +21,13 @@
 ComboHeader::ComboHeader(TableView *parent) :
              QHeaderView(Qt::Horizontal, parent)
 {
-    this->tv = parent;
+    tv = parent;
 
-    connect(this, SIGNAL(sectionResized(int,int,int)), this,
-            SLOT(handleSectionResized(int)));
-    connect(this, SIGNAL(sectionMoved(int,int,int)), this,
-            SLOT(handleSectionMoved(int,int,int)));
-    connect(this, SIGNAL(changeGrouping(QStringList)), tv, SLOT(regroup(QStringList)));
+    connect(this, &ComboHeader::sectionResized, this,
+            &ComboHeader::handleSectionResized);
+    connect(this, &ComboHeader::sectionMoved, this,
+            &ComboHeader::handleSectionMoved);
+    connect(this, &ComboHeader::changeGrouping, tv, &TableView::regroup);
 }
 
 void ComboHeader::showEvent(QShowEvent *event)
@@ -46,6 +46,7 @@ void ComboHeader::showEvent(QShowEvent *event)
 
         box->setStyleSheet(QString("QComboBox, QComboBox::drop-down { border: 0px solid gray;\
                                    border-bottom: 1px solid lightgray;\
+                                   padding-left: 4px;\
                                    color: black; \
                                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, \
                                                                stop: 0 #FFFFFF, stop: 1 #EEEEEE); \
@@ -57,10 +58,11 @@ void ComboHeader::showEvent(QShowEvent *event)
         connect(box, &ComboBox::columnToSelect, tv, &TableView::selectColumn);
 
         boxes.append(box);
-        boxes[i]->setGeometry(sectionViewportPosition(i), 0,
-                              sectionSize(i) - 5, height());
+        boxes[i]->setGeometry(sectionViewportPosition(i)+6, 0,
+                              sectionSize(i)-12, height()-1);
         boxes[i]->show();
     }
+
     QHeaderView::showEvent(event);
 }
 
@@ -68,8 +70,8 @@ void ComboHeader::handleSectionResized(int i)
 {
     for(int j=visualIndex(i); j<count(); j++) {
         int logical = logicalIndex(j);
-        boxes[logical]->setGeometry(sectionViewportPosition(logical), 0,
-                                     sectionSize(logical) - 4, height());
+        boxes[logical]->setGeometry(sectionViewportPosition(logical)+6, 0,
+                                     sectionSize(logical)-12, height()-1);
     }
 }
 
@@ -77,16 +79,16 @@ void ComboHeader::handleSectionMoved(int i, int oldidx, int newidx)
 {
     for(int i=qMin(oldidx, newidx); i<count(); i++) {
         int logical = logicalIndex(i);
-        boxes[logical]->setGeometry(sectionViewportPosition(logical), 0,
-                                     sectionSize(logical) - 4, height());
+        boxes[logical]->setGeometry(sectionViewportPosition(logical)+6, 0,
+                                     sectionSize(logical)-12, height()-1);
     }
 }
 
 void ComboHeader::fixComboPositions()
 {
     for(int i=0; i<count(); i++) {
-        boxes[i]->setGeometry(sectionViewportPosition(i), 0,
-                              sectionSize(i) - 4, height());
+        boxes[i]->setGeometry(sectionViewportPosition(i)+6, 0,
+                              sectionSize(i)-12, height()-1);
     }
 }
 
@@ -105,6 +107,7 @@ void ComboHeader::refreshCombos()
                 box->addItem(item);
                 box->setStyleSheet(QString("QComboBox { border: 0px solid gray;\
                                            border-bottom: 1px solid lightgray;\
+                                           padding-left: 4px;\
                                            color: black; \
                                            background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, \
                                                                        stop: 0 #FFFFFF, stop: 1 #EEEEEE); \
@@ -117,6 +120,7 @@ void ComboHeader::refreshCombos()
                 box->setStyleSheet(QString("QComboBox { border: 0px solid gray;\
                                            border-bottom: 1px solid lightgray;\
                                            color: black; \
+                                           padding-left: 4px;\
                                            background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, \
                                                                        stop: 0 #FFFFFF, stop: 1 #EEEEEE); \
                                       } QComboBox::drop-down { border: 0px}"));
@@ -129,8 +133,8 @@ void ComboHeader::refreshCombos()
         connect(box, &ComboBox::columnToSelect, tv, &TableView::selectColumn);
         connect(box, SIGNAL(currentIndexChanged(int)), this, SLOT(groupingChanged()));
         boxes.append(box);
-        boxes[i]->setGeometry(sectionViewportPosition(i), 0,
-                              sectionSize(i) - 4, height());
+        boxes[i]->setGeometry(sectionViewportPosition(i)+6, 0,
+                              sectionSize(i)-12, height()-1);
         boxes[i]->show();
     }
 }

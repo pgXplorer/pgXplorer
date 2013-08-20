@@ -37,6 +37,7 @@ int main(int argc, char **argv)
 
     QSettings settings("pgXplorer", "pgXplorer");
     settings.remove("license");
+
     /*
     Disabling license nag dialog for now.
     The source code will always be free. Just to keep track
@@ -58,17 +59,6 @@ int main(int argc, char **argv)
         license_dialog->close();
     }
     */
-
-    //qApp->setStyleSheet("QDialog {background-color: beige; font: bold 14px;} QPushButton {background-color: lightgray; \
-    //                      border-style: outset; \
-    //                      border-width: 2px; \
-    //                      border-radius: 10px; \
-    //                      border-color: beige; \
-    //                      font: bold 14px; \
-    //                      min-width: 6em; \
-    //                      padding: 6px;} \
-    //                      QPushButton:pressed {background-color: rgb(255, 250, 200); \
-    //                      border-style: inset;}");
 
     qApp->setStyleSheet("QTableView {selection-background-color: \
                             qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0.25, \

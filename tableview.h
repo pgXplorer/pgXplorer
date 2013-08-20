@@ -298,9 +298,6 @@ public:
 
 public slots:
     void resizeCells(int, int, int);
-    void setFocuz() {
-        setFocus();
-    }
 
 signals:
     void insertRow();

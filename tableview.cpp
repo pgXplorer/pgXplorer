@@ -174,9 +174,6 @@ TableView::TableView(Database *database, QString const table_name, QStringList c
     connect(table_view->verticalScrollBar(), &QScrollBar::valueChanged,
             this, &TableView::fetchDataSlot);
 
-    //Tie thread finish to an update slot that refreshes meta-information.
-    //connect(this, &TableView::updRowCntSignal, this, &TableView::updRowCntSlot);
-
     connect(this, &TableView::updRowCntSignal, table_model, &TableModel::clearCache);
     connect(this, &TableView::updateColumnAggregate, table_model, &TableModel::setColumnAggregate);
     connect(this, &TableView::canUpdate, table_model, &TableModel::setCanUpdate);
@@ -218,7 +215,10 @@ TableView::TableView(Database *database, QString const table_name, QStringList c
     connect(insert_row_search, &QShortcut::activated, this, &TableView::insertRow);
     connect(new_row_view, &NewRowTableView::insertRow, this, &TableView::insertRow);
     QShortcut *shortcut_focus_add_row = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_I), this);
-    connect(shortcut_focus_add_row, &QShortcut::activated, new_row_view, &NewRowTableView::setFocuz);
+    //connect(shortcut_focus_add_row, &QShortcut::activated, new_row_view, static_cast<void(NewRowTableView::*)()>(&NewRowTableView::setFocus));
+    connect(shortcut_focus_add_row, &QShortcut::activated, [this](){QModelIndex idx = this->new_row_model->index(0, 0, QModelIndex());
+        this->new_row_view->setCurrentIndex(idx);
+        this->new_row_view->edit(idx);});
     connect(new_row_model, &QStandardItemModel::itemChanged, this, &TableView::updatePrimaryKeyInfo);
     new_row_view->setEnabled(false);
     new_row_view->show();
@@ -426,8 +426,8 @@ bool TableView::eventFilter(QObject *obj, QEvent *event)
 
     if (obj == table_view->viewport()) {
         if(event->type() == QEvent::HoverMove && pivoting) {
-            QHoverEvent *hoverEvent = static_cast<QHoverEvent*>(event);
-            int hovered_col = table_view->columnAt(hoverEvent->pos().x());
+            QHoverEvent *hover_event = static_cast<QHoverEvent*>(event);
+            int hovered_col = table_view->columnAt(hover_event->pos().x());
             table_view->selectColumn(hovered_col);
             if(table_model->getPivotCol() == hovered_col && hovered_col != -1)
                 setStyleSheet(pivot_col_css);
@@ -777,71 +777,8 @@ void TableView::fetchPrevSlot()
     emit startQuery(check_query, main_query);
 }
 
-//void TableView::closeEvent(QCloseEvent *event)
-//{
-//    event->accept();
-//    //Clean-up only when there is no active thread.
-//    //However, this will cause a memory leak when the
-//    //TableView is closed when the thread is busy.
-//    //Proper solution is to create a Thread class
-//    //and cancel that before we clean-up. We cannot do
-//    //this now because we are using QFuture (per Qt docs).
-//    emit tableViewClosing(this);
-
-//    QSettings settings("pgXplorer", "pgXplorer");
-//    if(isMaximized()) {
-//        settings.setValue("tableview_maximized", true);
-//        showNormal();
-//    }
-//    else
-//        settings.setValue("tableview_maximized", false);
-
-//    settings.setValue("tableview_pos", pos());
-//    settings.setValue("tableview_size", size());
-//    settings.setValue("icon_size", toolbar->iconSize());
-
-//    if(!thread_busy) {
-//        delete toolbar;
-//        delete table_view;
-//        delete table_model;
-//        delete new_row_view;
-//        delete new_row_model;
-//        delete dock_widget;
-//        QSqlDatabase::removeDatabase("tableview" + sql + QString::number(thisTableViewId));
-//    }
-//    else {
-//        window_closed = true;
-//        /*foreach(QString database_connection_name, QSqlDatabase::connectionNames()) {
-//            if(database_connection_name.contains("tableview" + sql + QString::number(thisTableViewId))) {
-//                QSqlDatabase database_connection = QSqlDatabase::database(database_connection_name);
-//                if(database_connection.isOpen()) {
-//                    QVariant v = database_connection.driver()->handle();
-//                    if (qstrcmp(v.typeName(), "PGconn*") == 0) {
-//                        PGconn *handle = *static_cast<PGconn **>(v.data());
-//                        if (handle != 0) {
-//                            if(PQisBusy(handle)) {
-//                            PGcancel *cancel = PQgetCancel(handle);
-//                                char errbuf[256];
-//                                PQcancel(cancel, errbuf, sizeof(errbuf));
-//                                PQfreeCancel(cancel);
-//                            }
-//                        }
-//                    }
-//                    database_connection.close();
-//                }
-//            }
-//        }*/
-//        emit stopQuery();
-//    }
-//    databaseWorkerThread->quit();
-//    databaseWorkerThread->wait();
-//    delete databaseWorkerThread;
-//    QMainWindow::closeEvent(event);
-//}
-
 void TableView::closeEvent(QCloseEvent *event)
 {
-    //event->accept();
     //Clean-up only when there is no active thread.
     //However, this will cause a memory leak when the
     //TableView is closed when the thread is busy.
@@ -1326,7 +1263,6 @@ void TableView::group()
         }
         order_clause = pruned_order_clause;
 
-        //QtConcurrent::run(this, &TableView::fetchConditionDataInitial);
         busySlot();
         buildQuery(0);
         emit startQuery(check_query, main_query);
@@ -1350,7 +1286,6 @@ void TableView::regroup(QStringList aggs)
         }
     }
 
-    //QtConcurrent::run(this, &TableView::fetchConditionDataInitial);
     busySlot();
     buildQuery(0);
     emit startQuery(check_query, main_query);
@@ -1634,7 +1569,6 @@ void TableView::customContextMenuViewport()
             offset_list.clear();
             offset_list.append(" OFFSET 0");
 
-            //QtConcurrent::run(this, &TableView::fetchConditionDataInitial);
             busySlot();
             buildQuery(0);
             emit startQuery(check_query, main_query);
@@ -1653,7 +1587,6 @@ void TableView::customContextMenuViewport()
             offset_list.clear();
             offset_list.append(" OFFSET 0");
 
-            //QtConcurrent::run(this, &TableView::fetchConditionDataInitial);
             busySlot();
             buildQuery(0);
             emit startQuery(check_query, main_query);
@@ -1734,7 +1667,6 @@ void TableView::customContextMenuViewport()
                 }
             }
 
-            //QtConcurrent::run(this, &TableView::fetchConditionDataInitial);
             busySlot();
             buildQuery(0);
             emit startQuery(check_query, main_query);
@@ -1781,7 +1713,6 @@ void TableView::customContextMenuViewport()
                 }
             }
 
-            //QtConcurrent::run(this, &TableView::fetchConditionDataInitial);
             busySlot();
             buildQuery(0);
             emit startQuery(check_query, main_query);
@@ -1803,7 +1734,6 @@ void TableView::customContextMenuViewport()
             offset_list.clear();
             offset_list.append(" OFFSET 0");
 
-            //QtConcurrent::run(this, &TableView::fetchConditionDataInitial);
             busySlot();
             buildQuery(0);
             emit startQuery(check_query, main_query);
@@ -1824,7 +1754,6 @@ void TableView::customContextMenuViewport()
             offset_list.clear();
             offset_list.append(" OFFSET 0");
 
-            //QtConcurrent::run(this, &TableView::fetchConditionDataInitial);
             busySlot();
             buildQuery(0);
             emit startQuery(check_query, main_query);
@@ -1858,7 +1787,6 @@ void TableView::removeAllFilters()
     offset_list.clear();
     offset_list.append(" OFFSET 0");
 
-    //QtConcurrent::run(this, &TableView::fetchConditionDataInitial);
     busySlot();
     buildQuery(0);
     emit startQuery(check_query, main_query);
@@ -1879,7 +1807,6 @@ void TableView::removeAllGrouping()
     offset_list.clear();
     offset_list.append(" OFFSET 0");
 
-    //QtConcurrent::run(this, &TableView::fetchConditionDataInitial);
     busySlot();
     buildQuery(0);
     emit startQuery(check_query, main_query);
@@ -1900,7 +1827,6 @@ void TableView::removeAllWindowing()
     offset_list.clear();
     offset_list.append(" OFFSET 0");
 
-    //QtConcurrent::run(this, &TableView::fetchConditionDataInitial);
     busySlot();
     buildQuery(0);
     emit startQuery(check_query, main_query);
@@ -1915,7 +1841,6 @@ void TableView::removeAllOrdering()
     offset_list.clear();
     offset_list.append(" OFFSET 0");
 
-    //QtConcurrent::run(this, &TableView::fetchConditionDataInitial);
     busySlot();
     buildQuery(0);
     emit startQuery(check_query, main_query);

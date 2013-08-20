@@ -112,6 +112,7 @@ ViewView::ViewView(Database *database, QString const view_name, QString const na
     setObjectName(name);
 
     view_view = new QTableView(this);
+    view_view->setWordWrap(false);
     view_view->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     view_view->viewport()->installEventFilter(this);
     view_view->installEventFilter(this);

@@ -388,58 +388,7 @@ class ReportTable : public QGraphicsObject
 {
     Q_OBJECT
 
-private:
-    int rows;
-    QStringList column_list;
-    QStringList column_header_list;
-    QBitArray enabled_cols;
-    QList<QColor> column_color_list;
-    bool repeat_header_every_page;
-    QMenu hidden_cols_menu;
-
-    QFont f;
-
-    QPointF top_left;
-    QVector<int> width;
-    int height;
-    qreal x_mouse_pressed;
-    int x_width;
-    int col_to_be_moved;
-    qreal y_mouse_pressed;
-    int y_height;
-
-    bool hovered;
-    QPointF hover_spot;
-    QPointF drag_spot;
-
-    bool x_isResizing;
-    bool y_isResizing;
-
-protected:
-    void hoverMoveEvent(QGraphicsSceneHoverEvent *);
-    void hoverLeaveEvent(QGraphicsSceneHoverEvent *);
-
-    void wheelEvent(QGraphicsSceneWheelEvent *event)
-    {
-        prepareGeometryChange();
-        //Capture wheel rolls and increase/decrease
-        //font size and table height appropriately.
-        if(event->delta() > 0)
-            f.setPointSize(font().pointSize()+1);
-        else
-            f.setPointSize(font().pointSize()-1);
-
-        height = f.pointSize()*2;
-
-        //Repaint the scene to avoid ugly artifacts
-        //especially when the table height is reduced.
-        //scene()->update();
-    }
-
-    void mousePressEvent(QGraphicsSceneMouseEvent *event);
-    void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
-    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
-    void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
+    Q_PROPERTY(JapaneseFont japanese_font READ japaneseFont WRITE setJapaneseFont NOTIFY japaneseFontChanged)
 
 public:
     ReportTable()
@@ -476,6 +425,7 @@ public:
             column_color_list.append(Qt::black);
         x_isResizing = false;
         x_mouse_pressed = 0.0;
+        on_left_edge = false;
         col_to_be_moved = 0;
         y_isResizing = false;
         y_mouse_pressed = 0.0;
@@ -484,6 +434,22 @@ public:
     }
 
     ~ReportTable(){}
+
+    enum JapaneseFont {MSMincyo, MSMincyoBold, MSMincyoItalic, MSMincyoBoldItalic,
+                       MSPMincyo, MSPMincyoBold, MSPMincyoItalic, MSPMincyoBoldItalic,
+                       MSGothic, MSGothicBold, MSGothicItalic, MSGothicBoldItalic,
+                       MSPGothic, MSPGothicBold, MSPGothicItalic, MSPGothicBoldItalic};
+    void setJapaneseFont(JapaneseFont japanese_font)
+    {
+        if(this->japanese_font != japanese_font) {
+            this->japanese_font = japanese_font;
+            emit japaneseFontChanged(japanese_font);
+        }
+    }
+    JapaneseFont japaneseFont() const
+    {
+        return japanese_font;
+    }
 
     QFont font()
     {
@@ -625,7 +591,63 @@ public:
         painter->setRenderHint(QPainter::Antialiasing, true);
     }
 
+protected:
+    void hoverMoveEvent(QGraphicsSceneHoverEvent *);
+    void hoverLeaveEvent(QGraphicsSceneHoverEvent *);
+
+    void wheelEvent(QGraphicsSceneWheelEvent *event)
+    {
+        prepareGeometryChange();
+        //Capture wheel rolls and increase/decrease
+        //font size and table height appropriately.
+        if(event->delta() > 0)
+            f.setPointSize(font().pointSize()+1);
+        else
+            f.setPointSize(font().pointSize()-1);
+
+        height = f.pointSize()*2;
+
+        //Repaint the scene to avoid ugly artifacts
+        //especially when the table height is reduced.
+        //scene()->update();
+    }
+
+    void mousePressEvent(QGraphicsSceneMouseEvent *event);
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
+    void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
+
+private:
+    int rows;
+    JapaneseFont japanese_font;
+    QStringList column_list;
+    QStringList column_header_list;
+    QBitArray enabled_cols;
+    QList<QColor> column_color_list;
+    bool repeat_header_every_page;
+    QMenu hidden_cols_menu;
+
+    QFont f;
+
+    QPointF top_left;
+    QVector<int> width;
+    int height;
+    qreal x_mouse_pressed;
+    int x_width;
+    bool on_left_edge;
+    int col_to_be_moved;
+    qreal y_mouse_pressed;
+    int y_height;
+
+    bool hovered;
+    QPointF hover_spot;
+    QPointF drag_spot;
+
+    bool x_isResizing;
+    bool y_isResizing;
+
 signals:
+    void japaneseFontChanged(JapaneseFont);
     void deletingTable(ReportTable*);
 };
 
@@ -633,7 +655,55 @@ class ReportWindow : public QMainWindow
 {
     Q_OBJECT
 
+    Q_PROPERTY(Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged)
+    Q_PROPERTY(PageSize page_size READ pageSize WRITE setPageSize NOTIFY pageSizeChanged)
+
+public:
+    enum Orientation {Portrait, Landscape};
+    void setOrientation(Orientation orientation)
+    {
+        if(this->o != orientation) {
+            this->o = orientation;
+            emit orientationChanged(orientation);
+        }
+    }
+
+    Orientation orientation() const
+    {
+        return o;
+    }
+
+    enum PageSize {Letter, Legal, A3, A4, A5, B4, B5, Executive, US4x6, US4x8, US5x7, Comm10};
+    void setPageSize(PageSize page_size)
+    {
+        if(this->page_size != page_size) {
+            this->page_size = page_size;
+            emit pageSizeChanged(page_size);
+        }
+    }
+
+    PageSize pageSize() const
+    {
+        return page_size;
+    }
+
+    ReportWindow(Database *, QString);
+    void createActions();
+
+    ToolBar* getToolbar()
+    {
+        return toolbar;
+    }
+
+    QStringList pageSizesList()
+    {
+        return page_sizes_list;
+    }
+
 private:
+    Orientation o;
+    PageSize page_size;
+    QStringList page_sizes_list;
     Database *database;
     QString sql;
     QStringList column_list;
@@ -642,6 +712,20 @@ private:
     ReportView *report_view;
     ToolBar *toolbar;
     QTextCodec *text_codec = QTextCodec::codecForName("Shift-JIS");
+
+    QRectF pages_sizes[12] = {QRectF(0,0, 612, 792), // Letter
+                            QRectF(0,0, 612, 1008), // Legal
+                            QRectF(0,0, 841.89, 1199.551), // A3
+                            QRectF(0,0, 595.276, 841.89), // A4
+                            QRectF(0,0, 419.528, 595.276), // A5
+                            QRectF(0,0, 708.661, 1000.63), // B4
+                            QRectF(0,0, 498.898, 708.661), // B5
+                            QRectF(0,0, 522, 756), // Executive
+                            QRectF(0,0, 288, 432), // US4x6
+                            QRectF(0,0, 288, 576), // US4x8
+                            QRectF(0,0, 360, 504), // US5x7
+                            QRectF(0,0, 297, 684) // COMM10
+                           };
 
     QProgressDialog *progress_dialog;
 
@@ -653,6 +737,9 @@ private:
     QAction *pdf_print_action;
     QAction *html_print_action;
     QAction *odf_print_action;
+    QAction *orientation_action;
+    QAction *page_size_action;
+
     bool print_cancelled;
 
     QList<ReportTable*> table_list;
@@ -664,40 +751,34 @@ private:
     void drawPDFLine(HPDF_Page page, float x, float y);
 
 protected:
+    void contextMenuEvent(QContextMenuEvent *);
     void closeEvent(QCloseEvent *);
 
 signals:
     void done();
+    void orientationChanged(Orientation);
+    void pageSizeChanged(PageSize);
 
 public slots:
     void restore();
+    void togglePrint();
+    void changeOrientation();
     void drawLabel(QPointF);
     void drawDatabox(QPointF);
     void drawTable(QPointF);
     void drawHLine(QPointF);
-    void pdfPrintThread();
-    void htmlPrintThread();
-    void odfPrintThread();
-    void pdfPrint(QString file_name);
-    void htmlPrint(QString file_name);
-    void odfPrint(QString file_name);
+    void pdfPrintThread(QString file_name);
+    void htmlPrintThread(QString file_name);
+    void odfPrintThread(QString file_name);
+    void pdfPrint();
+    void htmlPrint();
+    void odfPrint();
     void printingCancelled();
     void deleteSeletectedItems();
     void labelDeleted(ReportLabel *);
     void tableDeleted(ReportTable *);
     void selectAll();
     void noZoom();
-
-public:
-    explicit ReportWindow(Database *, QString);
-    ~ReportWindow(){}
-
-    void createActions();
-
-    ToolBar* getToolbar()
-    {
-        return toolbar;
-    }
 };
 
 #endif // REPORTWINDOW_H
