@@ -355,7 +355,7 @@ void PgxEditor::createActions()
     //backwards_button->setDefaultAction(backwards_action);
     //backwards_button->setVisible(false);
 
-    find_previous_action = new QAction(QIcon(":/icons/find_previous.png"), "", this);
+    find_previous_action = new QAction(QIcon(":/icons/previous.svg"), "", this);
     find_previous_action->setToolTip(tr("Find previous"));
     connect(find_previous_action, SIGNAL(triggered()), SLOT(findPrevious()));
     find_previous_button = new QToolButton;
@@ -363,7 +363,7 @@ void PgxEditor::createActions()
     find_previous_button->setDefaultAction(find_previous_action);
     find_previous_button->setVisible(false);
 
-    find_next_action = new QAction(QIcon(":/icons/find_next.png"), "", this);
+    find_next_action = new QAction(QIcon(":/icons/next.svg"), "", this);
     find_next_action->setToolTip(tr("Find next"));
     connect(find_next_action, SIGNAL(triggered()), SLOT(findNext()));
     find_next_button = new QToolButton;
@@ -371,7 +371,7 @@ void PgxEditor::createActions()
     find_next_button->setDefaultAction(find_next_action);
     find_next_button->setVisible(false);
 
-    replace_previous_action = new QAction(QIcon(":/icons/replace_previous.png"), "", this);
+    replace_previous_action = new QAction(QIcon(":/icons/replace_previous.svg"), "", this);
     replace_previous_action->setToolTip(tr("Replace previous"));
     connect(replace_previous_action, SIGNAL(triggered()), SLOT(replacePrevious()));
     replace_previous_button = new QToolButton;
@@ -379,7 +379,7 @@ void PgxEditor::createActions()
     replace_previous_button->setDefaultAction(replace_previous_action);
     replace_previous_button->setVisible(false);
 
-    replace_next_action = new QAction(QIcon(":/icons/replace_next.png"), "", this);
+    replace_next_action = new QAction(QIcon(":/icons/replace_next.svg"), "", this);
     replace_next_action->setToolTip(tr("Replace next"));
     connect(replace_next_action, SIGNAL(triggered()), SLOT(replaceNext()));
     replace_next_button = new QToolButton;

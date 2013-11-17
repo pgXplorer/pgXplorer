@@ -251,12 +251,12 @@ void DesignView::createBrushes()
 
 void DesignView::createActions()
 {
-    save_action = new QAction(QIcon(":/icons/save.png"), tr("&Save"), this);
+    save_action = new QAction(QIcon(":/icons/save.svg"), tr("&Save"), this);
     save_action->setShortcuts(QKeySequence::Save);
     save_action->setStatusTip(tr("Save the table definition to database"));
     connect(save_action, &QAction::triggered, this, &DesignView::saveTable);
 
-    properties_action = new QAction(QIcon(":/icons/properties.png"), tr("&Properties"), this);
+    properties_action = new QAction(QIcon(":/icons/properties.svg"), tr("&Properties"), this);
     properties_action->setStatusTip(tr("Specify table properties"));
     connect(properties_action, &QAction::triggered, this, &DesignView::showTableProperties);
 

@@ -404,6 +404,7 @@ public:
         enabled_cols = QBitArray();
         hidden_cols_menu.setTitle(tr("Unhide columns"));
         setCacheMode(DeviceCoordinateCache);
+        setJapaneseFont(MSPGothic);
         prepareGeometryChange();
     }
 
@@ -740,6 +741,8 @@ private:
     QAction *orientation_action;
     QAction *page_size_action;
 
+    QComboBox *font_combo_box;
+
     bool print_cancelled;
 
     QList<ReportTable*> table_list;
@@ -763,6 +766,7 @@ public slots:
     void restore();
     void togglePrint();
     void changeOrientation();
+    void setSelectedItemsFont(int);
     void drawLabel(QPointF);
     void drawDatabox(QPointF);
     void drawTable(QPointF);

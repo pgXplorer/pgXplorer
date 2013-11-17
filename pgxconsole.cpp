@@ -485,22 +485,22 @@ void PgxConsole::__createWidgets()
 
 void PgxConsole::createActions()
 {
-    newpgxconsole_action = new QAction(QIcon(":/icons/console.png"), tr("New"), this);
+    newpgxconsole_action = new QAction(QIcon(":/icons/console.svg"), tr("New"), this);
     newpgxconsole_action->setShortcuts(QKeySequence::New);
     newpgxconsole_action->setStatusTip(tr("New console"));
     connect(newpgxconsole_action, SIGNAL(triggered()), this, SIGNAL(newPgxconsole()));
 
-    cut_action = new QAction(QIcon(":/icons/cut.png"), tr("Cut"), this);
+    cut_action = new QAction(QIcon(":/icons/cut.svg"), tr("Cut"), this);
     cut_action->setShortcuts(QKeySequence::Cut);
     cut_action->setStatusTip(tr("Cut selected text and copy to clipboard"));
     connect(cut_action, SIGNAL(triggered()), SLOT(cut()));
 
-    copy_action = new QAction(QIcon(":/icons/copy.png"), tr("Copy"), this);
+    copy_action = new QAction(QIcon(":/icons/copy.svg"), tr("Copy"), this);
     copy_action->setShortcuts(QKeySequence::Copy);
     copy_action->setStatusTip(tr("Copy selected text to clipboard"));
     connect(copy_action, SIGNAL(triggered()), SLOT(copy()));
 
-    paste_action = new QAction(QIcon(":/icons/paste.png"), tr("Paste"), this);
+    paste_action = new QAction(QIcon(":/icons/paste.svg"), tr("Paste"), this);
     paste_action->setShortcuts(QKeySequence::Paste);
     paste_action->setStatusTip(tr("Paste"));
     connect(paste_action, SIGNAL(triggered()), SLOT(pasteAsSingleFromClipboard()));
@@ -509,7 +509,7 @@ void PgxConsole::createActions()
     clear_action->setStatusTip(tr("Clear the console"));
     connect(clear_action, SIGNAL(triggered()), SLOT(clear()));
 
-    find_action = new QAction(QIcon(":/icons/search.png"), tr("Find"), this);
+    find_action = new QAction(QIcon(":/icons/search.svg"), tr("Find"), this);
     find_action->setShortcuts(QKeySequence::Find);
     find_action->setStatusTip(tr("Find text"));
     find_action->setCheckable(true);
@@ -536,7 +536,7 @@ void PgxConsole::createActions()
     //backwards_button->setDefaultAction(backwards_action);
     //backwards_button->setVisible(false);
 
-    find_previous_action = new QAction(QIcon(":/icons/find_previous.png"), "", this);
+    find_previous_action = new QAction(QIcon(":/icons/previous.svg"), "", this);
     find_previous_action->setToolTip(tr("Find previous"));
     connect(find_previous_action, SIGNAL(triggered()), SLOT(findPrevious()));
     find_previous_button = new QToolButton;
@@ -544,7 +544,7 @@ void PgxConsole::createActions()
     find_previous_button->setDefaultAction(find_previous_action);
     find_previous_button->setVisible(false);
 
-    find_next_action = new QAction(QIcon(":/icons/find_next.png"), "", this);
+    find_next_action = new QAction(QIcon(":/icons/next.svg"), "", this);
     find_next_action->setToolTip(tr("Find next"));
     connect(find_next_action, SIGNAL(triggered()), SLOT(findNext()));
     find_next_button = new QToolButton;

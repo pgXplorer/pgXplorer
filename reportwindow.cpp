@@ -207,7 +207,7 @@ void ReportTable::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
     QMenu context_menu;
     //context_menu.addAction(tr("Insert column"));
     if(repeat_header_every_page)
-        context_menu.addAction(QIcon(":/icons/ok.png"), tr("Repeat header on every page"));
+        context_menu.addAction(QIcon(":/icons/ok.svg"), tr("Repeat header on every page"));
     else
         context_menu.addAction(tr("Repeat on every page"));
     context_menu.addAction(tr("Change font..."));
@@ -341,6 +341,7 @@ ReportWindow::ReportWindow(Database *database, QString sql)
     toolbar->addAction(pdf_print_action);
     toolbar->addAction(html_print_action);
     toolbar->addAction(odf_print_action);
+    toolbar->addWidget(font_combo_box);
     addToolBar(toolbar);
 
     progress_dialog = new QProgressDialog(tr("Creating file..."), tr("Cancel"), 0, 0, this);
@@ -644,7 +645,7 @@ void ReportWindow::drawHLine(QPointF pos)
 
 void ReportWindow::createActions()
 {
-    pdf_print_action = new QAction(QIcon(":/icons/print.png"), tr("Create PDF"), this);
+    pdf_print_action = new QAction(QIcon(":/icons/pdf_print.svg"), tr("Create PDF"), this);
     pdf_print_action->setShortcuts(QKeySequence::Print);
     pdf_print_action->setStatusTip(tr("Print to a PDF document"));
     connect(pdf_print_action, &QAction::triggered, this, &ReportWindow::pdfPrint);
@@ -661,6 +662,13 @@ void ReportWindow::createActions()
 
     orientation_action = new QAction(QIcon(":/icons/portrait.png"), tr("Toggle page orientation"), this);
     connect(orientation_action, &QAction::triggered, this, &ReportWindow::changeOrientation);
+
+    font_combo_box = new QComboBox(this);
+    font_combo_box->addItem("MS-Mincyo");
+    font_combo_box->addItem("MSP-Mincyo");
+    font_combo_box->addItem("MS-Gothic");
+    font_combo_box->addItem("MSP-Gothic");
+    connect(font_combo_box, SIGNAL(currentIndexChanged(int)), this, SLOT(setSelectedItemsFont(int)));
 
     print_cancelled = false;
 }
@@ -761,7 +769,7 @@ void ReportWindow::pdfPrintThread(QString file_name)
 {
     HPDF_Doc  pdf;
     HPDF_Page page;
-    HPDF_Font jfont[17];
+    HPDF_Font jfont[4];
     HPDF_Font font[12];
     HPDF_REAL page_height;
     HPDF_REAL page_width;
@@ -836,7 +844,7 @@ void ReportWindow::pdfPrintThread(QString file_name)
         HPDF_UseJPFonts(pdf);
         HPDF_UseJPEncodings(pdf);
 
-        jfont[0] = HPDF_GetFont (pdf, "MS-Mincyo", "90ms-RKSJ-H");
+        /*jfont[0] = HPDF_GetFont (pdf, "MS-Mincyo", "90ms-RKSJ-H");
         jfont[1] = HPDF_GetFont (pdf, "MS-Mincyo,Bold", "90ms-RKSJ-H");
         jfont[2] = HPDF_GetFont (pdf, "MS-Mincyo,Italic", "90ms-RKSJ-H");
         jfont[3] = HPDF_GetFont (pdf, "MS-Mincyo,BoldItalic", "90ms-RKSJ-H");
@@ -851,7 +859,13 @@ void ReportWindow::pdfPrintThread(QString file_name)
         jfont[12] = HPDF_GetFont (pdf, "MS-PGothic", "90msp-RKSJ-H");
         jfont[13] = HPDF_GetFont (pdf, "MS-PGothic,Bold", "90msp-RKSJ-H");
         jfont[14] = HPDF_GetFont (pdf, "MS-PGothic,Italic", "90msp-RKSJ-H");
-        jfont[15] = HPDF_GetFont (pdf, "MS-PGothic,BoldItalic", "90msp-RKSJ-H");
+        jfont[15] = HPDF_GetFont (pdf, "MS-PGothic,BoldItalic", "90msp-RKSJ-H");*/
+
+        jfont[0] = HPDF_GetFont (pdf, "MS-Mincyo", "90ms-RKSJ-H");
+        jfont[1] = HPDF_GetFont (pdf, "MS-PMincyo", "90msp-RKSJ-H");
+        jfont[2] = HPDF_GetFont (pdf, "MS-Gothic", "90ms-RKSJ-H");
+        jfont[3] = HPDF_GetFont (pdf, "MS-PGothic", "90msp-RKSJ-H");
+
 
         font[0] = HPDF_GetFont (pdf, "Courier", NULL);
         font[1] = HPDF_GetFont (pdf, "Courier-Bold", NULL);
@@ -899,7 +913,7 @@ void ReportWindow::pdfPrintThread(QString file_name)
             int column_size = column_list.size();
             size = report_table->font().pointSize();
 
-            HPDF_Page_SetFontAndSize (page, jfont[8], size);
+            HPDF_Page_SetFontAndSize (page, jfont[report_table->japaneseFont()], size);
             for(int col=0; col<column_size; col++) {
                 if(report_table->getColumnEnabled(col)) {
                     HPDF_Page_SetRGBStroke(page,0.0,0.0,0.0);
@@ -944,11 +958,14 @@ void ReportWindow::pdfPrintThread(QString file_name)
             int row_count = 1;
             qreal bottom_point = page_height - 70;
 
+            qDebug() << QMovie::supportedFormats();
+
             while(sql_query.next()) {
                 int wrapped_rows = 1;
                 foreach(ReportTable *report_table, table_list) {
                     size = report_table->font().pointSize();
-                    HPDF_Page_SetFontAndSize (page, jfont[8], size);
+                    qDebug() << report_table->japaneseFont();
+                    HPDF_Page_SetFontAndSize (page, jfont[report_table->japaneseFont()], size);
                     int column_size = column_list.size();
                     for(int col=0; col<column_size; col++) {
                         if(print_cancelled)
@@ -1102,7 +1119,7 @@ void ReportWindow::pdfPrintThread(QString file_name)
                         if(report_table->repeatHeaderEveryPage()) {
                             int column_size = column_list.size();
                             size = report_table->font().pointSize();
-                            HPDF_Page_SetFontAndSize (page, jfont[0], size);
+                            HPDF_Page_SetFontAndSize (page, jfont[report_table->japaneseFont()], size);
                             for(int col=0; col<column_size; col++) {
                                 if(report_table->getColumnEnabled(col)) {
                                     HPDF_Page_SetRGBStroke(page,0.0,0.0,0.0);
@@ -1344,6 +1361,21 @@ void ReportWindow::changeOrientation()
     qreal w = scene.width();
     qreal h = scene.height();
     scene.setSceneRect(0, 0, h, w);
+}
+
+void ReportWindow::setSelectedItemsFont(int f)
+{
+    foreach(QGraphicsTextItem *label, label_list) {
+        if(label->isSelected()) {
+            label->update();
+        }
+    }
+    foreach(ReportTable *table, table_list) {
+        if(table->isSelected()) {
+            table->setJapaneseFont((ReportTable::JapaneseFont)f);
+            table->update();
+        }
+    }
 }
 
 void ReportWindow::drawPDFLine(HPDF_Page page, float x, float y)

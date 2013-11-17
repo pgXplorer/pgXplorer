@@ -142,7 +142,7 @@ void StatusView::createActions()
     terminate_action->setStatusTip(tr("Terminate selected query"));
     connect(terminate_action, SIGNAL(triggered()), SLOT(terminateQuery()));
 
-    copy_action = new QAction(QIcon(":/icons/copy.png"), tr("Copy"), this);
+    copy_action = new QAction(QIcon(":/icons/copy.svg"), tr("Copy"), this);
     copy_action->setEnabled(false);
     copy_action->setStatusTip(tr("Copy selected contents to clipboard"));
     connect(copy_action, SIGNAL(triggered()), SLOT(copyQuery()));

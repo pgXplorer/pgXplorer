@@ -74,9 +74,15 @@ void Database::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
         menu.addAction(tr("Refresh"));
         menu.addSeparator();
     }
-    menu.addAction(QIcon(":/icons/properties.png"), tr("Properties"));
-    if(getDatabaseStatus())
-        menu.addAction(QIcon(":/icons/processes.png"), tr("Status"));
+    menu.addAction(QIcon(":/icons/properties.svg"), tr("Properties"));
+    QAction *process = menu.addAction(tr("Status"));
+    if(getDatabaseStatus()) {
+        //menu.addAction(QIcon(":/icons/processes.png"), tr("Status"));
+        process->setEnabled(true);
+    }
+    else {
+        process->setEnabled(false);
+    }
 
     QAction *a = menu.exec(event->screenPos());
     if(a && QString::compare(a->text(), tr("Explode")) == 0) {

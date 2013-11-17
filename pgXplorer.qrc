@@ -120,5 +120,8 @@
         <file>icons/explain.svg</file>
         <file>icons/find.svg</file>
         <file>icons/wrap.svg</file>
+        <file>icons/replace_next.svg</file>
+        <file>icons/replace_previous.svg</file>
+        <file>icons/pdf_print.svg</file>
     </qresource>
 </RCC>

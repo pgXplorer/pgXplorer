@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- The icon can be used freely in both personal and commercial projects with no attribution required, but always appreciated. 
+You may NOT sub-license, resell, rent, redistribute or otherwise transfer the icon without express written permission from iconmonstr.com -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.1"
+   x="0px"
+   y="0px"
+   width="512px"
+   height="512px"
+   viewBox="0 0 512 512"
+   enable-background="new 0 0 512 512"
+   xml:space="preserve"
+   id="svg2"
+   inkscape:version="0.48.4 r9939"
+   sodipodi:docname="pdf_print.svg"><metadata
+     id="metadata9"><rdf:RDF><cc:Work
+         rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /></cc:Work></rdf:RDF></metadata><defs
+     id="defs7"><inkscape:path-effect
+       effect="spiro"
+       id="path-effect2988"
+       is_visible="true" /></defs><sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1440"
+     inkscape:window-height="853"
+     id="namedview5"
+     showgrid="false"
+     inkscape:zoom="1.3037281"
+     inkscape:cx="143.19718"
+     inkscape:cy="212.14345"
+     inkscape:window-x="-2"
+     inkscape:window-y="-3"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg2" /><path
+     id="blank-file-3-icon"
+     d="M321.897,50H88.317v412h335.365V152.25L321.897,50z M321.897,107.592l44.508,44.658h-44.508V107.592   z M128.317,422V90h153.119v102.5h102.246V422H128.317z" /><path
+     style="fill:none;stroke:#000000;stroke-width:14.21174908;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     d="m 181.06912,387.51255 c 19.98823,-25.18552 45.40182,-131.44297 36.84893,-201.26372 -2.62722,-19.56181 -5.47878,-35.05861 -16.70021,-37.25305 -16.26309,-1.15491 -10.95341,24.28703 -7.19082,37.84585 8.97037,27.29342 23.51442,51.148 44.18367,70.96517 24.3604,25.11007 55.37985,51.72074 84.79812,67.53968 14.97816,8.60235 26.83953,9.17308 40.92912,1.89973 11.35652,-8.27789 3.94139,-24.06264 -14.06319,-26.82538 -26.98587,-2.94882 -78.825,3.78872 -113.13813,16.51507 -28.4972,6.89733 -67.99557,30.48126 -76.66693,45.9634 -5.86613,8.60738 -12.76438,20.23124 -9.60456,33.30229 6.09697,11.86253 24.99485,-1.40995 30.604,-8.68904 z"
+     id="path3000"
+     inkscape:connector-curvature="0"
+     sodipodi:nodetypes="cccccccccccc" /></svg>
