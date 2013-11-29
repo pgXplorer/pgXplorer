@@ -214,9 +214,9 @@ void Table::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
     setColumnData();
     QMenu menu;
     if(column_list.isEmpty())
-        menu.addAction(QIcon(":/icons/design.png"), tr("Designer"));
+        menu.addAction(QIcon(":/icons/design.svg"), tr("Designer"));
     else {
-        menu.addAction(QIcon(":/icons/table.png"), tr("Contents"));
+        menu.addAction(QIcon(":/icons/table.svg"), tr("Contents"));
         menu.addAction(tr("Definition"));
         menu.addSeparator();
         menu.addAction(tr("Rename"));
