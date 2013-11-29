@@ -306,7 +306,7 @@ protected:
     {
         QMenu context_menu;
         if(repeat_every_page)
-            context_menu.addAction(QIcon(":/icons/ok.png"), tr("Repeat on every page"));
+            context_menu.addAction(QIcon(":/icons/ok.svg"), tr("Repeat on every page"));
         else
             context_menu.addAction(tr("Repeat on every page"));
         context_menu.addSeparator();
