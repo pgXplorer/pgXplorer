@@ -141,7 +141,7 @@ void View::setColumnData()
 void View::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 {
     QMenu menu;
-    menu.addAction(QIcon(":/icons/view2.png"), tr("Contents"));
+    menu.addAction(QIcon(":/icons/view2.svg"), tr("Contents"));
     menu.addAction(tr("Definition"));
     menu.addSeparator();
     menu.addAction(tr("Delete"));
