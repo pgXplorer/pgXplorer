@@ -147,17 +147,17 @@ void StatusView::createActions()
     copy_action->setStatusTip(tr("Copy selected contents to clipboard"));
     connect(copy_action, SIGNAL(triggered()), SLOT(copyQuery()));
 
-    no_refresh = new QAction(QIcon(":/icons/ok.png"), tr("Don't refresh"), this);
+    no_refresh = new QAction(QIcon(":/icons/ok.svg"), tr("Don't refresh"), this);
     connect(no_refresh, SIGNAL(triggered()), SLOT(dontRefresh()));
     if(timerInterval() != StatusView::NoInterval)
         no_refresh->setIconVisibleInMenu(false);
 
-    refresh_freq_1 = new QAction(QIcon(":/icons/ok.png"), tr("Refresh every 10s"), this);
+    refresh_freq_1 = new QAction(QIcon(":/icons/ok.svg"), tr("Refresh every 10s"), this);
     connect(refresh_freq_1, SIGNAL(triggered()), SLOT(refreshFrequency1()));
     if(timerInterval() != StatusView::TimerInterval1)
         refresh_freq_1->setIconVisibleInMenu(false);
 
-    refresh_freq_2 = new QAction(QIcon(":/icons/ok.png"), tr("Refresh every 20s"), this);
+    refresh_freq_2 = new QAction(QIcon(":/icons/ok.svg"), tr("Refresh every 20s"), this);
     connect(refresh_freq_2, SIGNAL(triggered()), SLOT(refreshFrequency2()));
     if(timerInterval() != StatusView::TimerInterval2)
         refresh_freq_2->setIconVisibleInMenu(false);
