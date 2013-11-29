@@ -639,12 +639,6 @@ void TableView::updRowCntSlot(QString dataset, QString error, bool can_fetch_mor
         else
             new_row_view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-        if(where_clause.isEmpty())
-            delete_rows_action->setEnabled(false);
-        else
-            delete_rows_action->setEnabled(true);
-
-        new_row_view->setEnabled(true);
         if(!can_fetch_more) {
             QModelIndex idx = new_row_model->index(0, 0, QModelIndex());
             new_row_view->setCurrentIndex(idx);
@@ -2076,6 +2070,13 @@ void TableView::toggleActions()
                 enableActions();
         }
     }
+    
+    if(where_clause.isEmpty())
+        delete_rows_action->setEnabled(false);
+    else
+        delete_rows_action->setEnabled(true);
+
+    new_row_view->setEnabled(true);
 }
 
 void TableView::enableActions()
