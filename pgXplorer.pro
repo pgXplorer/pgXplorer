@@ -74,7 +74,7 @@ SOURCES		= main.cpp \
     tablequerythread.cpp \
     simplequerythread.cpp
 
-QT += core gui sql widgets network
+QT += core gui sql widgets network svg
 
 QMAKE_CXXFLAGS += -std=c++11
 
