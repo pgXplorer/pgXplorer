@@ -86,6 +86,18 @@ unix:INCLUDEPATH += "/home/nimbus/libharu/include" "/usr/include"
 win32:LIBS += C:/tmp/libhpdf-2.3.0RC2/src/.libs/libhpdf.a C:/tmp/postgresql-9.3.2/src/interfaces/libpq/libpq.a
 unix:LIBS += "/home/nimbus/libharu/src/libhpdfs.a" -lQt5Concurrent -lz -lpq
 
+mac {
+QMAKE_CXXFLAGS += -mmacosx-version-min=10.7
+CONFIG += c++11
+QMAKE_MAC_SDK = macosx10.9
+INCLUDEPATH += \
+    /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk/usr/include \
+    /Users/lex/Development/libharu/include
+LIBS += \
+    /usr/local/lib/libhpdf.dylib \
+    /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk/usr/lib/libpq.dylib
+}
+
 MOC_DIR = mocs
 OBJECTS_DIR = objs
 RESOURCES += pgXplorer.qrc
