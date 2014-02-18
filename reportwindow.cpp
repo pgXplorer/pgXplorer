@@ -348,19 +348,19 @@ ReportWindow::ReportWindow(Database *database, QString sql)
 
     QToolButton *label = new QToolButton;
     label->setToolTip(tr("Label"));
-    label->setIcon(QIcon(":/icons/label.png"));
+    label->setIcon(QIcon(":/icons/lable.svg"));
     label->setIconSize(QSize(48,36));
     QToolButton *databox = new QToolButton;
     databox->setToolTip(tr("Databox"));
-    databox->setIcon(QIcon(":/icons/databox.png"));
+    databox->setIcon(QIcon(":/icons/databox.svg"));
     databox->setIconSize(QSize(48,36));
     QToolButton *table = new QToolButton;
     table->setToolTip(tr("Table"));
-    table->setIcon(QIcon(":/icons/report_table.png"));
+    table->setIcon(QIcon(":/icons/report_table.svg"));
     table->setIconSize(QSize(48,36));
     QToolButton *hline = new QToolButton;
     hline->setToolTip(tr("Horizontal line"));
-    hline->setIcon(QIcon(":/icons/hline.png"));
+    hline->setIcon(QIcon(":/icons/hline.svg"));
     hline->setIconSize(QSize(48,36));
 
     button_group = new QButtonGroup;
@@ -447,7 +447,7 @@ void ReportView::changeCursor(int i)
             mime_data = new QMimeData;
             mime_data->setText("label");
             drag->setMimeData(mime_data);
-            drag->setPixmap(QPixmap(":/icons/label.png"));
+            drag->setPixmap(QPixmap(":/icons/lable.svg").scaled(QSize(48,48)));
             //drag->setHotSpot(QPoint(drag->pixmap().width()/2,
             //                        drag->pixmap().height()));
             drag->exec();
@@ -458,7 +458,7 @@ void ReportView::changeCursor(int i)
             mime_data = new QMimeData;
             mime_data->setText("databox");
             drag->setMimeData(mime_data);
-            drag->setPixmap(QPixmap(":/icons/databox.png"));
+            drag->setPixmap(QPixmap(":/icons/databox.svg").scaled(QSize(48,48)));
             //drag->setHotSpot(QPoint(drag->pixmap().width()/2,
             //                        drag->pixmap().height()));
             drag->exec();
@@ -469,7 +469,7 @@ void ReportView::changeCursor(int i)
             mime_data = new QMimeData;
             mime_data->setText("table");
             drag->setMimeData(mime_data);
-            drag->setPixmap(QPixmap(":/icons/report_table.png"));
+            drag->setPixmap(QPixmap(":/icons/report_table.svg").scaled(QSize(48,48)));
             //drag->setHotSpot(QPoint(drag->pixmap().width()/2,
             //                        drag->pixmap().height()));
             drag->exec();
@@ -480,7 +480,7 @@ void ReportView::changeCursor(int i)
             mime_data = new QMimeData;
             mime_data->setText("hline");
             drag->setMimeData(mime_data);
-            drag->setPixmap(QPixmap(":/icons/hline.png"));
+            drag->setPixmap(QPixmap(":/icons/hline.svg").scaled(QSize(48,48)));
             //drag->setHotSpot(QPoint(drag->pixmap().width()/2,
             //                        drag->pixmap().height()));
             drag->exec();

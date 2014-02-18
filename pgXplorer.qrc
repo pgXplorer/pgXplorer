@@ -5,10 +5,10 @@
         <file>database.ico</file>
         <file>icons/zoom-in.png</file>
         <file>icons/zoom-out.png</file>
-        <file>icons/label.png</file>
-        <file>icons/hline.png</file>
-        <file>icons/report_table.png</file>
-        <file>icons/databox.png</file>
+        <file>icons/lable.svg</file>
+        <file>icons/hline.svg</file>
+        <file>icons/report_table.svg</file>
+        <file>icons/databox.svg</file>
         <file>icons/console.svg</file>
         <file>icons/copy_sql.svg</file>
         <file>icons/copy_with_headers.svg</file>
