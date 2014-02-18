@@ -20,7 +20,7 @@ You may NOT sub-license, resell, rent, redistribute or otherwise transfer the ic
    xml:space="preserve"
    id="svg2"
    inkscape:version="0.48.4 r9939"
-   sodipodi:docname="pencil.svg"><metadata
+   sodipodi:docname="bar.svg"><metadata
    id="metadata9"><rdf:RDF><cc:Work
        rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
          rdf:resource="http://purl.org/dc/dcmitype/StillImage" /></cc:Work></rdf:RDF></metadata><defs
@@ -46,8 +46,8 @@ You may NOT sub-license, resell, rent, redistribute or otherwise transfer the ic
    inkscape:current-layer="svg2" />
 
 <path
-   id="pencil-10-icon"
-   d="M172.782,438.836L172.782,438.836L50.417,461.42l24.686-120.264l0.001-0.001L172.782,438.836z    M364.735,51.523l-43.829,43.829l97.682,97.68l43.829-43.829L364.735,51.523z M96.996,319.263l97.681,97.679l202.017-202.015   l-97.68-97.682L96.996,319.263z"
+   id="bar_chart_2_icon"
+   d="M148.527,360.5H81.334v-139h67.193V360.5z M242.527,360.5h-67.193V79.167h67.193V360.5z    M336.527,360.5h-67.193V164.667h67.193V360.5z M430.527,360.5h-67.193v-70.578h67.193V360.5z M462,387.834H50v45h412V387.834z"
    style="fill:#6c5367" />
 
 </svg>

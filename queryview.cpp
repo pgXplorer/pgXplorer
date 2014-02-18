@@ -175,22 +175,22 @@ void QueryView::createActions()
     copy_with_headers_action->setEnabled(false);
     connect(copy_with_headers_action, &QAction::triggered, this , &QueryView::copyToClipboardWithHeaders);
 
-    scatterplot_action = new QAction(QIcon(":/icons/scatter.png"), tr("Scatter plot"), this);
+    scatterplot_action = new QAction(QIcon(":/icons/scatter.svg"), tr("Scatter plot"), this);
     scatterplot_action->setEnabled(false);
     scatterplot_action->setStatusTip(tr("Plot the selected columns as a scatter plot"));
     connect(scatterplot_action, &QAction::triggered, this , &QueryView::scatterPlot);
 
-    lineplot_action = new QAction(QIcon(":/icons/line.png"), tr("Line plot"), this);
+    lineplot_action = new QAction(QIcon(":/icons/line.svg"), tr("Line plot"), this);
     lineplot_action->setEnabled(false);
     lineplot_action->setStatusTip(tr("Plot the selected columns as a line plot"));
     connect(lineplot_action, &QAction::triggered, this , &QueryView::linePlot);
 
-    barplot_action = new QAction(QIcon(":/icons/bar.png"), tr("Bar plot"), this);
+    barplot_action = new QAction(QIcon(":/icons/bar.svg"), tr("Bar plot"), this);
     barplot_action->setEnabled(false);
     barplot_action->setStatusTip(tr("Plot the selected columns as a bar plot"));
     connect(barplot_action, &QAction::triggered, this , &QueryView::barPlot);
 
-    areaplot_action = new QAction(QIcon(":/icons/area.png"), tr("Area plot"), this);
+    areaplot_action = new QAction(QIcon(":/icons/area.svg"), tr("Area plot"), this);
     areaplot_action->setEnabled(false);
     areaplot_action->setStatusTip(tr("Plot the selected columns as an area plot"));
     connect(areaplot_action, &QAction::triggered, this , &QueryView::areaPlot);

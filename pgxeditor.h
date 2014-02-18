@@ -25,11 +25,6 @@
 #include "database.h"
 #include "highlighter.h"
 
-class QPaintEvent;
-class QResizeEvent;
-class QSize;
-class QWidget;
-
 class LineNumberArea;
 class PgxEditorMainWindow;
 

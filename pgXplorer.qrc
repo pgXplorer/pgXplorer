@@ -75,7 +75,6 @@
         <file>icons/window.png</file>
         <file>icons/down.png</file>
         <file>icons/pivot.png</file>
-        <file>icons/having.png</file>
         <file>icons/console.svg</file>
         <file>icons/copy_sql.svg</file>
         <file>icons/copy_with_headers.svg</file>
@@ -123,5 +122,11 @@
         <file>icons/replace_next.svg</file>
         <file>icons/replace_previous.svg</file>
         <file>icons/pdf_print.svg</file>
+        <file>icons/plus.svg</file>
+        <file>icons/remove.svg</file>
+        <file>icons/area.svg</file>
+        <file>icons/bar.svg</file>
+        <file>icons/line.svg</file>
+        <file>icons/scatter.svg</file>
     </qresource>
 </RCC>

@@ -339,8 +339,6 @@ ReportWindow::ReportWindow(Database *database, QString sql)
     toolbar->setObjectName("reportwindow");
     toolbar->setMovable(false);
     toolbar->addAction(pdf_print_action);
-    toolbar->addAction(html_print_action);
-    toolbar->addAction(odf_print_action);
     toolbar->addWidget(font_combo_box);
     addToolBar(toolbar);
 
@@ -958,13 +956,10 @@ void ReportWindow::pdfPrintThread(QString file_name)
             int row_count = 1;
             qreal bottom_point = page_height - 70;
 
-            qDebug() << QMovie::supportedFormats();
-
             while(sql_query.next()) {
                 int wrapped_rows = 1;
                 foreach(ReportTable *report_table, table_list) {
                     size = report_table->font().pointSize();
-                    qDebug() << report_table->japaneseFont();
                     HPDF_Page_SetFontAndSize (page, jfont[report_table->japaneseFont()], size);
                     int column_size = column_list.size();
                     for(int col=0; col<column_size; col++) {

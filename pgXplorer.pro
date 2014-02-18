@@ -1,5 +1,5 @@
 TEMPLATE	= app
-TARGET		= pgXplorer
+TARGET		= PGXplorer
 
 CONFIG		+= qt warn_on
 
@@ -8,7 +8,7 @@ VER_MIN = 0
 VER_PAT = 0
 VERSION = 1.0.0
 
-#DEFINES *= QT_USE_QSTRINGBUILDER
+DEFINES *= QT_USE_QSTRINGBUILDER
 
 HEADERS		= \
     database.h \
@@ -74,16 +74,16 @@ SOURCES		= main.cpp \
     tablequerythread.cpp \
     simplequerythread.cpp
 
-QT += core gui sql widgets network
+QT += core gui sql widgets network svg
 
 QMAKE_CXXFLAGS += -std=c++11
 
 #SUBDIRS = threads models gui graphicalitems views
 
-win32:INCLUDEPATH += "C:/tmp3/postgresql-9.2.4/src/interfaces/libpq" "C:/tmp3/postgresql-9.2.4/src/include"
+win32:INCLUDEPATH += "C:/tmp/libhpdf-2.3.0RC2/include" "C:/tmp/postgresql-9.3.2/src/interfaces/libpq" "C:/tmp/postgresql-9.3.2/src/include"
 unix:INCLUDEPATH += "/home/nimbus/libharu/include" "/usr/include"
 
-win32:LIBS += C:/tmp5/libhpdf-2.3.0RC2/src/.libs/libhpdf.a -lQt5Concurrent C:/tmp3/postgresql-9.2.4/src/interfaces/libpq/libpq.a
+win32:LIBS += C:/tmp/libhpdf-2.3.0RC2/src/.libs/libhpdf.a C:/tmp/postgresql-9.3.2/src/interfaces/libpq/libpq.a
 unix:LIBS += "/home/nimbus/libharu/src/libhpdfs.a" -lQt5Concurrent -lz -lpq
 
 MOC_DIR = mocs
@@ -100,7 +100,7 @@ ICON = database.icns
 
 CODECFORTR = UTF-8
 
-# install
+#install
 #target.path = C:/QtSDK/Examples/4.7/graphicsview/pgXplorer
 #sources.files = $$SOURCES $$HEADERS $$RESOURCES pgXplorer.pro
 #sources.path = C:/QtSDK/Examples/4.7/graphicsview/pgXplorer

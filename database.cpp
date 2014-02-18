@@ -77,7 +77,6 @@ void Database::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
     menu.addAction(QIcon(":/icons/properties.svg"), tr("Properties"));
     QAction *process = menu.addAction(tr("Status"));
     if(getDatabaseStatus()) {
-        //menu.addAction(QIcon(":/icons/processes.png"), tr("Status"));
         process->setEnabled(true);
     }
     else {

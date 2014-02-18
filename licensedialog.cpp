@@ -23,7 +23,7 @@ bool LicenseDialog::validLicense(QString user, bool site_wide, QByteArray key)
     user.simplified();
     key.simplified();
     key.toLower();
-    QCryptographicHash hash(QCryptographicHash::Md5);
+    QCryptographicHash hash(QCryptographicHash::Sha256);
     if(site_wide)
         hash.addData((user.append("yes")).toLatin1());
     else
@@ -147,7 +147,7 @@ LicenseDialog::LicenseDialog(MainWin *mainwin)
     QPalette palette;
     palette.setColor(QPalette::Base, QColor(Qt::lightGray).lighter(125));
     display_text->setGeometry(260,20,220,250);
-    QString dt(tr("<b>pgXplorer</b> is an open source PostgreSQL administrative client.\nYou can purchase an individual or site-wide license key at pgxplorer.com. Buying a license key includes support as well as priority ticket requests.\nYou can also freely download the source and build pgXplorer yourself.The source code is available at: github.com/davyjones/pgxplorer \nRefer to the README document at the source code location for more details on build instructions."));
+    QString dt(tr("<b>PGXplorer</b> is an open source PostgreSQL administrative client.\nYou can purchase an individual or site-wide license key at pgxplorer.com. Buying a license key includes support as well as priority ticket requests.\nYou can also freely download the source and build pgXplorer yourself.The source code is available at: github.com/davyjones/pgxplorer \nRefer to the README document at the source code location for more details on build instructions."));
 
     display_text->setText(dt);
 
@@ -193,7 +193,7 @@ void LicenseDialog::okslot()
 
 void LicenseDialog::launchBuyLink()
 {
-    QDesktopServices::openUrl(QUrl("https://www.pgxplorer.com/buy"));
+    QDesktopServices::openUrl(QUrl("http://www.pgxplorer.com/index.html#buy"));
     return;
 }
 

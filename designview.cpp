@@ -66,7 +66,6 @@ public:
 DesignView::DesignView(Database *database, Table *table, QString const table_name, QString const name, QStringList column_list, QStringList primary_key, QStringList column_types, QStringList column_lengths, QStringList column_nulls, bool read_only, Qt::WidgetAttribute f)
 {
     setAttribute(Qt::WA_DeleteOnClose);
-    //setWindowIcon(QIcon(":/icons/design.png"));
     menuBar()->setVisible(false);
     createBrushes();
     createActions();
@@ -260,11 +259,11 @@ void DesignView::createActions()
     properties_action->setStatusTip(tr("Specify table properties"));
     connect(properties_action, &QAction::triggered, this, &DesignView::showTableProperties);
 
-    insert_column_left_action = new QAction(QIcon(":/icons/insertleft.png"), tr("Insert column left"), this);
+    insert_column_left_action = new QAction(QIcon(":/icons/plus.svg"), tr("Insert column left"), this);
     insert_column_left_action->setStatusTip(tr("Insert to the left of the selected column(s)"));
     connect(insert_column_left_action, &QAction::triggered, this, &DesignView::insertLeftColumn);
 
-    delete_column_action = new QAction(QIcon(":/icons/removecolumn.png"), tr("&Delete column(s)"), this);
+    delete_column_action = new QAction(QIcon(":/icons/remove.svg"), tr("&Delete column(s)"), this);
     delete_column_action->setStatusTip(tr("Delete selected column(s)"));
     connect(delete_column_action, &QAction::triggered, this, &DesignView::deleteColumns);
 }

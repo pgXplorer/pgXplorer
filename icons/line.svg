@@ -20,7 +20,7 @@ You may NOT sub-license, resell, rent, redistribute or otherwise transfer the ic
    xml:space="preserve"
    id="svg2"
    inkscape:version="0.48.4 r9939"
-   sodipodi:docname="pencil.svg"><metadata
+   sodipodi:docname="line.svg"><metadata
    id="metadata9"><rdf:RDF><cc:Work
        rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
          rdf:resource="http://purl.org/dc/dcmitype/StillImage" /></cc:Work></rdf:RDF></metadata><defs
@@ -46,8 +46,9 @@ You may NOT sub-license, resell, rent, redistribute or otherwise transfer the ic
    inkscape:current-layer="svg2" />
 
 <path
-   id="pencil-10-icon"
-   d="M172.782,438.836L172.782,438.836L50.417,461.42l24.686-120.264l0.001-0.001L172.782,438.836z    M364.735,51.523l-43.829,43.829l97.682,97.68l43.829-43.829L364.735,51.523z M96.996,319.263l97.681,97.679l202.017-202.015   l-97.68-97.682L96.996,319.263z"
-   style="fill:#6c5367" />
+   d="m 462,397.716 0,40 -412,0 0,-363.432 40,0 0,323.432 z m -93.369,-233.653 -89.186,88.287 -40.227,-37.818 -108.216,107.92 33.955,34.055 75.105,-74.91 40.106,37.705 122.68,-121.447 c -30.01103,-30.34661 -17.82,-18.22749 -34.217,-33.792 z"
+   style="fill:#6c5367"
+   inkscape:connector-curvature="0"
+   sodipodi:nodetypes="cccccccccccccccc" />
 
 </svg>

@@ -1868,11 +1868,11 @@ void MainWin::createMenus()
     language_menu->addAction(japanese_action);
     //language_menu->addAction(french_action);
 
-    //menuBar()->addSeparator();
+    menuBar()->addSeparator();
 
-    //help_menu = menuBar()->addMenu(MainWin::tr("&Help"));
+    help_menu = menuBar()->addMenu(MainWin::tr("&Help"));
     //help_menu->addAction(help_action);
-    ////help_menu->addAction(about_action);
+    help_menu->addAction(about_action);
 }
 
 void MainWin::showTableView(Database *database, Schema *schema, Table *table)

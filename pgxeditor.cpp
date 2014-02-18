@@ -72,7 +72,6 @@ PgxEditor::PgxEditor(Database *database, QString editor_name, QString function_a
     toolbar->addSeparator();
     toolbar->addAction(wrap_action);
     toolbar->addAction(find_action);
-    //toolbar->addAction(complete_action);
 
     pgxeditor_mainwin = new PgxEditorMainWindow(this);
     pgxeditor_mainwin->addToolBar(toolbar);
@@ -719,8 +718,10 @@ void PgxEditor::toggleFindBar()
             replace_next_button->setVisible(false);
             replace_previous_button->setVisible(false);
         }
-        else
+        else {
+            find_bar->setText(textCursor().selectedText().replace(QChar::ParagraphSeparator,"\n"));
             find_bar->setFocus();
+        }
     }
     else {
         find_cursor = textCursor();
@@ -729,6 +730,7 @@ void PgxEditor::toggleFindBar()
         casesensitivity_button->setVisible(true);
         wholeword_button->setVisible(true);
         find_bar->setVisible(true);
+        find_bar->setText(find_cursor.selectedText().replace(QChar::ParagraphSeparator,"\n"));
         replace_bar->setVisible(true);
         find_next_button->setVisible(true);
         find_previous_button->setVisible(true);
@@ -1162,8 +1164,9 @@ void PgxEditorMainWindow::closeEvent(QCloseEvent *event)
         settings.setValue("pgxeditor_maximized", true);
         showNormal();
     }
-    else
+    else {
         settings.setValue("pgxeditor_maximized", false);
+    }
     settings.setValue("pgxeditor_pos", pos());
     settings.setValue("pgxeditor_size", size());
     //settings.setValue("icon_size", toolbar->iconSize());

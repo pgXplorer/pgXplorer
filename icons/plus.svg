@@ -20,7 +20,7 @@ You may NOT sub-license, resell, rent, redistribute or otherwise transfer the ic
    xml:space="preserve"
    id="svg2"
    inkscape:version="0.48.4 r9939"
-   sodipodi:docname="pencil.svg"><metadata
+   sodipodi:docname="plus.svg"><metadata
    id="metadata9"><rdf:RDF><cc:Work
        rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
          rdf:resource="http://purl.org/dc/dcmitype/StillImage" /></cc:Work></rdf:RDF></metadata><defs
@@ -46,8 +46,8 @@ You may NOT sub-license, resell, rent, redistribute or otherwise transfer the ic
    inkscape:current-layer="svg2" />
 
 <path
-   id="pencil-10-icon"
-   d="M172.782,438.836L172.782,438.836L50.417,461.42l24.686-120.264l0.001-0.001L172.782,438.836z    M364.735,51.523l-43.829,43.829l97.682,97.68l43.829-43.829L364.735,51.523z M96.996,319.263l97.681,97.679l202.017-202.015   l-97.68-97.682L96.996,319.263z"
-   style="fill:#6c5367" />
+   id="plus-5-icon"
+   d="M363.68,288.439h-76.24v76.238h-58.877v-76.238h-76.24v-58.877h76.24v-76.24h58.877v76.24h76.24V288.439z    M462,256c0,113.771-92.229,206-206,206S50,369.771,50,256S142.229,50,256,50S462,142.229,462,256z M422,256   c0-91.755-74.258-166-166-166c-91.755,0-166,74.259-166,166c0,91.755,74.258,166,166,166C347.755,422,422,347.741,422,256z"
+   style="fill:#67536c" />
 
 </svg>

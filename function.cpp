@@ -116,7 +116,7 @@ void Function::verticalPosition2()
 void Function::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 {
     QMenu menu;
-    menu.addAction(QIcon(":/icons/function.png"), tr("Function definition"));
+    menu.addAction(QIcon(":/icons/function.svg"), tr("Function definition"));
     menu.addSeparator();
     menu.addAction(tr("Drop function"));
 
