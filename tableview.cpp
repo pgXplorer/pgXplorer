@@ -959,17 +959,12 @@ void TableView::bulkUpdateData(QModelIndexList indices, QVariant data)
 
     //Indicate that we are going to be retrieving data and busy.
     emit busySignal();
-    qSort(indices);
 
-    QModelIndex index;
+    qSort(indices);
 
     if((indices.size() > 1) && !can_fetch_more &&
        (indices.first().column() == indices.last().column()))
     {
-        /*foreach(index, indices) {
-            if(error_status)
-                break;
-        }*/
         table_model->setBulkData(indices, data);
     }
     emit notBusySignal();

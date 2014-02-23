@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- License Agreement at http://iconmonstr.com/license/ -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.1"
+   x="0px"
+   y="0px"
+   width="512px"
+   height="512px"
+   viewBox="0 0 512 512"
+   enable-background="new 0 0 512 512"
+   xml:space="preserve"
+   id="svg2"
+   inkscape:version="0.48.4 r9939"
+   sodipodi:docname="iconmonstr-cursor-text-3-icon.svg"><metadata
+   id="metadata9"><rdf:RDF><cc:Work
+       rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
+         rdf:resource="http://purl.org/dc/dcmitype/StillImage" /></cc:Work></rdf:RDF></metadata><defs
+   id="defs7" /><sodipodi:namedview
+   pagecolor="#ffffff"
+   bordercolor="#666666"
+   borderopacity="1"
+   objecttolerance="10"
+   gridtolerance="10"
+   guidetolerance="10"
+   inkscape:pageopacity="0"
+   inkscape:pageshadow="2"
+   inkscape:window-width="678"
+   inkscape:window-height="480"
+   id="namedview5"
+   showgrid="false"
+   inkscape:zoom="0.4609375"
+   inkscape:cx="256"
+   inkscape:cy="256"
+   inkscape:window-x="0"
+   inkscape:window-y="0"
+   inkscape:window-maximized="0"
+   inkscape:current-layer="svg2" />
+<path
+   id="cursor-text-3-icon"
+   d="M283.977,101.757V241h40.198v30h-40.198v139.243c0,9.271,7.516,16.786,16.786,16.786h38.412V462  h-48.316c-13.533,0-26.34-6.127-34.832-16.665l-0.068-0.085c-8.49,10.589-21.328,16.75-34.9,16.75h-48.232v-34.971h38.412  c9.271,0,16.786-7.516,16.786-16.786V271h-40.198v-30h40.198V101.757c0-9.271-7.516-16.786-16.786-16.786h-38.412V50h48.316  c13.533,0,26.34,6.127,34.832,16.665l0.068,0.085c8.49-10.589,21.328-16.75,34.9-16.75h48.232v34.971h-38.412  C291.492,84.971,283.977,92.486,283.977,101.757z M85,205.417H50v101h35V205.417z M85,85h42.825v-0.029V50H50v121.417h35V85z   M127.825,427.029V427H85v-86.583H50V462h77.825V427.029z M384.175,50v34.971V85H427v86.417h35V50H384.175z M427,427h-42.825v0.029  V462H462V340.417h-35V427z M427,306.417h35v-101h-35V306.417z"
+   style="fill:#6c5367" />
+</svg>

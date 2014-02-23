@@ -63,7 +63,7 @@ private:
     QStringList current_column_aggregates;
     bool primary_key_with_oid;
     bool can_update;
-    QList<QStringList> primary_key_valuez;
+    QList<QStringList> primary_key_values_list;
     QStringList primary_key_values;
     QString edit_column;
     QModelIndex edit_index;

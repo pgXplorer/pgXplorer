@@ -170,7 +170,7 @@ bool TableModel::setBulkData(const QModelIndexList &indices, const QVariant &val
             if(primary_key.contains(QString("\"" + rec.fieldName(column)) + "\""))
                     primary_key_values.append(rec.value(column).toString());
         }
-        primary_key_valuez.append(primary_key_values);
+        primary_key_values_list.append(primary_key_values);
     }
 
     //If UPDATE statement fails, do not store in cache
@@ -182,12 +182,12 @@ bool TableModel::setBulkData(const QModelIndexList &indices, const QVariant &val
             emit dataChanged(idx, idx);
         }
         primary_key_values.clear();
-        primary_key_valuez.clear();
+        primary_key_values_list.clear();
         return true;
     }
     else {
         primary_key_values.clear();
-        primary_key_valuez.clear();
+        primary_key_values_list.clear();
         return false;
     }
 }
@@ -276,7 +276,7 @@ bool TableModel::bulkUpdate()
 
     //Code-block to perform the actual UPDATE
     {
-        QSqlDatabase database_connection = QSqlDatabase::addDatabase("QPSQL", "update " + objectName());
+        QSqlDatabase database_connection = QSqlDatabase::addDatabase("QPSQL", "bulk update " + objectName());
         database_connection.setHostName(database->getHost());
         database_connection.setPort(database->getPort().toInt());
         database_connection.setDatabaseName(database->getName());
@@ -296,7 +296,7 @@ bool TableModel::bulkUpdate()
         query_string.append(primary_key.join(","));
         query_string.append(QLatin1String(") IN ("));
 
-        foreach(primary_key_values, primary_key_valuez) {
+        foreach(primary_key_values, primary_key_values_list) {
             query_string.append(QLatin1String("("));
             foreach(QString primary_key_value, primary_key_values) {
                 query_string.append(QLatin1String("?,"));;
@@ -311,7 +311,7 @@ bool TableModel::bulkUpdate()
         query.prepare(query_string);
         query.addBindValue(edit_value.toString());
 
-        foreach(primary_key_values, primary_key_valuez) {
+        foreach(primary_key_values, primary_key_values_list) {
             foreach(QString primary_key_value, primary_key_values) {
                 query.addBindValue(primary_key_value);
             }
@@ -320,7 +320,7 @@ bool TableModel::bulkUpdate()
         if(update_status == false)
             emit updateFailed(query.lastError().text());
     }
-    QSqlDatabase::removeDatabase("update " + objectName());
+    QSqlDatabase::removeDatabase("bulk update " + objectName());
     return update_status;
 }
 
