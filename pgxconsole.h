@@ -121,6 +121,7 @@ signals:
     void getDbPros();
     void newPgxconsole();
     void showQueryView(Database *, QString);
+    void showExplainView(Database *, QString);
     void pgxconsoleClosing(PgxConsole *);
 };
 

@@ -92,6 +92,7 @@ public:
     void notBusy();
     void enableActions();
     void disableActions();
+    void hideChartAndReport();
 
 public slots:
     void bringOnTop();

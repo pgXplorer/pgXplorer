@@ -152,6 +152,7 @@ signals:
     void newPgxeditor();
     void newPgxeditorQuery(QString);
     void showQueryView(Database *, QString);
+    void showExplainView(Database *, QString);
     void pgxeditorClosing(PgxEditor *);
 };
 

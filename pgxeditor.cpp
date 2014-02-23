@@ -79,7 +79,7 @@ PgxEditor::PgxEditor(Database *database, QString editor_name, QString function_a
     pgxeditor_mainwin->setAttribute(Qt::WA_DeleteOnClose);
 
     find_bar = new QLineEdit;
-    find_bar->setMaximumSize(100,find_bar->height());
+    find_bar->setMaximumSize(100, find_bar->height());
     find_bar->setPlaceholderText(tr("Find text"));
     find_bar->setVisible(false);
     pgxeditor_mainwin->statusBar()->setSizeGripEnabled(false);
@@ -87,7 +87,7 @@ PgxEditor::PgxEditor(Database *database, QString editor_name, QString function_a
     pgxeditor_mainwin->statusBar()->addPermanentWidget(wholeword_button, 0);
     pgxeditor_mainwin->statusBar()->addPermanentWidget(find_bar);
     replace_bar = new QLineEdit;
-    replace_bar->setMaximumSize(100,find_bar->height());
+    replace_bar->setMaximumSize(100, find_bar->height());
     replace_bar->setPlaceholderText(tr("Replace text"));
     replace_bar->setVisible(false);
     pgxeditor_mainwin->statusBar()->addPermanentWidget(replace_bar);
@@ -451,7 +451,7 @@ void PgxEditor::explainText()
     else
         sql = QLatin1String("BEGIN; EXPLAIN ANALYZE VERBOSE ") + textCursor().selectedText().replace(QChar::ParagraphSeparator,"\n");
 
-    emit showQueryView(database, sql);
+    emit showExplainView(database, sql);
 }
 
 void PgxEditor::selectionChangedSlot()

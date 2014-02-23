@@ -304,6 +304,15 @@ void QueryView::disableActions()
     copy_with_headers_action->setEnabled(false);
 }
 
+void QueryView::hideChartAndReport()
+{
+    scatterplot_action->setVisible(false);
+    lineplot_action->setVisible(false);
+    barplot_action->setVisible(false);
+    areaplot_action->setVisible(false);
+    report_action->setVisible(false);
+}
+
 void QueryView::fullscreen()
 {
     this->showFullScreen();

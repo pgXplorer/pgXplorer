@@ -966,11 +966,11 @@ void TableView::bulkUpdateData(QModelIndexList indices, QVariant data)
     if((indices.size() > 1) && !can_fetch_more &&
        (indices.first().column() == indices.last().column()))
     {
-        foreach(index, indices) {
+        /*foreach(index, indices) {
             if(error_status)
                 break;
-            table_model->setUpdateData(index, data);
-        }
+        }*/
+        table_model->setBulkData(indices, data);
     }
     emit notBusySignal();
 }

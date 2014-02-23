@@ -261,6 +261,7 @@ public slots:
     void createTable(QString, QString, GraphicsTextItem*);
     void renameTable(QString, QString, GraphicsTextItem*);
     void showQueryView(Database *, QString);
+    void showExplainView(Database *, QString);
     void showSchemas();
     void hideSchemas();
     void showTables(Schema *);

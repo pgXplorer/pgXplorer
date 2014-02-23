@@ -1283,6 +1283,7 @@ void MainWin::showPgxconsole()
     PgxConsole *pgxconsole = new PgxConsole(database);
     pgxconsole_list.append(pgxconsole);
     QObject::connect(pgxconsole, SIGNAL(showQueryView(Database *, QString)), SLOT(showQueryView(Database*,QString)));
+    QObject::connect(pgxconsole, SIGNAL(showExplainView(Database *, QString)), SLOT(showExplainView(Database*,QString)));
     QObject::connect(pgxconsole, SIGNAL(pgxconsoleClosing(PgxConsole*)), SLOT(pgxconsoleClosed(PgxConsole*)));
     QObject::connect(pgxconsole, SIGNAL(newPgxconsole()), SLOT(showPgxconsole()));
     QObject::connect(pgxconsole->getToolbar(), SIGNAL(iconSizeChanged(QSize)), SLOT(resizeToolbarIcons(QSize)));
@@ -2125,6 +2126,27 @@ void MainWin::showQueryView(Database *database, QString command)
     query_view->show();
 }
 
+void MainWin::showExplainView(Database *database, QString command)
+{
+    QueryView *query_view = new QueryView(database, command);
+    query_view_list.append(query_view);
+    QObject::connect(query_view, SIGNAL(queryViewClosing(QueryView*)), SLOT(queryViewClosed(QueryView*)));
+    QObject::connect(query_view->getToolbar(), SIGNAL(iconSizeChanged(QSize)), SLOT(resizeToolbarIcons(QSize)));
+    QObject::connect(this, SIGNAL(changeLanguage(QEvent*)), query_view, SLOT(languageChanged(QEvent*)));
+
+    QSettings settings("pgXplorer", "pgXplorer");
+    QPoint pos = settings.value("queryview_pos", QPoint(100, 100)).toPoint();
+    QSize size = settings.value("queryview_size", QSize(1024, 768)).toSize();
+    QSize icon_size = settings.value("icon_size", QSize(36, 36)).toSize();
+
+    query_view->resize(size);
+    query_view->move(pos);
+    query_view->getToolbar()->setIconSize(icon_size);
+    query_view->show();
+
+    query_view->hideChartAndReport();
+}
+
 void MainWin::showFunctionEditor(Schema *schema, Function *function)
 {
     QString full_function_name = schema->getName();
@@ -2140,6 +2162,7 @@ void MainWin::showFunctionEditor(Schema *schema, Function *function)
 
     QSettings settings("pgXplorer", "pgXplorer");
     QObject::connect(pgxeditor, SIGNAL(showQueryView(Database *, QString)), SLOT(showQueryView(Database*, QString)));
+    QObject::connect(pgxeditor, SIGNAL(showExplainView(Database *, QString)), SLOT(showExplainView(Database*, QString)));
     QObject::connect(pgxeditor, SIGNAL(pgxeditorClosing(PgxEditor*)), SLOT(pgxeditorClosed(PgxEditor*)));
     QObject::connect(pgxeditor, SIGNAL(newPgxeditor()), SLOT(showPgxeditor()));
     connect(pgxeditor, &PgxEditor::newPgxeditorQuery, this, &MainWin::showPgxeditorQuery);
@@ -2240,6 +2263,7 @@ void MainWin::showViewEditor(Schema *schema, View *view)
 
         QSettings settings("pgXplorer", "pgXplorer");
         QObject::connect(pgxeditor, SIGNAL(showQueryView(Database *, QString)), SLOT(showQueryView(Database*, QString)));
+        QObject::connect(pgxeditor, SIGNAL(showExplainView(Database *, QString)), SLOT(showExplainView(Database*, QString)));
         QObject::connect(pgxeditor, SIGNAL(pgxeditorClosing(PgxEditor*)), SLOT(pgxeditorClosed(PgxEditor*)));
         QObject::connect(pgxeditor, SIGNAL(newPgxeditor()), SLOT(showPgxeditor()));
         QObject::connect(pgxeditor, SIGNAL(newPgxeditorQUery(QString)), this, SLOT(showPgxeditor(QString)));
@@ -2320,6 +2344,7 @@ void MainWin::showTableEditor(Schema *schema, Table *table)
 
     QSettings settings("pgXplorer", "pgXplorer");
     QObject::connect(pgxeditor, SIGNAL(showQueryView(Database *, QString)), SLOT(showQueryView(Database*, QString)));
+    QObject::connect(pgxeditor, SIGNAL(showExplainView(Database *, QString)), SLOT(showExplainView(Database*, QString)));
     QObject::connect(pgxeditor, SIGNAL(pgxeditorClosing(PgxEditor*)), SLOT(pgxeditorClosed(PgxEditor*)));
     QObject::connect(pgxeditor, SIGNAL(newPgxeditor()), SLOT(showPgxeditor()));
     QObject::connect(pgxeditor, SIGNAL(newPgxeditorQuery(QString)), SLOT(showPgxeditorQuery(QString)));
@@ -2365,6 +2390,7 @@ void MainWin::showPgxeditor()
 
     QSettings settings("pgXplorer", "pgXplorer");
     QObject::connect(pgxeditor, SIGNAL(showQueryView(Database *, QString)), SLOT(showQueryView(Database*, QString)));
+    QObject::connect(pgxeditor, SIGNAL(showExplainView(Database *, QString)), SLOT(showExplainView(Database*, QString)));
     QObject::connect(pgxeditor, SIGNAL(pgxeditorClosing(PgxEditor*)), SLOT(pgxeditorClosed(PgxEditor*)));
     QObject::connect(pgxeditor, SIGNAL(newPgxeditor()), SLOT(showPgxeditor()));
     QObject::connect(pgxeditor, SIGNAL(newPgxeditorQuery(QString)), SLOT(showPgxeditorQuery(QString)));
@@ -2389,6 +2415,7 @@ void MainWin::showPgxeditorQuery(QString query)
 
     QSettings settings("pgXplorer", "pgXplorer");
     QObject::connect(pgxeditor, SIGNAL(showQueryView(Database *, QString)), SLOT(showQueryView(Database*, QString)));
+    QObject::connect(pgxeditor, SIGNAL(showExplainView(Database *, QString)), SLOT(showExplainView(Database*, QString)));
     QObject::connect(pgxeditor, SIGNAL(pgxeditorClosing(PgxEditor*)), SLOT(pgxeditorClosed(PgxEditor*)));
     QObject::connect(pgxeditor, SIGNAL(newPgxeditor()), SLOT(showPgxeditor()));
     QObject::connect(pgxeditor->getToolbar(), SIGNAL(iconSizeChanged(QSize)), SLOT(resizeToolbarIcons(QSize)));
@@ -2413,6 +2440,7 @@ void MainWin::showPgxeditorFunction(QString function_name, QString query)
 
     QSettings settings("pgXplorer", "pgXplorer");
     QObject::connect(pgxeditor, SIGNAL(showQueryView(Database *, QString)), SLOT(showQueryView(Database*, QString)));
+    QObject::connect(pgxeditor, SIGNAL(showExplainView(Database *, QString)), SLOT(showExplainView(Database*, QString)));
     QObject::connect(pgxeditor, SIGNAL(pgxeditorClosing(PgxEditor*)), SLOT(pgxeditorClosed(PgxEditor*)));
     QObject::connect(pgxeditor, SIGNAL(newPgxeditor()), SLOT(showPgxeditor()));
     QObject::connect(pgxeditor, SIGNAL(newPgxeditorQuery(QString)), SLOT(showPgxeditorQuery(QString)));

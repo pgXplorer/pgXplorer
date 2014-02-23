@@ -264,7 +264,12 @@ void PgxConsole::showView(QString cmd)
         // required output (used for queries and tables only).
         QTime t;
         t.start();
-        emit showQueryView(database, cmd);
+        if(cmd.startsWith("EXPLAIN", Qt::CaseInsensitive)) {
+            emit showExplainView(database, cmd);
+        }
+        else {
+            emit showQueryView(database, cmd);
+        }
         appendPlainText("");
     }
 }

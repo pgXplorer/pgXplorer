@@ -42,10 +42,11 @@ public:
 
     Qt::ItemFlags flags(const QModelIndex &index) const;
     bool setData(const QModelIndex &index, const QVariant &value, int role);
+    bool setBulkData(const QModelIndexList &index_list, const QVariant &value);
     QVariant data(const QModelIndex & item, int role = Qt::DisplayRole) const;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const;
-    bool setUpdateData(const QModelIndex &index, const QVariant &value);
     bool update();
+    bool bulkUpdate();
     void setRowsFrom(int);
     int getPivotCol();
     int getPivotCat();
@@ -62,6 +63,7 @@ private:
     QStringList current_column_aggregates;
     bool primary_key_with_oid;
     bool can_update;
+    QList<QStringList> primary_key_valuez;
     QStringList primary_key_values;
     QString edit_column;
     QModelIndex edit_index;

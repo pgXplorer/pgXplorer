@@ -11,3 +11,4 @@ pgXplorer.pro.user
 qrc_pgXplorer.cpp
 Makefile
 pgXplorer
+*.iss

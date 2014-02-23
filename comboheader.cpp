@@ -36,7 +36,7 @@ void ComboHeader::showEvent(QShowEvent *event)
          delete boxes.takeFirst();
     }
 
-    for (int i=0; i<tv->columnNames().length(); i++) {
+    for (int i=0; i < tv->columnNames().length(); i++) {
         ComboBox *box = new ComboBox(this, i);
         box->setEnabled(false);
 
